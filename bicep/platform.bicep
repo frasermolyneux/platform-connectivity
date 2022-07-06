@@ -24,3 +24,13 @@ module molyneuxIO 'zones/molyneux.io.bicep' = {
   name: 'molyneuxIo'
   scope: resourceGroup(defaultResourceGroup.name)
 }
+
+module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
+  name: 'xtremeidiotsCom'
+  scope: resourceGroup(defaultResourceGroup.name)
+}
+
+module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
+  name: 'xtremeidiotsDev'
+  scope: resourceGroup(defaultResourceGroup.name)
+}
