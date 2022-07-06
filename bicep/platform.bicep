@@ -13,3 +13,14 @@ resource defaultResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = 
   location: parLocation
   properties: {}
 }
+
+// DNS Zones
+module molyneuxDev 'zones/molyneux.dev.bicep' = {
+  name: 'molyneuxDev'
+  scope: resourceGroup(defaultResourceGroup.name)
+}
+
+module molyneuxIO 'zones/molyneux.io.bicep' = {
+  name: 'molyneuxIo'
+  scope: resourceGroup(defaultResourceGroup.name)
+}
