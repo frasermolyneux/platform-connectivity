@@ -7,6 +7,13 @@
         },
         "parEnvironment": {
             "value": "prd"
+        },
+        "parTags": {
+            "value": {
+                "Environment": "prd",
+                "DeployedBy": "AzDo-Bicep",
+                "Git": "https://github.com/frasermolyneux/dns-config-mgmt"
+            }
         }
     }
 }
