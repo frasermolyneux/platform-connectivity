@@ -1,0 +1,34 @@
+trigger:
+  branches:
+    include:
+    - '*'
+
+pool: 'Dedicated'
+
+stages: 
+- stage: ValidateBicep
+  jobs: 
+  - job: LintCode
+    displayName: Lint Code
+    steps:
+      - script: |
+          az bicep build --file bicep/platform.bicep
+        name: LintBicepCode
+        displayName: Run Bicep Linter
+
+  - job: ValidateBicepCode
+    dependsOn: [LintCode]
+    displayName: Validate Bicep Code
+    steps:
+      - task: AzureCLI@2
+        name: RunPreflightValidation
+        displayName: Run Preflight Validation
+        inputs:
+          azureSubscription: 'sub-platform-management'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az deployment tenant validate `
+              --template-file bicep/platform.bicep `
+              --location 'uksouth' `
+              --parameters @params/platform.prd.json

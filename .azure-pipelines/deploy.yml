@@ -1,0 +1,26 @@
+trigger: none
+
+pool: 'Dedicated'
+
+resources:
+  pipelines:
+  - pipeline: dns-config-mgmt.Validate
+    source: dns-config-mgmt.Validate
+    trigger: true
+
+stages: 
+- stage: DeployPrdPlatform
+  jobs:
+  - job: DeployPrdPlatformBicep
+    steps:
+      - task: AzureCLI@2
+        displayName: DeployPrdPlatformBicep
+        inputs:
+          azureSubscription: 'sub-platform-management'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az deployment tenant create `
+              --template-file bicep/platform.bicep `
+              --location 'uksouth' `
+              --parameters @params/platform.prd.json
