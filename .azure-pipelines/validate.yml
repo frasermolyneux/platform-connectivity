@@ -32,3 +32,16 @@ stages:
               --template-file bicep/platform.bicep `
               --location 'uksouth' `
               --parameters @params/platform.prd.json
+
+      - task: AzureCLI@2
+        name: RunWhatIfDeploy
+        displayName: Run What-If Deploy
+        inputs:
+          azureSubscription: 'sub-platform-management'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az deployment sub what-if `
+              --template-file bicep/platform.bicep `
+              --location 'uksouth' `
+              --parameters @params/platform.prd.json
