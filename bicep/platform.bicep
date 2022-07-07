@@ -53,3 +53,12 @@ module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
     parTags: parTags
   }
 }
+
+module geolocationNet 'zones/geo-location.net.bicep' = {
+  name: 'geolocationNet'
+  scope: resourceGroup(defaultResourceGroup.name)
+
+  params: {
+    parTags: parTags
+  }
+}
