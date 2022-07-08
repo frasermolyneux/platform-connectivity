@@ -6,11 +6,20 @@ param parEnvironment string
 param parTags object
 
 // Variables
-var varResourceGroupName = 'rg-dns-${parEnvironment}-${parLocation}'
+var varDnsResourceGroupName = 'rg-dns-${parEnvironment}-${parLocation}'
+var varFrontDoorResourceGroupName = 'rg-frontdoor-${parEnvironment}-${parLocation}'
 
 // Platform
-resource defaultResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: varResourceGroupName
+resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: varDnsResourceGroupName
+  location: parLocation
+  tags: parTags
+
+  properties: {}
+}
+
+resource frontDoorResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: varFrontDoorResourceGroupName
   location: parLocation
   tags: parTags
 
@@ -20,7 +29,7 @@ resource defaultResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = 
 // DNS Zones
 module molyneuxDev 'zones/molyneux.dev.bicep' = {
   name: 'molyneuxDev'
-  scope: resourceGroup(defaultResourceGroup.name)
+  scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
     parTags: parTags
@@ -29,7 +38,7 @@ module molyneuxDev 'zones/molyneux.dev.bicep' = {
 
 module molyneuxIO 'zones/molyneux.io.bicep' = {
   name: 'molyneuxIo'
-  scope: resourceGroup(defaultResourceGroup.name)
+  scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
     parTags: parTags
@@ -38,7 +47,7 @@ module molyneuxIO 'zones/molyneux.io.bicep' = {
 
 module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
   name: 'xtremeidiotsCom'
-  scope: resourceGroup(defaultResourceGroup.name)
+  scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
     parTags: parTags
@@ -47,7 +56,7 @@ module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
 
 module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
   name: 'xtremeidiotsDev'
-  scope: resourceGroup(defaultResourceGroup.name)
+  scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
     parTags: parTags
@@ -56,7 +65,7 @@ module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
 
 module geolocationNet 'zones/geo-location.net.bicep' = {
   name: 'geolocationNet'
-  scope: resourceGroup(defaultResourceGroup.name)
+  scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
     parTags: parTags

@@ -4,8 +4,8 @@ pool: 'Dedicated'
 
 resources:
   pipelines:
-  - pipeline: dns-config-mgmt.Validate
-    source: dns-config-mgmt.Validate
+  - pipeline: platform-connectivity.Validate
+    source: platform-connectivity.Validate
     trigger: true
 
 stages: 
@@ -16,7 +16,7 @@ stages:
       - task: AzureCLI@2
         displayName: DeployPrdPlatformBicep
         inputs:
-          azureSubscription: 'spn-ado-Personal-Public-dns-mgmt'
+          azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
