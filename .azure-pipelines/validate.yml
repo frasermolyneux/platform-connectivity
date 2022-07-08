@@ -31,7 +31,7 @@ stages:
         name: RunPreflightValidation
         displayName: Run Preflight Validation
         inputs:
-          azureSubscription: 'sub-platform-management'
+          azureSubscription: 'spn-ado-Personal-Public-dns-mgmt'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
@@ -44,7 +44,7 @@ stages:
         name: RunWhatIfDeploy
         displayName: Run What-If Deploy
         inputs:
-          azureSubscription: 'sub-platform-management'
+          azureSubscription: 'spn-ado-Personal-Public-dns-mgmt'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |

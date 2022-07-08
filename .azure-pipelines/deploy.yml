@@ -16,7 +16,7 @@ stages:
       - task: AzureCLI@2
         displayName: DeployPrdPlatformBicep
         inputs:
-          azureSubscription: 'sub-platform-management'
+          azureSubscription: 'spn-ado-Personal-Public-dns-mgmt'
           scriptType: 'pscore'
           scriptLocation: 'inlineScript'
           inlineScript: |
