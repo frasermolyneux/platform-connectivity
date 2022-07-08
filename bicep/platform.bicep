@@ -8,6 +8,7 @@ param parTags object
 // Variables
 var varDnsResourceGroupName = 'rg-dns-${parEnvironment}-${parLocation}'
 var varFrontDoorResourceGroupName = 'rg-frontdoor-${parEnvironment}-${parLocation}'
+var varFrontDoorName = 'fd-mx-platform-${parEnvironment}'
 
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -24,6 +25,16 @@ resource frontDoorResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' 
   tags: parTags
 
   properties: {}
+}
+
+module frontDoor 'platform/frontDoor.bicep' = {
+  name: 'frontDoor'
+  scope: resourceGroup(frontDoorResourceGroup.name)
+
+  params: {
+    parFrontDoorName: varFrontDoorName
+    parTags: parTags
+  }
 }
 
 // DNS Zones
