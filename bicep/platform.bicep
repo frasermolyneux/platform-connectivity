@@ -6,8 +6,8 @@ param parEnvironment string
 param parTags object
 
 // Variables
-var varDnsResourceGroupName = 'rg-dns-${parEnvironment}-${parLocation}'
-var varFrontDoorResourceGroupName = 'rg-frontdoor-${parEnvironment}-${parLocation}'
+var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}'
+var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}'
 var varFrontDoorName = 'fd-mx-platform-${parEnvironment}'
 
 // Platform
