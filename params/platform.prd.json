@@ -12,7 +12,7 @@
             "value": {
                 "Environment": "prd",
                 "DeployedBy": "AzDo-Bicep",
-                "Git": "https://github.com/frasermolyneux/dns-config-mgmt"
+                "Git": "https://github.com/frasermolyneux/platform-connectivity"
             }
         }
     }
