@@ -134,6 +134,17 @@ resource tcadmin 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   }
 }
 
+resource portal 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'portal'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'webapp-admin-portal-prd-uksouth-01.azurewebsites.net'
+    }
+  }
+}
+
 // Teamspeak
 resource teamspeak 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   name: 'ts'
@@ -145,5 +156,61 @@ resource teamspeak 'Microsoft.Network/dnsZones/A@2018-05-01' = {
         ipv4Address: '192.95.39.66'
       }
     ]
+  }
+}
+
+// Microsoft 365
+resource autodiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'autodiscover'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'autodiscover.outlook.com'
+    }
+  }
+}
+
+resource enterpriseenrollment 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'enterpriseenrollment'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'enterpriseenrollment.manage.microsoft.com'
+    }
+  }
+}
+
+resource enterpriseregistration 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'enterpriseregistration'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'enterpriseregistration.windows.net'
+    }
+  }
+}
+
+resource lyncdiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'lyncdiscover'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'webdir.online.lync.com'
+    }
+  }
+}
+
+resource sip 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'sip'
+  parent: zone
+
+  properties: {
+    CNAMERecord: {
+      cname: 'sipdir.online.lync.com'
+    }
   }
 }
