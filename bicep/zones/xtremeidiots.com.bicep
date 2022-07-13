@@ -20,6 +20,7 @@ resource minecraft112 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '192.99.235.196'
@@ -33,6 +34,7 @@ resource minecraftModMc 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '192.95.38.141'
@@ -46,6 +48,7 @@ resource minecraftSf3 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '192.95.22.174'
@@ -60,6 +63,7 @@ resource forums 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '144.217.22.232'
@@ -73,6 +77,7 @@ resource forumsWww 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '144.217.22.232'
@@ -86,6 +91,7 @@ resource forumsCdn 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '144.217.22.232'
@@ -99,6 +105,7 @@ resource test 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '144.217.22.232'
@@ -113,6 +120,7 @@ resource stats 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '144.217.22.232'
@@ -126,6 +134,7 @@ resource tcadmin 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '51.79.83.13'
@@ -139,6 +148,7 @@ resource portal 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'webapp-admin-portal-prd-uksouth-01.azurewebsites.net'
     }
@@ -151,6 +161,7 @@ resource teamspeak 'Microsoft.Network/dnsZones/A@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     ARecords: [
       {
         ipv4Address: '192.95.39.66'
@@ -165,6 +176,7 @@ resource autodiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'autodiscover.outlook.com'
     }
@@ -176,6 +188,7 @@ resource enterpriseenrollment 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'enterpriseenrollment.manage.microsoft.com'
     }
@@ -187,6 +200,7 @@ resource enterpriseregistration 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = 
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'enterpriseregistration.windows.net'
     }
@@ -198,6 +212,7 @@ resource lyncdiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'webdir.online.lync.com'
     }
@@ -209,6 +224,7 @@ resource sip 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
   parent: zone
 
   properties: {
+    TTL: 3600
     CNAMERecord: {
       cname: 'sipdir.online.lync.com'
     }
