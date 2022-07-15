@@ -132,33 +132,29 @@ resource siptls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
   }
 }
 
-module spf './../modules/dnsTextRecord.bicep' = {
-  name: 'spf'
+resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
+  name: '@'
+  parent: zone
 
-  params: {
-    parDnsZoneName: zone.name
-    parRecordValue: 'v=spf1 include:spf.protection.outlook.com -all'
-    parTags: parTags
-  }
-}
-
-module msftTenant './../modules/dnsTextRecord.bicep' = {
-  name: 'msftTenant'
-
-  params: {
-    parDnsZoneName: zone.name
-    parRecordValue: 'MS=ms78513937'
-    parTags: parTags
-  }
-}
-
-// Google Analytics
-module googleAnaytics './../modules/dnsTextRecord.bicep' = {
-  name: 'googleAnaytics'
-
-  params: {
-    parDnsZoneName: zone.name
-    parRecordValue: 'google-site-verification=U1O-XOx3VlyUOjJvCZOiEsS42FcO4SIbFkP6uL-j-oM'
-    parTags: parTags
+  properties: {
+    TTL: 3600
+    metadata: parTags
+    TXTRecords: [
+      {
+        value: [
+          'v=spf1 include:spf.protection.outlook.com -all'
+        ]
+      }
+      {
+        value: [
+          'MS=ms78513937'
+        ]
+      }
+      {
+        value: [
+          'google-site-verification=U1O-XOx3VlyUOjJvCZOiEsS42FcO4SIbFkP6uL-j-oM'
+        ]
+      }
+    ]
   }
 }
