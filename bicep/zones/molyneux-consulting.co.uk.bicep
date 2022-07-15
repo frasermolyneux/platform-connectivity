@@ -96,8 +96,8 @@ resource mxRoot 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
   }
 }
 
-resource sipfederationtls 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
-  name: '_sipfederationtls'
+resource sipfederationtls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
+  name: '_sipfederationtls_tcp'
   parent: zone
 
   properties: {
@@ -114,8 +114,8 @@ resource sipfederationtls 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
   }
 }
 
-resource siptls 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
-  name: '_sip'
+resource siptls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
+  name: '_sip_tls'
   parent: zone
 
   properties: {
