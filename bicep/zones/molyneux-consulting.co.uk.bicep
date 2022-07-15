@@ -90,7 +90,7 @@ resource mxRoot 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
     MXRecords: [
       {
         exchange: 'molyneuxconsulting-co-uk02b.mail.protection.outlook.com'
-        preference: 1
+        preference: 0
       }
     ]
   }
@@ -132,22 +132,33 @@ resource siptls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
   }
 }
 
-// Google Analytics
-resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
-  name: '@'
-  parent: zone
+module spf './../modules/dnsTextRecord.bicep' = {
+  name: 'spf'
 
-  properties: {
-    TTL: 3600
-    metadata: parTags
-    TXTRecords: [
-      {
-        value: [
-          'google-site-verification=U1O-XOx3VlyUOjJvCZOiEsS42FcO4SIbFkP6uL-j-oM'
-          'v=spf1 include:spf.protection.outlook.com -all'
-          'MS=ms78513937'
-        ]
-      }
-    ]
+  params: {
+    parDnsZoneName: zone.name
+    parRecordValue: 'v=spf1 include:spf.protection.outlook.com -all'
+    parTags: parTags
+  }
+}
+
+module msftTenant './../modules/dnsTextRecord.bicep' = {
+  name: 'msftTenant'
+
+  params: {
+    parDnsZoneName: zone.name
+    parRecordValue: 'MS=ms78513937'
+    parTags: parTags
+  }
+}
+
+// Google Analytics
+module googleAnaytics './../modules/dnsTextRecord.bicep' = {
+  name: 'googleAnaytics'
+
+  params: {
+    parDnsZoneName: zone.name
+    parRecordValue: 'google-site-verification=U1O-XOx3VlyUOjJvCZOiEsS42FcO4SIbFkP6uL-j-oM'
+    parTags: parTags
   }
 }
