@@ -38,6 +38,15 @@ module frontDoor 'platform/frontDoor.bicep' = {
 }
 
 // DNS Zones
+module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = {
+  name: 'molyneuxConsultingCoUk'
+  scope: resourceGroup(dnsResourceGroup.name)
+
+  params: {
+    parTags: parTags
+  }
+}
+
 module molyneuxDev 'zones/molyneux.dev.bicep' = {
   name: 'molyneuxDev'
   scope: resourceGroup(dnsResourceGroup.name)
@@ -49,6 +58,15 @@ module molyneuxDev 'zones/molyneux.dev.bicep' = {
 
 module molyneuxIO 'zones/molyneux.io.bicep' = {
   name: 'molyneuxIo'
+  scope: resourceGroup(dnsResourceGroup.name)
+
+  params: {
+    parTags: parTags
+  }
+}
+
+module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = {
+  name: 'mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
