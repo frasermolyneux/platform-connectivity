@@ -6,6 +6,7 @@ param parEnvironment string
 param parTags object
 
 // Variables
+var varDeploymentPrefix = 'platformConnectivity' //Prevent deployment naming conflicts
 var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}'
 var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}'
 var varFrontDoorName = 'fd-mx-platform-${parEnvironment}'
@@ -28,7 +29,7 @@ resource frontDoorResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' 
 }
 
 module frontDoor 'platform/frontDoor.bicep' = {
-  name: 'frontDoor'
+  name: '${varDeploymentPrefix}-frontDoor'
   scope: resourceGroup(frontDoorResourceGroup.name)
 
   params: {
@@ -39,7 +40,7 @@ module frontDoor 'platform/frontDoor.bicep' = {
 
 // DNS Zones
 module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = {
-  name: 'molyneuxConsultingCoUk'
+  name: '${varDeploymentPrefix}-molyneuxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -48,7 +49,7 @@ module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = {
 }
 
 module molyneuxDev 'zones/molyneux.dev.bicep' = {
-  name: 'molyneuxDev'
+  name: '${varDeploymentPrefix}-molyneuxDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -57,7 +58,7 @@ module molyneuxDev 'zones/molyneux.dev.bicep' = {
 }
 
 module molyneuxIO 'zones/molyneux.io.bicep' = {
-  name: 'molyneuxIo'
+  name: '${varDeploymentPrefix}-molyneuxIo'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -66,7 +67,7 @@ module molyneuxIO 'zones/molyneux.io.bicep' = {
 }
 
 module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = {
-  name: 'mxConsultingCoUk'
+  name: '${varDeploymentPrefix}-mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -75,7 +76,7 @@ module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = {
 }
 
 module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
-  name: 'xtremeidiotsCom'
+  name: '${varDeploymentPrefix}-xtremeidiotsCom'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -84,7 +85,7 @@ module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
 }
 
 module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
-  name: 'xtremeidiotsDev'
+  name: '${varDeploymentPrefix}-xtremeidiotsDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -93,7 +94,7 @@ module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
 }
 
 module geolocationNet 'zones/geo-location.net.bicep' = {
-  name: 'geolocationNet'
+  name: '${varDeploymentPrefix}-geolocationNet'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
