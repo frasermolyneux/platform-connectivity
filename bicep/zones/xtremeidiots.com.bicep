@@ -160,7 +160,7 @@ resource portal 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
     TTL: 3600
     metadata: parTags
     CNAMERecord: {
-      cname: 'webapp-admin-portal-prd-uksouth-01.azurewebsites.net'
+      cname: 'webapp-admin-portal-prd-uksouth.azurewebsites.net'
     }
   }
 }
