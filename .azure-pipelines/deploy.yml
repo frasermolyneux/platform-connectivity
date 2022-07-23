@@ -1,4 +1,5 @@
 trigger: none
+pr: none
 
 pool: 'Dedicated'
 
@@ -6,21 +7,30 @@ resources:
   pipelines:
   - pipeline: platform-connectivity.Validate
     source: platform-connectivity.Validate
-    trigger: true
+    trigger:
+      branches:
+        include:
+        - main
 
 stages: 
 - stage: DeployPrdPlatform
   jobs:
-  - job: DeployPrdPlatformBicep
-    steps:
-      - task: AzureCLI@2
-        displayName: DeployPrdPlatformBicep
-        inputs:
-          azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-          scriptType: 'pscore'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            az deployment sub create `
-              --template-file bicep/platform.bicep `
-              --location 'uksouth' `
-              --parameters @params/platform.prd.json
+
+  - deployment: DeployPrdPlatformBicep
+    environment: 'platform-connectivity'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: AzureCLI@2
+              displayName: DeployPrdPlatformBicep
+              inputs:
+                azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az deployment sub create `
+                    --template-file bicep/platform.bicep `
+                    --location 'uksouth' `
+                    --parameters @params/platform.prd.json
