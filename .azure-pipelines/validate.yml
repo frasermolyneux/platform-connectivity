@@ -5,6 +5,13 @@ trigger:
     - feature/*
     - dependabot/*
 
+pr:
+  branches:
+    include:
+    - main
+    - feature/*
+    - dependabot/*
+
 schedules:
   - cron: "0 3 * * 0"
     displayName: Weekly Build
