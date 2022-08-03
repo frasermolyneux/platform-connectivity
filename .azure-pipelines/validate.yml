@@ -22,19 +22,66 @@ schedules:
 pool: 'Dedicated'
 
 stages: 
+
+
 - stage: ValidateBicep
   jobs: 
   - job: LintCode
     displayName: Lint Code
     steps:
-      - script: |
-          az bicep build --file bicep/platform.bicep
+      - task: AzureCLI@2
         name: LintBicepCode
         displayName: Run Bicep Linter
+        inputs:
+          azureSubscription: 'spn-ado-Personal-Public-devtest'
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            $files = Get-ChildItem '$(Build.sourcesDirectory)/bicep/*.bicep'
 
-  - deployment: ValidateBicepCode
+            foreach ($file in $files) {
+              Write-Host "Running az bicep build for '$($file.FullName)'"
+              az bicep build --file $file.FullName --stdout
+            }
+
+  - deployment: ValidateBicepCodeForDev
     dependsOn: [LintCode]
-    environment: 'platform-connectivity'
+    environment: 'platform-connectivity-dev'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+            
+            - task: AzureCLI@2
+              name: RunPreflightValidation
+              inputs:
+                azureSubscription: 'spn-ado-Personal-Public-devtest'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az deployment sub validate `
+                    --template-file bicep/platform.bicep `
+                    --location 'uksouth' `
+                    --parameters @params/platform.dev.json
+
+            - task: AzureCLI@2
+              name: RunWhatIfDeploy
+              inputs:
+                azureSubscription: 'spn-ado-Personal-Public-devtest'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az deployment sub what-if `
+                    --template-file bicep/platform.bicep `
+                    --location 'uksouth' `
+                    --parameters @params/platform.dev.json
+
+
+  - deployment: ValidateBicepCodeForPrd
+    dependsOn: [LintCode]
+    environment: 'platform-connectivity-prd'
 
     strategy:
       runOnce:

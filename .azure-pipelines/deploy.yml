@@ -13,11 +13,35 @@ resources:
         - main
 
 stages: 
+- stage: DeployDevPlatform
+  jobs:
+
+  - deployment: DeployDevPlatformBicep
+    environment: 'platform-connectivity-dev'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+            
+            - task: AzureCLI@2
+              displayName: DeployDevPlatformBicep
+              inputs:
+                azureSubscription: 'spn-ado-Personal-Public-devtest'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az deployment sub create `
+                    --template-file bicep/platform.bicep `
+                    --location 'uksouth' `
+                    --parameters @params/platform.dev.json
+
 - stage: DeployPrdPlatform
   jobs:
 
   - deployment: DeployPrdPlatformBicep
-    environment: 'platform-connectivity'
+    environment: 'platform-connectivity-prd'
 
     strategy:
       runOnce:
