@@ -21,6 +21,13 @@ schedules:
 
 pool: 'Dedicated'
 
+resources:
+  repositories:
+    - repository: ado-pipeline-templates
+      type: github
+      name: frasermolyneux/ado-pipeline-templates
+      endpoint: github.com_frasermolyneux
+
 stages: 
 - stage: Validation
   jobs:

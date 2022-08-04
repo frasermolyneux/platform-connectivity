@@ -4,6 +4,11 @@ pr: none
 pool: 'Dedicated'
 
 resources:
+  repositories:
+    - repository: ado-pipeline-templates
+      type: github
+      name: frasermolyneux/ado-pipeline-templates
+      endpoint: github.com_frasermolyneux
   pipelines:
   - pipeline: platform-connectivity.Validate
     source: platform-connectivity.Validate
