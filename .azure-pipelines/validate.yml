@@ -22,93 +22,16 @@ schedules:
 pool: 'Dedicated'
 
 stages: 
+- stage: Validation
+  jobs:
+  - template: jobs/bicep-lint-code.yml@ado-pipeline-templates
+    parameters: 
+      jobName: 'BicepLinter'
+      azureSubscription: 'spn-ado-Personal-Public-devtest'
 
-
-- stage: ValidateBicep
-  jobs: 
-  - job: LintCode
-    displayName: Lint Code
-    steps:
-      - task: AzureCLI@2
-        name: LintBicepCode
-        displayName: Run Bicep Linter
-        inputs:
-          azureSubscription: 'spn-ado-Personal-Public-devtest'
-          scriptType: 'pscore'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            $files = Get-ChildItem '$(Build.sourcesDirectory)/bicep/*.bicep'
-
-            foreach ($file in $files) {
-              Write-Host "Running az bicep build for '$($file.FullName)'"
-              az bicep build --file $file.FullName --stdout
-            }
-
-  - deployment: ValidateBicepCodeForDev
-    dependsOn: [LintCode]
-    environment: 'platform-connectivity-dev'
-
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-            - checkout: self
-            
-            - task: AzureCLI@2
-              name: RunPreflightValidation
-              inputs:
-                azureSubscription: 'spn-ado-Personal-Public-devtest'
-                scriptType: 'pscore'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                  az deployment sub validate `
-                    --template-file bicep/platform.bicep `
-                    --location 'uksouth' `
-                    --parameters @params/platform.dev.json
-
-            - task: AzureCLI@2
-              name: RunWhatIfDeploy
-              inputs:
-                azureSubscription: 'spn-ado-Personal-Public-devtest'
-                scriptType: 'pscore'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                  az deployment sub what-if `
-                    --template-file bicep/platform.bicep `
-                    --location 'uksouth' `
-                    --parameters @params/platform.dev.json
-
-
-  - deployment: ValidateBicepCodeForPrd
-    dependsOn: [LintCode]
-    environment: 'platform-connectivity-prd'
-
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-            - checkout: self
-            
-            - task: AzureCLI@2
-              name: RunPreflightValidation
-              inputs:
-                azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-                scriptType: 'pscore'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                  az deployment sub validate `
-                    --template-file bicep/platform.bicep `
-                    --location 'uksouth' `
-                    --parameters @params/platform.prd.json
-
-            - task: AzureCLI@2
-              name: RunWhatIfDeploy
-              inputs:
-                azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-                scriptType: 'pscore'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                  az deployment sub what-if `
-                    --template-file bicep/platform.bicep `
-                    --location 'uksouth' `
-                    --parameters @params/platform.prd.json
+  - template: templates/bicep-environment-validation.yml
+    parameters:
+      dependsOn: [BicepLinter]
+      jobName: 'ValidateBicepAgainstPrdEnvironment'
+      azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
+      environment: 'prd'

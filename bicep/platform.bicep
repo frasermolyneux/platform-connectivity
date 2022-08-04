@@ -12,7 +12,7 @@ var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${p
 var varFrontDoorName = 'fd-mx-platform-${parEnvironment}'
 
 // Platform
-resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {
+resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: varDnsResourceGroupName
   location: parLocation
   tags: parTags
@@ -39,7 +39,7 @@ module frontDoor 'platform/frontDoor.bicep' = {
 }
 
 // DNS Zones
-module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (parEnvironment == 'prd') {
+module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = {
   name: '${varDeploymentPrefix}-molyneuxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -48,7 +48,7 @@ module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (parE
   }
 }
 
-module molyneuxDev 'zones/molyneux.dev.bicep' = if (parEnvironment == 'prd') {
+module molyneuxDev 'zones/molyneux.dev.bicep' = {
   name: '${varDeploymentPrefix}-molyneuxDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -57,7 +57,7 @@ module molyneuxDev 'zones/molyneux.dev.bicep' = if (parEnvironment == 'prd') {
   }
 }
 
-module molyneuxIO 'zones/molyneux.io.bicep' = if (parEnvironment == 'prd') {
+module molyneuxIO 'zones/molyneux.io.bicep' = {
   name: '${varDeploymentPrefix}-molyneuxIo'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -66,7 +66,7 @@ module molyneuxIO 'zones/molyneux.io.bicep' = if (parEnvironment == 'prd') {
   }
 }
 
-module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (parEnvironment == 'prd') {
+module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = {
   name: '${varDeploymentPrefix}-mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -75,7 +75,7 @@ module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (parEnvironment =
   }
 }
 
-module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (parEnvironment == 'prd') {
+module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = {
   name: '${varDeploymentPrefix}-xtremeidiotsCom'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -84,7 +84,7 @@ module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (parEnvironment == 'p
   }
 }
 
-module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (parEnvironment == 'prd') {
+module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = {
   name: '${varDeploymentPrefix}-xtremeidiotsDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
@@ -93,7 +93,7 @@ module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (parEnvironment == 'p
   }
 }
 
-module geolocationNet 'zones/geo-location.net.bicep' = if (parEnvironment == 'prd') {
+module geolocationNet 'zones/geo-location.net.bicep' = {
   name: '${varDeploymentPrefix}-geolocationNet'
   scope: resourceGroup(dnsResourceGroup.name)
 
