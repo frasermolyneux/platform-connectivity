@@ -1,17 +1,19 @@
 parameters:
 - name: azureSubscription
   type: string
-- name: environmentFriendlyName
-  type: string
 - name: environment
+  type: string
+- name: environmentName
+  type: string
+- name: environmentTag
   type: string
 
 stages: 
-- stage: Deploy${{ parameters.environmentFriendlyName }}Platform
+- stage: Deploy${{ parameters.environmentName }}Platform
   jobs:
 
-  - deployment: Deploy${{ parameters.environmentFriendlyName }}PlatformBicep
-    environment: 'platform-connectivity-${{ parameters.environment }}'
+  - deployment: Deploy${{ parameters.environmentName }}PlatformBicep
+    environment: ${{ parameters.environment }}
 
     strategy:
       runOnce:
@@ -20,7 +22,7 @@ stages:
             - checkout: self
             
             - task: AzureCLI@2
-              displayName: Deploy${{ parameters.environmentFriendlyName }}PlatformBicep
+              displayName: Deploy${{ parameters.environmentName }}PlatformBicep
               inputs:
                 azureSubscription: ${{ parameters.azureSubscription }}
                 scriptType: 'pscore'
@@ -29,4 +31,4 @@ stages:
                   az deployment sub create `
                     --template-file bicep/platform.bicep `
                     --location 'uksouth' `
-                    --parameters @params/platform.${{ parameters.environment }}.json
+                    --parameters @params/platform.${{ parameters.environmentTag }}.json

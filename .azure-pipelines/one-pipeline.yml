@@ -32,12 +32,14 @@ stages:
   - template: templates/bicep-environment-validation.yml
     parameters:
       dependsOn: [BicepLinter]
-      jobName: 'ValidateBicepAgainstPrdEnvironment'
       azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-      environment: 'prd'
+      environment: 'platform-connectivity-prd'
+      environmentName: 'Prd'
+      environmentTag: 'prd'
 
 - template: templates/deploy-environment.yml
   parameters:
     azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-    environmentFriendlyName: 'Prd'
-    environment: 'prd'
+    environment: 'platform-connectivity-prd'
+    environmentName: 'Prd'
+    environmentTag: 'prd'

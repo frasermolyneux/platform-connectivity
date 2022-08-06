@@ -1,7 +1,4 @@
 parameters:
-- name: jobName
-  type: string
-  default: BicepEnvironmentValidation
 - name: dependsOn
   type: object
   default: []
@@ -9,11 +6,16 @@ parameters:
   type: string
 - name: environment
   type: string
+- name: environmentName
+  type: string
+- name: environmentTag
+  type: string
+
 
 jobs:
-- deployment: ${{ parameters.jobName }}
+- deployment: ValidateBicepAgainst${{ parameters.environmentName }}Environment
   dependsOn: ${{ parameters.dependsOn }}
-  environment: 'platform-connectivity-${{ parameters.environment }}'
+  environment: ${{ parameters.environment }}
 
   strategy:
     runOnce:
@@ -31,7 +33,7 @@ jobs:
                 az deployment sub validate `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
                   --location 'uksouth' `
-                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environment }}.json
+                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
 
           - task: AzureCLI@2
             name: RunWhatIfDeploy
@@ -43,4 +45,4 @@ jobs:
                 az deployment sub what-if `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
                   --location 'uksouth' `
-                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environment }}.json
+                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
