@@ -1,5 +1,16 @@
-trigger: none
-pr: none
+trigger:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'docs/*'
+
+pr:
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'docs/*'
 
 pool: 'Dedicated'
 
@@ -9,16 +20,9 @@ resources:
       type: github
       name: frasermolyneux/ado-pipeline-templates
       endpoint: github.com_frasermolyneux
-  pipelines:
-  - pipeline: platform-connectivity.Validate
-    source: platform-connectivity.Validate
-    trigger:
-      branches:
-        include:
-        - main
 
 stages: 
-- stage: Validation
+- stage: Build
   jobs:
   - template: jobs/bicep-lint-code.yml@ado-pipeline-templates
     parameters: 
@@ -31,7 +35,7 @@ stages:
       jobName: 'ValidateBicepAgainstPrdEnvironment'
       azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
       environment: 'prd'
-      
+
 - template: templates/deploy-environment.yml
   parameters:
     azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
