@@ -31,6 +31,7 @@ jobs:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az deployment sub validate `
+                  --name 'platformConnectivity${{ parameters.environmentName }}' `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
                   --location 'uksouth' `
                   --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
@@ -43,6 +44,7 @@ jobs:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az deployment sub what-if `
+                  --name 'platformConnectivity${{ parameters.environmentName }}' `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
                   --location 'uksouth' `
                   --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json

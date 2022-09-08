@@ -29,6 +29,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az deployment sub create `
+                    --name 'platformConnectivity${{ parameters.environmentName }}' `
                     --template-file bicep/platform.bicep `
                     --location 'uksouth' `
                     --parameters @params/platform.${{ parameters.environmentTag }}.json
