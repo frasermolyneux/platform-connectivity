@@ -32,10 +32,25 @@ stages:
   - template: templates/bicep-environment-validation.yml
     parameters:
       dependsOn: [BicepLinter]
+      azureSubscription: 'spn-ado-Personal-Public-devtest'
+      environment: 'platform-connectivity-dev'
+      environmentName: 'Dev'
+      environmentTag: 'dev'
+
+  - template: templates/bicep-environment-validation.yml
+    parameters:
+      dependsOn: [BicepLinter]
       azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
       environment: 'platform-connectivity-prd'
       environmentName: 'Prd'
       environmentTag: 'prd'
+
+- template: templates/deploy-environment.yml
+  parameters:
+    azureSubscription: 'spn-ado-Personal-Public-devtest'
+    environment: 'platform-connectivity-dev'
+    environmentName: 'Dev'
+    environmentTag: 'dev'
 
 - template: templates/deploy-environment.yml
   parameters:
