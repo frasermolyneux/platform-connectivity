@@ -38,7 +38,7 @@ resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
 }
 
 // M365 Exchange - MX Record
-resource m365mx 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+resource m365mx 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
   name: '@'
   parent: zone
 
