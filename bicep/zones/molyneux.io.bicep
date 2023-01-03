@@ -15,7 +15,7 @@ resource zone 'Microsoft.Network/dnsZones@2018-05-01' = {
 }
 
 // TXT Records
-resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
+resource txt_records 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
   name: '@'
   parent: zone
 
@@ -23,22 +23,22 @@ resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
     TTL: 3600
     metadata: parTags
     TXTRecords: [
-      {
+      { // M365/AAD - Proof of Ownership
         value: [
-          'MS=ms70605256' // M365/AAD - Proof of Ownership
+          'MS=ms70605256'
         ]
       }
-      {
+      { // M365 Exchange - SPF
         value: [
-          'v=spf1 include:spf.protection.outlook.com -all' // M365 Exchange - SPF
+          'v=spf1 include:spf.protection.outlook.com -all'
         ]
       }
     ]
   }
 }
 
-// M365 Exchange - MX Record
-resource m365mx 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
+// MX Records
+resource mx_records 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
   name: '@'
   parent: zone
 
@@ -46,7 +46,7 @@ resource m365mx 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
     TTL: 3600
     metadata: parTags
     MXRecords: [
-      {
+      { // M365 Exchange - MX Record
         exchange: 'molyneux-io.mail.protection.outlook.com.'
         preference: 0
       }
@@ -93,5 +93,71 @@ resource m365enterpriseenrollment 'Microsoft.Network/dnsZones/CNAME@2018-05-01' 
     CNAMERecord: {
       cname: 'enterpriseenrollment.manage.microsoft.com.'
     }
+  }
+}
+
+// M365 Skype / Teams
+resource m365sip 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'sip'
+  parent: zone
+
+  properties: {
+    TTL: 3600
+    metadata: parTags
+    CNAMERecord: {
+      cname: 'sipdir.online.lync.com.'
+    }
+  }
+}
+
+// M365 Skype / Teams
+resource m365lyncdiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
+  name: 'lyncdiscover'
+  parent: zone
+
+  properties: {
+    TTL: 3600
+    metadata: parTags
+    CNAMERecord: {
+      cname: 'webdir.online.lync.com.'
+    }
+  }
+}
+
+// M365 Skype / Teams
+resource m365sipsrv 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
+  name: '_sip._tls'
+  parent: zone
+
+  properties: {
+    TTL: 3600
+    metadata: parTags
+    SRVRecords: [
+      {
+        port: 443
+        priority: 100
+        target: 'sipdir.online.lync.com.'
+        weight: 1
+      }
+    ]
+  }
+}
+
+// M365 Skype / Teams
+resource m365sipfedsrv 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
+  name: '_sipfederationtls._tls'
+  parent: zone
+
+  properties: {
+    TTL: 3600
+    metadata: parTags
+    SRVRecords: [
+      {
+        port: 5061
+        priority: 100
+        target: 'sipfed.online.lync.com.'
+        weight: 1
+      }
+    ]
   }
 }
