@@ -145,7 +145,7 @@ resource m365sipsrv 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
 
 // M365 Skype / Teams
 resource m365sipfedsrv 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
-  name: '_sipfederationtls._tls'
+  name: '_sipfederationtls._tcp'
   parent: zone
 
   properties: {
