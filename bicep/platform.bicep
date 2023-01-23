@@ -8,7 +8,7 @@ param parTags object
 // Variables
 var varDeploymentPrefix = 'platformConnectivity' //Prevent deployment naming conflicts
 var varDnsResourceGroupName = 'rg-platform-dns-${uniqueString(subscription().id)}-${parEnvironment}-${parLocation}'
-var varFrontDoorResourceGroupName = 'rg-platform-${uniqueString(subscription().id)}-frontdoor-${parEnvironment}-${parLocation}'
+var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${uniqueString(subscription().id)}-${parEnvironment}-${parLocation}'
 var varFrontDoorName = 'fd-platform-${uniqueString(subscription().id)}-${parEnvironment}'
 
 // Platform
