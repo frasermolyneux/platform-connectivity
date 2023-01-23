@@ -7,9 +7,9 @@ param parTags object
 
 // Variables
 var varDeploymentPrefix = 'platformConnectivity' //Prevent deployment naming conflicts
-var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}'
-var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}'
-var varFrontDoorName = 'fd-mx-platform-${parEnvironment}'
+var varDnsResourceGroupName = 'rg-platform-dns-${uniqueString(subscription().id)}-${parEnvironment}-${parLocation}'
+var varFrontDoorResourceGroupName = 'rg-platform-${uniqueString(subscription().id)}-frontdoor-${parEnvironment}-${parLocation}'
+var varFrontDoorName = 'fd-platform-${uniqueString(subscription().id)}-${parEnvironment}'
 
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {

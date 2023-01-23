@@ -27,34 +27,34 @@ stages:
   - template: jobs/bicep-lint-code.yml@ado-pipeline-templates
     parameters: 
       jobName: 'BicepLinter'
-      azureSubscription: 'spn-ado-Personal-Public-devtest'
+      azureSubscription: 'spn-platform-connectivity-development'
 
   - template: templates/bicep-environment-validation.yml
     parameters:
       dependsOn: [BicepLinter]
-      azureSubscription: 'spn-ado-Personal-Public-devtest'
-      environment: 'platform-connectivity-dev'
+      azureSubscription: 'spn-platform-connectivity-development'
+      environment: 'platform-connectivity-Development'
       environmentName: 'Dev'
       environmentTag: 'dev'
 
   - template: templates/bicep-environment-validation.yml
     parameters:
       dependsOn: [BicepLinter]
-      azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-      environment: 'platform-connectivity-prd'
+      azureSubscription: 'spn-platform-connectivity-production'
+      environment: 'platform-connectivity-Production'
       environmentName: 'Prd'
       environmentTag: 'prd'
 
 - template: templates/deploy-environment.yml
   parameters:
-    azureSubscription: 'spn-ado-Personal-Public-devtest'
-    environment: 'platform-connectivity-dev'
+    azureSubscription: 'spn-platform-connectivity-development'
+    environment: 'platform-connectivity-Development'
     environmentName: 'Dev'
     environmentTag: 'dev'
 
 - template: templates/deploy-environment.yml
   parameters:
-    azureSubscription: 'spn-ado-Personal-Public-platform-connectivity'
-    environment: 'platform-connectivity-prd'
+    azureSubscription: 'spn-platform-connectivity-production'
+    environment: 'platform-connectivity-Production'
     environmentName: 'Prd'
     environmentTag: 'prd'
