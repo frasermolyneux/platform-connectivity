@@ -1,15 +1,19 @@
 targetScope = 'subscription'
 
 // Parameters
-param parLocation string
 param parEnvironment string
+param parLocation string
+param parInstance string
+
 param parTags object
 
 // Variables
-var varDeploymentPrefix = 'platformConnectivity' //Prevent deployment naming conflicts
-var varDnsResourceGroupName = 'rg-platform-dns-${uniqueString(subscription().id)}-${parEnvironment}-${parLocation}'
-var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${uniqueString(subscription().id)}-${parEnvironment}-${parLocation}'
-var varFrontDoorName = 'fd-platform-${uniqueString(subscription().id)}-${parEnvironment}'
+var environmentUniqueId = uniqueString('connectivity', parEnvironment, parInstance)
+var varDeploymentPrefix = 'platform-${environmentUniqueId}' //Prevent deployment naming conflicts
+
+var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}-${parInstance}'
+var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}-${parInstance}'
+var varFrontDoorName = 'fd-platform-${parEnvironment}-${environmentUniqueId}'
 
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {
