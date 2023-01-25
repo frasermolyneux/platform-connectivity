@@ -8,12 +8,12 @@ param parInstance string
 param parTags object
 
 // Variables
-var environmentUniqueId = uniqueString('connectivity', parEnvironment, parInstance)
-var varDeploymentPrefix = 'platform-${environmentUniqueId}' //Prevent deployment naming conflicts
+var varEnvironmentUniqueId = uniqueString('connectivity', parEnvironment, parInstance)
+var varDeploymentPrefix = 'platform-${varEnvironmentUniqueId}' //Prevent deployment naming conflicts
 
 var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}-${parInstance}'
 var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}-${parInstance}'
-var varFrontDoorName = 'fd-platform-${parEnvironment}-${environmentUniqueId}'
+var varFrontDoorName = 'fd-platform-${parEnvironment}-${varEnvironmentUniqueId}'
 
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {
