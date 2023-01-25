@@ -28,8 +28,10 @@ stages:
                 scriptType: 'pscore'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
+                  $config = (Get-Content $(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json | ConvertFrom-Json)
+
                   az deployment sub create `
                     --name 'platformConnectivity${{ parameters.environmentName }}' `
                     --template-file bicep/platform.bicep `
-                    --location 'uksouth' `
+                    --location $config.parameters.parLocation.value `
                     --parameters @params/platform.${{ parameters.environmentTag }}.json

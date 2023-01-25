@@ -30,10 +30,12 @@ jobs:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                $config = (Get-Content $(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json | ConvertFrom-Json)
+
                 az deployment sub validate `
                   --name 'platformConnectivity${{ parameters.environmentName }}' `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
-                  --location 'uksouth' `
+                  --location $config.parameters.parLocation.value `
                   --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
 
           - task: AzureCLI@2
@@ -43,8 +45,10 @@ jobs:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                $config = (Get-Content $(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json | ConvertFrom-Json)
+
                 az deployment sub what-if `
                   --name 'platformConnectivity${{ parameters.environmentName }}' `
                   --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
-                  --location 'uksouth' `
+                  --location $config.parameters.parLocation.value `
                   --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
