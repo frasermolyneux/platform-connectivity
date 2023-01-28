@@ -8,12 +8,9 @@ parameters:
   type: string
 - name: environmentName
   type: string
-- name: environmentTag
-  type: string
-
 
 jobs:
-- deployment: ValidateBicepAgainst${{ parameters.environmentName }}Environment
+- deployment: validate_bicep_against_${{ parameters.environmentName }}_environment
   dependsOn: ${{ parameters.dependsOn }}
   environment: ${{ parameters.environment }}
 
@@ -30,13 +27,13 @@ jobs:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                $config = (Get-Content $(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json | ConvertFrom-Json)
+                $config = (Get-Content ./params/platform.${{ parameters.environmentName }}.json | ConvertFrom-Json)
 
                 az deployment sub validate `
                   --name 'platformConnectivity${{ parameters.environmentName }}' `
-                  --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
+                  --template-file ./bicep/platform.bicep `
                   --location $config.parameters.parLocation.value `
-                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
+                  --parameters @params/platform.${{ parameters.environmentName }}.json
 
           - task: AzureCLI@2
             name: RunWhatIfDeploy
@@ -45,10 +42,10 @@ jobs:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                $config = (Get-Content $(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json | ConvertFrom-Json)
+                $config = (Get-Content ./params/platform.${{ parameters.environmentName }}.json | ConvertFrom-Json)
 
                 az deployment sub what-if `
                   --name 'platformConnectivity${{ parameters.environmentName }}' `
-                  --template-file $(Build.sourcesDirectory)/bicep/platform.bicep `
+                  --template-file ./bicep/platform.bicep `
                   --location $config.parameters.parLocation.value `
-                  --parameters @$(Build.sourcesDirectory)/params/platform.${{ parameters.environmentTag }}.json
+                  --parameters @params/platform.${{ parameters.environmentName }}.json

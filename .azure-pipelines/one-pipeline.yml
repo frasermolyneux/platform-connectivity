@@ -22,39 +22,35 @@ resources:
       endpoint: github.com_frasermolyneux
 
 stages: 
-- stage: Build
+- stage: build
   jobs:
   - template: jobs/bicep-lint-code.yml@ado-pipeline-templates
     parameters: 
-      jobName: 'BicepLinter'
+      jobName: 'bicep_linter'
       azureSubscription: 'spn-platform-connectivity-development'
 
   - template: templates/bicep-environment-validation.yml
     parameters:
-      dependsOn: [BicepLinter]
+      dependsOn: [bicep_linter]
       azureSubscription: 'spn-platform-connectivity-development'
       environment: 'platform-connectivity-Development'
-      environmentName: 'Dev'
-      environmentTag: 'dev'
+      environmentName: 'dev'
 
   - template: templates/bicep-environment-validation.yml
     parameters:
-      dependsOn: [BicepLinter]
+      dependsOn: [bicep_linter]
       azureSubscription: 'spn-platform-connectivity-production'
       environment: 'platform-connectivity-Production'
-      environmentName: 'Prd'
-      environmentTag: 'prd'
+      environmentName: 'prd'
 
 - template: templates/deploy-environment.yml
   parameters:
     azureSubscription: 'spn-platform-connectivity-development'
     environment: 'platform-connectivity-Development'
-    environmentName: 'Dev'
-    environmentTag: 'dev'
+    environmentName: 'dev'
 
 - template: templates/deploy-environment.yml
   parameters:
     azureSubscription: 'spn-platform-connectivity-production'
     environment: 'platform-connectivity-Production'
-    environmentName: 'Prd'
-    environmentTag: 'prd'
+    environmentName: 'prd'
