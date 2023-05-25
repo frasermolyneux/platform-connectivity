@@ -15,6 +15,24 @@ var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}-
 var varFrontDoorResourceGroupName = 'rg-platform-frontdoor-${parEnvironment}-${parLocation}-${parInstance}'
 var varFrontDoorName = 'fd-platform-${parEnvironment}-${varEnvironmentUniqueId}'
 
+var privateLinkZones = [
+  'privatelink.database.windows.net'
+  'privatelink.blob.core.windows.net'
+  'privatelink.table.core.windows.net'
+  'privatelink.queue.core.windows.net'
+  'privatelink.file.core.windows.net'
+  'privatelink.web.core.windows.net'
+  'privatelink.dfs.core.windows.net'
+  'privatelink.mysql.database.azure.com'
+  'privatelink.azurecr.io'
+  'privatelink.azconfig.io'
+  'privatelink.servicebus.windows.net'
+  'privatelink.eventgrid.azure.net'
+  'privatelink.azurewebsites.net'
+  'scm.privatelink.azurewebsites.net'
+  'privatelink.azure-api.net'
+]
+
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {
   name: varDnsResourceGroupName
@@ -23,6 +41,17 @@ resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (
 
   properties: {}
 }
+
+module privateDnsZones 'modules/privateDnsZone.bicep' = [for zone in privateLinkZones: if (parEnvironment == 'prd') {
+  name: '${varDeploymentPrefix}-${zone}'
+  scope: dnsResourceGroup
+
+  params: {
+    parDnsZoneName: zone
+    parTags: parTags
+    parLocation: dnsResourceGroup.location
+  }
+}]
 
 resource frontDoorResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: varFrontDoorResourceGroupName
