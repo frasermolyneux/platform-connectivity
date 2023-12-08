@@ -12,7 +12,8 @@ pr:
     exclude:
     - 'docs/*'
 
-pool: "ubuntu-latest"
+  pool:
+    vmImage: 'ubuntu-latest'
 
 resources:
   repositories:
