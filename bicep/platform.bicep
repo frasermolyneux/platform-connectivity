@@ -34,7 +34,7 @@ var privateLinkZones = [
 ]
 
 // Platform
-resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = if (parEnvironment == 'prd') {
+resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: varDnsResourceGroupName
   location: parLocation
   tags: parTags
