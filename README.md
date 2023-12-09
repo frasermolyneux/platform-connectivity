@@ -1,6 +1,13 @@
 # Platform Connectivity
 
-[![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status/platform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)
+| Stage                  | Status                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DevOps Secure Scanning | [![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.DevOpsSecureScanning?branchName=main)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=205&branchName=main)                                                                                                                      |
+| Build                  | [![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=build)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)               |
+| Release to Development | [![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=deploy_dev_platform)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main) |
+| Release to Production  | [![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=deploy_prd_platform)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main) |
+
+---
 
 ## Overview
 
