@@ -48,7 +48,6 @@ module privateDnsZones 'modules/privateDnsZone.bicep' = [
     params: {
       parDnsZoneName: zone
       parTags: parTags
-      parLocation: dnsResourceGroup.location
     }
   }
 ]
