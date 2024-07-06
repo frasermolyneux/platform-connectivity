@@ -31,5 +31,5 @@ stages:
                   az deployment sub create `
                     --name 'platformConnectivity${{ parameters.environmentName }}' `
                     --template-file bicep/platform.bicep `
-                    --location $config.parameters.parLocation.value `
+                    --location $config.parameters.location.value `
                     --parameters @params/platform.${{ parameters.environmentName }}.json

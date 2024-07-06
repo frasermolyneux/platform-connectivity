@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
 // Parameters
-param parTags object
+param tags object
 
 // Resources
 resource zone 'Microsoft.Network/dnsZones@2018-05-01' = {
   name: 'xtremeidiots.dev'
   location: 'global'
-  tags: parTags
+  tags: tags
 
   properties: {
     zoneType: 'Public'

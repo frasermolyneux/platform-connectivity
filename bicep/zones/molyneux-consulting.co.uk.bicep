@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
 // Parameters
-param parTags object
+param tags object
 
 // Resources
 resource zone 'Microsoft.Network/dnsZones@2018-05-01' = {
   name: 'molyneux-consulting.co.uk'
   location: 'global'
-  tags: parTags
+  tags: tags
 
   properties: {
     zoneType: 'Public'
@@ -21,7 +21,7 @@ resource autodiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     CNAMERecord: {
       cname: 'autodiscover.outlook.com'
     }
@@ -34,7 +34,7 @@ resource enterpriseenrollment 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     CNAMERecord: {
       cname: 'enterpriseenrollment.manage.microsoft.com'
     }
@@ -47,7 +47,7 @@ resource enterpriseregistration 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = 
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     CNAMERecord: {
       cname: 'enterpriseregistration.windows.net'
     }
@@ -60,7 +60,7 @@ resource lyncdiscover 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     CNAMERecord: {
       cname: 'webdir.online.lync.com'
     }
@@ -73,7 +73,7 @@ resource sip 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     CNAMERecord: {
       cname: 'sipdir.online.lync.com'
     }
@@ -86,7 +86,7 @@ resource mxRoot 'Microsoft.Network/dnsZones/MX@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     MXRecords: [
       {
         exchange: 'molyneuxconsulting-co-uk02b.mail.protection.outlook.com'
@@ -102,7 +102,7 @@ resource sipfederationtls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     SRVRecords: [
       {
         port: 5061
@@ -120,7 +120,7 @@ resource siptls 'Microsoft.Network/dnsZones/SRV@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     SRVRecords: [
       {
         port: 443
@@ -138,7 +138,7 @@ resource textRecordsRoot 'Microsoft.Network/dnsZones/TXT@2018-05-01' = {
 
   properties: {
     TTL: 3600
-    metadata: parTags
+    metadata: tags
     TXTRecords: [
       {
         value: [

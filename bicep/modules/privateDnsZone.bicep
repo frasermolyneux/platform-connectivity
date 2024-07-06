@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
 // Parameters
-param parDnsZoneName string
-param parTags object
+param dnsZoneName string
+param tags object
 
 resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: parDnsZoneName
+  name: dnsZoneName
   location: 'global'
-  tags: parTags
+  tags: tags
 
   properties: {}
 }

@@ -1,17 +1,20 @@
 targetScope = 'subscription'
 
 // Parameters
-param parEnvironment string
-param parLocation string
-param parInstance string
+@description('The environment for the resources')
+param environment string
 
-param parTags object
+@description('The location to deploy the resources')
+param location string
+param instance string
+
+param tags object
 
 // Variables
-var varEnvironmentUniqueId = uniqueString('connectivity', parEnvironment, parInstance)
-var varDeploymentPrefix = 'platform-${varEnvironmentUniqueId}' //Prevent deployment naming conflicts
+var environmentUniqueId = uniqueString('connectivity', environment, instance)
+var varDeploymentPrefix = 'platform-${environmentUniqueId}' //Prevent deployment naming conflicts
 
-var varDnsResourceGroupName = 'rg-platform-dns-${parEnvironment}-${parLocation}-${parInstance}'
+var varDnsResourceGroupName = 'rg-platform-dns-${environment}-${location}-${instance}'
 
 var privateLinkZones = [
   'privatelink.database.windows.net'
@@ -34,84 +37,84 @@ var privateLinkZones = [
 // Platform
 resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: varDnsResourceGroupName
-  location: parLocation
-  tags: parTags
+  location: location
+  tags: tags
 
   properties: {}
 }
 
 module privateDnsZones 'modules/privateDnsZone.bicep' = [
-  for zone in privateLinkZones: if (parEnvironment == 'prd') {
+  for zone in privateLinkZones: if (environment == 'prd') {
     name: '${varDeploymentPrefix}-${zone}'
     scope: dnsResourceGroup
 
     params: {
-      parDnsZoneName: zone
-      parTags: parTags
+      dnsZoneName: zone
+      tags: tags
     }
   }
 ]
 
 // DNS Zones
-module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (parEnvironment == 'prd') {
+module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-molyneuxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module molyneuxDev 'zones/molyneux.dev.bicep' = if (parEnvironment == 'prd') {
+module molyneuxDev 'zones/molyneux.dev.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-molyneuxDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module molyneuxIO 'zones/molyneux.io.bicep' = if (parEnvironment == 'prd') {
+module molyneuxIO 'zones/molyneux.io.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-molyneuxIo'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (parEnvironment == 'prd') {
+module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (parEnvironment == 'prd') {
+module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-xtremeidiotsCom'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (parEnvironment == 'prd') {
+module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-xtremeidiotsDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
 
-module geolocationNet 'zones/geo-location.net.bicep' = if (parEnvironment == 'prd') {
+module geolocationNet 'zones/geo-location.net.bicep' = if (environment == 'prd') {
   name: '${varDeploymentPrefix}-geolocationNet'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
-    parTags: parTags
+    tags: tags
   }
 }
