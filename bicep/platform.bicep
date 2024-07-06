@@ -12,7 +12,7 @@ param tags object
 
 // Variables
 var environmentUniqueId = uniqueString('connectivity', environment, instance)
-var varDeploymentPrefix = 'platform-${environmentUniqueId}' //Prevent deployment naming conflicts
+var deploymentPrefix = 'platform-${environmentUniqueId}' //Prevent deployment naming conflicts
 
 var varDnsResourceGroupName = 'rg-platform-dns-${environment}-${location}-${instance}'
 
@@ -45,7 +45,7 @@ resource dnsResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 module privateDnsZones 'modules/privateDnsZone.bicep' = [
   for zone in privateLinkZones: if (environment == 'prd') {
-    name: '${varDeploymentPrefix}-${zone}'
+    name: '${deploymentPrefix}-${zone}'
     scope: dnsResourceGroup
 
     params: {
@@ -57,7 +57,7 @@ module privateDnsZones 'modules/privateDnsZone.bicep' = [
 
 // DNS Zones
 module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-molyneuxConsultingCoUk'
+  name: '${deploymentPrefix}-molyneuxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -66,7 +66,7 @@ module molyneuxConsultingCoUk 'zones/molyneux-consulting.co.uk.bicep' = if (envi
 }
 
 module molyneuxDev 'zones/molyneux.dev.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-molyneuxDev'
+  name: '${deploymentPrefix}-molyneuxDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -75,7 +75,7 @@ module molyneuxDev 'zones/molyneux.dev.bicep' = if (environment == 'prd') {
 }
 
 module molyneuxIO 'zones/molyneux.io.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-molyneuxIo'
+  name: '${deploymentPrefix}-molyneuxIo'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -84,7 +84,7 @@ module molyneuxIO 'zones/molyneux.io.bicep' = if (environment == 'prd') {
 }
 
 module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-mxConsultingCoUk'
+  name: '${deploymentPrefix}-mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -93,7 +93,7 @@ module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (environment == '
 }
 
 module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-xtremeidiotsCom'
+  name: '${deploymentPrefix}-xtremeidiotsCom'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -102,7 +102,7 @@ module xtremeidiotsCom 'zones/xtremeidiots.com.bicep' = if (environment == 'prd'
 }
 
 module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-xtremeidiotsDev'
+  name: '${deploymentPrefix}-xtremeidiotsDev'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
@@ -111,7 +111,7 @@ module xtremeidiotsDev 'zones/xtremeidiots.dev.bicep' = if (environment == 'prd'
 }
 
 module geolocationNet 'zones/geo-location.net.bicep' = if (environment == 'prd') {
-  name: '${varDeploymentPrefix}-geolocationNet'
+  name: '${deploymentPrefix}-geolocationNet'
   scope: resourceGroup(dnsResourceGroup.name)
 
   params: {
