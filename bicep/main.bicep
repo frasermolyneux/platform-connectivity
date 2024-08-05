@@ -84,6 +84,15 @@ module molyneuxIO 'zones/molyneux.io.bicep' = if (environment == 'prd') {
   }
 }
 
+module molyneuxMe 'zones/molyneux.me.bicep' = if (environment == 'prd') {
+  name: '${deploymentPrefix}-molyneuxMe'
+  scope: resourceGroup(dnsResourceGroup.name)
+
+  params: {
+    tags: tags
+  }
+}
+
 module mxConsultingCoUk 'zones/mx-consulting.co.uk.bicep' = if (environment == 'prd') {
   name: '${deploymentPrefix}-mxConsultingCoUk'
   scope: resourceGroup(dnsResourceGroup.name)
