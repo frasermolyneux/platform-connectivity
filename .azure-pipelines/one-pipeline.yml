@@ -5,6 +5,14 @@ trigger:
     exclude:
     - 'docs/*'
 
+schedules:
+- cron: '0 0 * * *'
+  displayName: Daily midnight run
+  branches:
+    include:
+    - main
+  always: true
+  
 pr:
   autoCancel: false
   branches:
