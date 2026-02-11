@@ -1,44 +1,22 @@
 # Platform Connectivity
 
-[![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.DevOpsSecureScanning?branchName=main)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=205&branchName=main)
-[![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=build)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)
-[![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=deploy_dev_platform)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)
-[![Build Status](https://dev.azure.com/frasermolyneux/Personal-Public/_apis/build/status%2Fplatform-connectivity.OnePipeline?repoName=frasermolyneux%2Fplatform-connectivity&branchName=main&stageName=deploy_prd_platform)](https://dev.azure.com/frasermolyneux/Personal-Public/_build/latest?definitionId=173&repoName=frasermolyneux%2Fplatform-connectivity&branchName=main)
+[![Code Quality](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/codequality.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/codequality.yml)
+[![PR Verify](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml)
+[![Deploy Dev](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml)
+[![Deploy Prd](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml)
 
----
+## Documentation
+
+* [Development Workflows](docs/development-workflows.md) - Branch strategy, CI/CD triggers, and development flows
+* [Architecture Overview](docs/architecture-overview.md) - High level architecture diagrams and explanations of major components
 
 ## Overview
 
-This repository contains the resource configuration and associated Azure DevOps pipelines for the connectivity related resources for the MX landing zones. These are strategic resources similar to the [frasermolyneux/platform-strategic-services](https://github.com/frasermolyneux/platform-strategic-services), however have been kept separate as deployed to different subscriptions.
-
----
-
-## Related Projects
-
-* [frasermolyneux/azure-landing-zones](https://github.com/frasermolyneux/azure-landing-zones) - The deploy service principal is managed by this project, as is the workload subscription.
-
----
-
-## Solution
-
-The solution will deploy the following resources:
-
-* DNS Zones for the MX platform
-* Azure Front Door
-
----
-
-## Azure Pipelines
-
-The `one-pipeline` is within the `.azure-pipelines` folder and output is visible on the [frasermolyneux/Personal-Public](https://dev.azure.com/frasermolyneux/Personal-Public/_build?definitionId=173) Azure DevOps project.
-
----
+Subscription-scope Bicep that builds platform connectivity for MX. The deployment creates a DNS resource group per environment/location/instance, production-only private DNS zones for common Azure private link endpoints, and public DNS zones for platform domains via modular Bicep files. Azure DevOps pipelines lint, validate/what-if, and deploy the templates using shared templates from frasermolyneux/ado-pipeline-templates. Parameter files in [params](params) define environment, location, instance, and tags used throughout the deployment.
 
 ## Contributing
 
 Please read the [contributing](CONTRIBUTING.md) guidance; this is a learning and development project.
-
----
 
 ## Security
 
