@@ -1,9 +1,12 @@
 # Platform Connectivity
 
+[![Build and Test](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/build-and-test.yml)
 [![Code Quality](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/codequality.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/codequality.yml)
 [![PR Verify](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml)
 [![Deploy Dev](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml)
 [![Deploy Prd](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml)
+[![Dependabot Auto-Merge](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/dependabot-automerge.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/dependabot-automerge.yml)
+[![Copilot Setup Steps](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/copilot-setup-steps.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/copilot-setup-steps.yml)
 
 ## Documentation
 

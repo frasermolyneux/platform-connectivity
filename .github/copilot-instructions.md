@@ -1,12 +1,38 @@
 # Copilot Instructions
 
-- Purpose: subscription-scope Bicep that builds platform connectivity for MX (DNS resource group, private link DNS zones, public DNS zones for platform domains).
-- Layout: `bicep/main.bicep` orchestrates everything. Private DNS zone module is `bicep/modules/privateDnsZone.bicep`. Public zones live under `bicep/zones/` per domain. Parameter sets per environment in `params/platform.<env>.json` supply `environment`, `location`, `instance`, `tags`.
-- Environment gating: Most resources (private link zones and public domains) deploy only when `environment == 'prd'`; dev runs primarily to validate templates. Resource group naming pattern `rg-platform-dns-{environment}-{location}-{instance}`.
-- Tags: applied from parameters (`Environment`, `Workload`, `DeployedBy`, `Git`); keep them aligned across environments for traceability.
-- Pipelines: Azure DevOps definitions in `.azure-pipelines/`. `release-to-production.yml` runs Bicep lint, validate/what-if (dev & prd), then deploy stages using templates in `.azure-pipelines/templates/`. `devops-secure-scanning.yml` runs weekly/PR secure scanning. Templates `bicep-environment-validation.yml` and `deploy-environment.yml` run `az deployment sub validate/what-if/create`.
-- Local loop: authenticate with Azure CLI, then `az deployment sub validate/what-if/create --template-file bicep/main.bicep --location <loc> --parameters @params/platform.dev.json` (or prd) to mirror pipelines.
-- Naming/uniqueness: `uniqueString('connectivity', environment, instance)` seeds deployment prefixes to avoid conflicts; preserve this when extending modules.
-- Adding zones: define a new module under `bicep/zones/` and reference it from `bicep/main.bicep` with the appropriate environment guard. For additional private link zones, extend `privateLinkZones` array; private zone deployments are scoped to the DNS resource group.
-- External dependencies: pipelines import templates from `frasermolyneux/ado-pipeline-templates` via GitHub service connection `github.com_frasermolyneux`; ensure that repo stays reachable when editing pipelines.
-- Formatting/testing: use `az bicep build` or Azure CLI validation to catch syntax issues. Keep files ASCII and avoid changing scope/parameter shapes without updating params and pipelines.
+## Project Overview
+
+This repository contains subscription-scope Bicep templates that build platform connectivity for MX. It provisions DNS resource groups, Azure Private Link DNS zones, and public DNS zones for platform domains.
+
+## Architecture
+
+- `bicep/main.bicep` is the orchestrator; it is deployed at subscription scope.
+- `bicep/modules/privateDnsZone.bicep` is a reusable module for private DNS zones.
+- `bicep/zones/` contains one Bicep file per public domain (e.g. `molyneux.io.bicep`, `xtremeidiots.com.bicep`).
+- `params/platform.dev.json` and `params/platform.prd.json` supply `environment`, `location`, `instance`, and `tags` parameters.
+
+## Environment Gating
+
+- Most resources (private link zones and public domain zones) deploy only when `environment == 'prd'`.
+- Dev deployments primarily validate templates without provisioning DNS zones.
+- Resource group naming pattern: `rg-platform-dns-{environment}-{location}-{instance}`.
+
+## Build and Validation Commands
+
+- Lint/build: `az bicep build --file bicep/main.bicep`
+- Validate: `az deployment sub validate --location uksouth --template-file bicep/main.bicep --parameters @params/platform.dev.json`
+- What-if: `az deployment sub what-if --location uksouth --template-file bicep/main.bicep --parameters @params/platform.dev.json`
+- Deploy: `az deployment sub create --location uksouth --template-file bicep/main.bicep --parameters @params/platform.dev.json`
+
+## CI/CD Pipelines
+
+- GitHub Actions workflows are in `.github/workflows/`. Key workflows: `build-and-test.yml` (lint on feature branches), `pr-verify.yml` (lint on PRs), `codequality.yml` (secure scanning and dependency review), `deploy-dev.yml` and `deploy-prd.yml` (deployment).
+- Azure DevOps pipelines in `.azure-pipelines/` use templates from `frasermolyneux/ado-pipeline-templates`.
+
+## Conventions
+
+- `uniqueString('connectivity', environment, instance)` seeds deployment prefixes; preserve this pattern when adding modules.
+- Tags (`Environment`, `Workload`, `DeployedBy`, `Git`) are applied from parameter files; keep them consistent.
+- To add a new public DNS zone: create a Bicep file under `bicep/zones/`, reference it from `bicep/main.bicep` with an `if (environment == 'prd')` guard.
+- To add a new private link zone: append to the `privateLinkZones` array in `bicep/main.bicep`.
+- Keep files ASCII. Do not change subscription-scope or parameter shapes without updating both params files and pipeline definitions.
