@@ -1,0 +1,36 @@
+name: Deploy Dev
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  bicep-deploy-dev:
+    permissions:
+      contents: read
+      id-token: write
+    environment: Development
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.repository }}-dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      
+      - name: Azure CLI - Install Bicep
+        run: az bicep install
+      
+      - name: Az CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+      
+      - name: Bicep Deploy
+        run: |
+          az deployment sub create \
+            --location uksouth \
+            --template-file bicep/main.bicep \
+            --parameters @params/platform.dev.json
