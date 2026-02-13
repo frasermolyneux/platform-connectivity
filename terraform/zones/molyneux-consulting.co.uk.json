@@ -1,0 +1,74 @@
+{
+    "name": "molyneux-consulting.co.uk",
+    "a_records": [],
+    "aaaa_records": [],
+    "cname_records": [
+        {
+            "name": "autodiscover",
+            "record": "autodiscover.outlook.com."
+        },
+        {
+            "name": "enterpriseenrollment",
+            "record": "enterpriseenrollment.manage.microsoft.com."
+        },
+        {
+            "name": "enterpriseregistration",
+            "record": "enterpriseregistration.windows.net."
+        },
+        {
+            "name": "lyncdiscover",
+            "record": "webdir.online.lync.com."
+        },
+        {
+            "name": "sip",
+            "record": "sipdir.online.lync.com."
+        }
+    ],
+    "mx_records": [
+        {
+            "name": "@",
+            "records": [
+                {
+                    "preference": 0,
+                    "exchange": "molyneuxconsulting-co-uk02b.mail.protection.outlook.com."
+                }
+            ]
+        }
+    ],
+    "txt_records": [
+        {
+            "name": "@",
+            "records": [
+                "v=spf1 include:spf.protection.outlook.com -all",
+                "MS=ms78513937",
+                "google-site-verification=U1O-XOx3VlyUOjJvCZOiEsS42FcO4SIbFkP6uL-j-oM"
+            ]
+        }
+    ],
+    "srv_records": [
+        {
+            "name": "_sipfederationtls._tcp",
+            "skip_import": true,
+            "records": [
+                {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 5061,
+                    "target": "sipfed.online.lync.com."
+                }
+            ]
+        },
+        {
+            "name": "_sip._tls",
+            "skip_import": true,
+            "records": [
+                {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 443,
+                    "target": "sipdir.online.lync.com."
+                }
+            ]
+        }
+    ]
+}

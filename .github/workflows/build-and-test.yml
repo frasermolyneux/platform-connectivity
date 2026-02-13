@@ -10,17 +10,20 @@ on:
 permissions: {}
 
 jobs:
-  bicep-lint:
+  terraform-plan-dev:
     permissions:
       contents: read
+      id-token: write
     runs-on: ubuntu-latest
+    environment: Development
+    concurrency:
+      group: ${{ github.repository }}-dev
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      
-      - name: Azure CLI - Install Bicep
-        run: az bicep install
-      
-      - name: Bicep Lint
-        run: |
-          az bicep build --file bicep/main.bicep
+      - uses: frasermolyneux/actions/terraform-plan@main
+        with:
+          terraform-folder: "terraform"
+          terraform-var-file: "tfvars/dev.tfvars"
+          terraform-backend-file: "backends/dev.backend.hcl"
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}

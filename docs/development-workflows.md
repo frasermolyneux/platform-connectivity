@@ -1,38 +1,30 @@
 # Development Workflows
 
-## Azure DevOps pipelines
-- `release-to-production.yml` (scheduled weekly on Thu 03:00 UTC and on `main`) runs Bicep linting, per-environment validate/what-if, then deploy stages for `dev` and `prd` using Azure subscriptions `spn-platform-connectivity-development` and `spn-platform-connectivity-production`.
-- `devops-secure-scanning.yml` (scheduled weekly on Thu 02:00 UTC and on `main`/PR) runs the shared DevOps secure scanning template from `frasermolyneux/ado-pipeline-templates`.
-- Pipeline templates reside in `.azure-pipelines/templates/` (`bicep-environment-validation.yml` for validate/what-if and `deploy-environment.yml` for `az deployment sub create`).
+## GitHub Actions workflows
+- **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
+- **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label.
+- **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
+- **deploy-prd**: Triggered on push to main, weekly schedule (Thu 03:00 UTC), or manual dispatch. Applies dev first, then prd.
+- **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
+- **destroy-environment**: Manual dispatch with environment choice (dev/prd).
 
 ## Local validation and deployment
 1. Authenticate with Azure CLI and ensure access to the target subscription.
-2. Validate for an environment (example for dev):
-   ```pwsh
-   az deployment sub validate \
-     --name platformConnectivityDev \
-     --template-file bicep/main.bicep \
-     --location uksouth \
-     --parameters @params/platform.dev.json
+2. Initialise Terraform (example for dev):
+   ```bash
+   terraform -chdir=terraform init -backend-config=backends/dev.backend.hcl
    ```
-3. Review a what-if:
-   ```pwsh
-   az deployment sub what-if \
-     --name platformConnectivityDev \
-     --template-file bicep/main.bicep \
-     --location uksouth \
-     --parameters @params/platform.dev.json
+3. Plan:
+   ```bash
+   terraform -chdir=terraform plan -var-file=tfvars/dev.tfvars
    ```
-4. Deploy when ready:
-   ```pwsh
-   az deployment sub create \
-     --name platformConnectivityDev \
-     --template-file bicep/main.bicep \
-     --location uksouth \
-     --parameters @params/platform.dev.json
+4. Apply when ready:
+   ```bash
+   terraform -chdir=terraform apply -var-file=tfvars/dev.tfvars
    ```
 
 ## Conventions
-- Keep parameter files in `params/` aligned across environments (`environment`, `location`, `instance`, `tags`).
-- Production-only resources are guarded by `environment == 'prd'` checks in `bicep/main.bicep`; avoid toggling these without pipeline/environment updates.
-- Tag changes flow automatically into resource groups and zones; keep `Git` pointing at the repo URL for traceability.
+- DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
+- Private link zones are listed in `terraform/private_link_zones/prd.json`.
+- Production-only resources are gated by tfvars: dev has no `dns_zones_path` set, prd points to the zone configurations.
+- Tags are applied from tfvars; keep `Git` pointing at the repo URL for traceability.
