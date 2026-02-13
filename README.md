@@ -5,8 +5,6 @@
 [![PR Verify](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/pr-verify.yml)
 [![Deploy Dev](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-dev.yml)
 [![Deploy Prd](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/deploy-prd.yml)
-[![Dependabot Auto-Merge](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/dependabot-automerge.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/dependabot-automerge.yml)
-[![Copilot Setup Steps](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/copilot-setup-steps.yml/badge.svg)](https://github.com/frasermolyneux/platform-connectivity/actions/workflows/copilot-setup-steps.yml)
 
 ## Documentation
 
@@ -15,7 +13,7 @@
 
 ## Overview
 
-Subscription-scope Bicep that builds platform connectivity for MX. The deployment creates a DNS resource group per environment/location/instance, production-only private DNS zones for common Azure private link endpoints, and public DNS zones for platform domains via modular Bicep files. Azure DevOps pipelines lint, validate/what-if, and deploy the templates using shared templates from frasermolyneux/ado-pipeline-templates. Parameter files in [params](params) define environment, location, instance, and tags used throughout the deployment.
+Terraform-managed platform connectivity for the Molyneux.IO tenant. Provisions a DNS resource group per environment, production-only Azure Private Link DNS zones for common private endpoints, and public DNS zones for platform domains using a JSON-driven configuration approach. GitHub Actions workflows handle plan, apply, and deployment gating across dev and prd environments with OIDC authentication to Azure.
 
 ## Contributing
 

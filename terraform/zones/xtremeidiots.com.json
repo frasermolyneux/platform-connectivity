@@ -1,0 +1,75 @@
+{
+    "name": "xtremeidiots.com",
+    "a_records": [
+        {
+            "name": "112",
+            "records": ["192.99.235.196"]
+        },
+        {
+            "name": "sf3",
+            "records": ["192.95.38.141"]
+        },
+        {
+            "name": "mod-mc",
+            "records": ["192.95.22.174"]
+        },
+        {
+            "name": "@",
+            "records": ["144.217.22.232"]
+        },
+        {
+            "name": "www",
+            "records": ["144.217.22.232"]
+        },
+        {
+            "name": "cdn",
+            "records": ["144.217.22.232"]
+        },
+        {
+            "name": "test",
+            "records": ["144.217.22.232"]
+        },
+        {
+            "name": "stats",
+            "records": ["144.217.22.232"]
+        },
+        {
+            "name": "tcadmin",
+            "records": ["51.79.83.13"]
+        },
+        {
+            "name": "ts",
+            "records": ["192.95.39.66"]
+        }
+    ],
+    "aaaa_records": [],
+    "cname_records": [
+        {
+            "name": "portal",
+            "record": "webapp-admin-portal-prd-uksouth.azurewebsites.net"
+        },
+        {
+            "name": "autodiscover",
+            "record": "autodiscover.outlook.com"
+        },
+        {
+            "name": "enterpriseenrollment",
+            "record": "enterpriseenrollment.manage.microsoft.com"
+        },
+        {
+            "name": "enterpriseregistration",
+            "record": "enterpriseregistration.windows.net"
+        },
+        {
+            "name": "lyncdiscover",
+            "record": "webdir.online.lync.com"
+        },
+        {
+            "name": "sip",
+            "record": "sipdir.online.lync.com"
+        }
+    ],
+    "mx_records": [],
+    "txt_records": [],
+    "srv_records": []
+}

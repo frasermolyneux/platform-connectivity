@@ -1,0 +1,17 @@
+[
+    "privatelink.database.windows.net",
+    "privatelink.blob.core.windows.net",
+    "privatelink.table.core.windows.net",
+    "privatelink.queue.core.windows.net",
+    "privatelink.file.core.windows.net",
+    "privatelink.web.core.windows.net",
+    "privatelink.dfs.core.windows.net",
+    "privatelink.mysql.database.azure.com",
+    "privatelink.azurecr.io",
+    "privatelink.azconfig.io",
+    "privatelink.servicebus.windows.net",
+    "privatelink.eventgrid.azure.net",
+    "privatelink.azurewebsites.net",
+    "scm.privatelink.azurewebsites.net",
+    "privatelink.azure-api.net"
+]

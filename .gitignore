@@ -349,5 +349,9 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+
 # Shared Copilot configuration checked out during copilot-setup-steps
 .github-copilot/
