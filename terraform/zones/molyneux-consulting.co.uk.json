@@ -48,6 +48,7 @@
     "srv_records": [
         {
             "name": "_sipfederationtls._tcp",
+            "skip_import": true,
             "records": [
                 {
                     "priority": 100,
@@ -59,6 +60,7 @@
         },
         {
             "name": "_sip._tls",
+            "skip_import": true,
             "records": [
                 {
                     "priority": 100,

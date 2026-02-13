@@ -83,6 +83,7 @@ locals {
         name        = record.name
         ttl         = try(record.ttl, 3600)
         records     = record.records
+        skip_import = try(record.skip_import, false)
       }
     }
   ]...) : {}

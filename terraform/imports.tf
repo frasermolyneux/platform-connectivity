@@ -64,7 +64,7 @@ import {
 # --- SRV Records ---
 
 import {
-  for_each = local.srv_records
+  for_each = { for k, v in local.srv_records : k => v if !v.skip_import }
   to       = azurerm_dns_srv_record.records[each.key]
   id       = "${local.resource_group_id}/providers/Microsoft.Network/dnsZones/${each.value.zone_name}/SRV/${each.value.name}"
 }
