@@ -9,7 +9,7 @@ locals {
   }
 
   # Flatten all records across all zones for each record type
-  a_records = merge([
+  a_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.a_records, []) :
       "${zone.name}/${record.name}" => {
@@ -20,9 +20,9 @@ locals {
         records     = record.records
       }
     }
-  ]...)
+  ]...) : {}
 
-  aaaa_records = merge([
+  aaaa_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.aaaa_records, []) :
       "${zone.name}/${record.name}" => {
@@ -33,9 +33,9 @@ locals {
         records     = record.records
       }
     }
-  ]...)
+  ]...) : {}
 
-  cname_records = merge([
+  cname_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.cname_records, []) :
       "${zone.name}/${record.name}" => {
@@ -46,9 +46,9 @@ locals {
         record      = record.record
       }
     }
-  ]...)
+  ]...) : {}
 
-  mx_records = merge([
+  mx_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.mx_records, []) :
       "${zone.name}/${record.name}" => {
@@ -59,9 +59,9 @@ locals {
         records     = record.records
       }
     }
-  ]...)
+  ]...) : {}
 
-  txt_records = merge([
+  txt_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.txt_records, []) :
       "${zone.name}/${record.name}" => {
@@ -72,9 +72,9 @@ locals {
         records     = record.records
       }
     }
-  ]...)
+  ]...) : {}
 
-  srv_records = merge([
+  srv_records = length(local.dns_zones) > 0 ? merge([
     for zone_key, zone in local.dns_zones : {
       for record in try(zone.srv_records, []) :
       "${zone.name}/${record.name}" => {
@@ -85,7 +85,7 @@ locals {
         records     = record.records
       }
     }
-  ]...)
+  ]...) : {}
 
   # Load private link zones
   private_link_zones = var.private_link_zones_file != "" ? jsondecode(file(var.private_link_zones_file)) : []

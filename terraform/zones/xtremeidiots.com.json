@@ -46,27 +46,27 @@
     "cname_records": [
         {
             "name": "portal",
-            "record": "webapp-admin-portal-prd-uksouth.azurewebsites.net"
+            "record": "webapp-admin-portal-prd-uksouth.azurewebsites.net."
         },
         {
             "name": "autodiscover",
-            "record": "autodiscover.outlook.com"
+            "record": "autodiscover.outlook.com."
         },
         {
             "name": "enterpriseenrollment",
-            "record": "enterpriseenrollment.manage.microsoft.com"
+            "record": "enterpriseenrollment.manage.microsoft.com."
         },
         {
             "name": "enterpriseregistration",
-            "record": "enterpriseregistration.windows.net"
+            "record": "enterpriseregistration.windows.net."
         },
         {
             "name": "lyncdiscover",
-            "record": "webdir.online.lync.com"
+            "record": "webdir.online.lync.com."
         },
         {
             "name": "sip",
-            "record": "sipdir.online.lync.com"
+            "record": "sipdir.online.lync.com."
         }
     ],
     "mx_records": [],
