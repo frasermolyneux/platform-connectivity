@@ -1,5 +1,7 @@
 variable "environment" {
-  default = "dev"
+  description = "Environment name (e.g., dev, prd)"
+  type        = string
+  default     = "dev"
 }
 
 variable "workload_name" {
@@ -9,14 +11,21 @@ variable "workload_name" {
 }
 
 variable "location" {
-  default = "uksouth"
+  description = "Azure region where resources will be deployed"
+  type        = string
+  default     = "uksouth"
 }
 
 variable "instance" {
-  default = "01"
+  description = "Instance number for resource naming (e.g., 01, 02)"
+  type        = string
+  default     = "01"
 }
 
-variable "subscription_id" {}
+variable "subscription_id" {
+  description = "Azure subscription ID where resources will be deployed"
+  type        = string
+}
 
 variable "platform_workloads_state" {
   description = "Backend config for platform-workloads remote state"
@@ -43,5 +52,7 @@ variable "private_link_zones_file" {
 }
 
 variable "tags" {
-  default = {}
+  description = "Map of tags to apply to all resources"
+  type        = map(string)
+  default     = {}
 }

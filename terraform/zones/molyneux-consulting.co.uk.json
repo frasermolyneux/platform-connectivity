@@ -5,23 +5,23 @@
     "cname_records": [
         {
             "name": "autodiscover",
-            "record": "autodiscover.outlook.com"
+            "record": "autodiscover.outlook.com."
         },
         {
             "name": "enterpriseenrollment",
-            "record": "enterpriseenrollment.manage.microsoft.com"
+            "record": "enterpriseenrollment.manage.microsoft.com."
         },
         {
             "name": "enterpriseregistration",
-            "record": "enterpriseregistration.windows.net"
+            "record": "enterpriseregistration.windows.net."
         },
         {
             "name": "lyncdiscover",
-            "record": "webdir.online.lync.com"
+            "record": "webdir.online.lync.com."
         },
         {
             "name": "sip",
-            "record": "sipdir.online.lync.com"
+            "record": "sipdir.online.lync.com."
         }
     ],
     "mx_records": [
@@ -30,7 +30,7 @@
             "records": [
                 {
                     "preference": 0,
-                    "exchange": "molyneuxconsulting-co-uk02b.mail.protection.outlook.com"
+                    "exchange": "molyneuxconsulting-co-uk02b.mail.protection.outlook.com."
                 }
             ]
         }
@@ -47,24 +47,24 @@
     ],
     "srv_records": [
         {
-            "name": "_sipfederationtls_tcp",
+            "name": "_sipfederationtls._tcp",
             "records": [
                 {
                     "priority": 100,
                     "weight": 1,
                     "port": 5061,
-                    "target": "sipfed.online.lync.com"
+                    "target": "sipfed.online.lync.com."
                 }
             ]
         },
         {
-            "name": "_sip_tls",
+            "name": "_sip._tls",
             "records": [
                 {
                     "priority": 100,
                     "weight": 1,
                     "port": 443,
-                    "target": "sipdir.online.lync.com"
+                    "target": "sipdir.online.lync.com."
                 }
             ]
         }
