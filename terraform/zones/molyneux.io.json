@@ -1,5 +1,6 @@
 {
     "name": "molyneux.io",
+    "dns_provider": "azure",
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [

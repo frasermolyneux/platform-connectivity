@@ -1,5 +1,6 @@
 {
     "name": "craftpledge.org",
+    "dns_provider": "azure",
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [],

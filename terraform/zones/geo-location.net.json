@@ -1,5 +1,6 @@
 {
     "name": "geo-location.net",
+    "dns_provider": "azure",
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [],

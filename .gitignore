@@ -350,8 +350,11 @@ MigrationBackup/
 .ionide/
 
 # Terraform
-terraform/.terraform/
-terraform/.terraform.lock.hcl
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+.terraform.lock.hcl
 
 # Shared Copilot configuration checked out during copilot-setup-steps
 .github-copilot/

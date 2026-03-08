@@ -1,5 +1,6 @@
 {
     "name": "molyneux-consulting.co.uk",
+    "dns_provider": "azure",
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [

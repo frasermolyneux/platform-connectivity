@@ -1,5 +1,6 @@
 {
     "name": "xtremeidiots.com",
+    "dns_provider": "cloudflare",
     "a_records": [
         {
             "name": "112",
