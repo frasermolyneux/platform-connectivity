@@ -36,15 +36,7 @@
             ]
         }
     ],
-    "txt_records": [
-        {
-            "name": "@",
-            "records": [
-                "MS=ms70605256",
-                "v=spf1 include:spf.protection.outlook.com -all"
-            ]
-        }
-    ],
+    "txt_records": [],
     "srv_records": [
         {
             "name": "_sip._tls",
