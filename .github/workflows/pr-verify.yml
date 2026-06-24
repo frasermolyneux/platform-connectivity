@@ -6,13 +6,17 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   terraform-plan-dev:
     permissions:
       contents: read
       id-token: write
       pull-requests: write
-    if: github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'deploy-dev')
+    if: github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'deploy-dev') && contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action)
     environment: Development
     runs-on: ubuntu-latest
     concurrency:
@@ -36,7 +40,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    if: github.event.pull_request.draft == false && github.event.pull_request.user.login != 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'deploy-dev')
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.login != 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'deploy-dev') && (contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action) || (github.event.action == 'labeled' && github.event.label.name == 'deploy-dev'))
     environment: Development
     runs-on: ubuntu-latest
     concurrency:
@@ -56,7 +60,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'run-prd-plan')
+    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'run-prd-plan') && (contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action) || (github.event.action == 'labeled' && github.event.label.name == 'run-prd-plan'))
     environment: Production
     runs-on: ubuntu-latest
     concurrency:
