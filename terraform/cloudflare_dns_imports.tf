@@ -9,7 +9,10 @@
 
 locals {
   cloudflare_record_ids_file = "${path.module}/../cf/record_ids.json"
-  cloudflare_record_imports  = fileexists(local.cloudflare_record_ids_file) ? jsondecode(file(local.cloudflare_record_ids_file)) : {}
+  # Only load import IDs where Cloudflare zones are actually managed (dns_zones_path
+  # set — i.e. prd). In dev the Cloudflare resources have empty for_each, so import
+  # blocks must not reference them.
+  cloudflare_record_imports = (var.dns_zones_path != "" && fileexists(local.cloudflare_record_ids_file)) ? jsondecode(file(local.cloudflare_record_ids_file)) : {}
 
   cloudflare_managed_record_count = (
     length(local.cf_a_records) + length(local.cf_aaaa_records) + length(local.cf_cname_records) +
