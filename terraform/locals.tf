@@ -162,8 +162,7 @@ locals {
 
   # ---------------------------------------------------------------------------
   # Cloudflare DNS records — one homogeneous map per record type (mirrors the
-  # Azure per-type locals). Keys are stable slugs reproduced by
-  # scripts/Export-CloudflareRecordIds.ps1 so import blocks bind 1:1 to resources.
+  # Azure per-type locals). Keyed by stable zone-qualified slugs.
   # ---------------------------------------------------------------------------
   cf_a_records = length(local.cloudflare_zones) > 0 ? merge([
     for zk, z in local.cloudflare_zones : {

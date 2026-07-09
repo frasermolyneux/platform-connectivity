@@ -22,7 +22,7 @@ Ownership is split the same way as Azure zones: platform-connectivity holds the 
 ### Adopting Cloudflare records
 
 - `terraform/zones/*.json` is the managed source of truth for Cloudflare records. It was originally generated from the Cloudflare dashboard's BIND export during migration (capturing proxy state, normalised TTLs, SOA/apex-NS dropped, other stacks' records carved out); edit the JSON directly going forward.
-- `scripts/Export-CloudflareRecordIds.ps1` queries the Cloudflare API and writes `cf/record_ids.json`, mapping each managed record to its Cloudflare record ID. `terraform/cloudflare_dns_imports.tf` uses this to `import` existing records so `apply` adopts rather than recreates them. When the file is absent, no imports are attempted. Once the initial adoption apply has succeeded, the import blocks, `cf/record_ids.json`, and this script can be removed.
+- The existing Cloudflare records were adopted into Terraform state via one-time `import` blocks during the initial rollout. Those import blocks and their record-ID export have since been removed; ongoing changes are made by editing `terraform/zones/*.json`.
 
 ### Backup mirroring
 
