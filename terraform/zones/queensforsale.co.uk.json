@@ -1,0 +1,22 @@
+{
+  "name": "queensforsale.co.uk",
+  "dns_provider": "cloudflare",
+  "zone_id": "1f041d4d9fca3c0f5df7a3ffa7be0ef6",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    }
+  ]
+}

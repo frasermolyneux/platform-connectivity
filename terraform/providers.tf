@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.80.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.21.0"
+    }
   }
 
   backend "azurerm" {}
@@ -21,4 +25,8 @@ provider "azurerm" {
   }
 
   storage_use_azuread = true
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
 }

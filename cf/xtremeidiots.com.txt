@@ -1,0 +1,72 @@
+;;
+;; Domain:     xtremeidiots.com.
+;; Exported:   2026-07-09 15:22:21
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+xtremeidiots.com	3600	IN	SOA	gabe.ns.cloudflare.com. dns.cloudflare.com. 2053527714 10000 2400 604800 3600
+
+;; NS Records
+xtremeidiots.com.	86400	IN	NS	gabe.ns.cloudflare.com.
+xtremeidiots.com.	86400	IN	NS	iris.ns.cloudflare.com.
+
+;; A Records
+112.xtremeidiots.com.	1	IN	A	192.99.235.196 ; cf_tags=cf-proxied:false
+cdn.xtremeidiots.com.	1	IN	A	144.217.22.232 ; cf_tags=cf-proxied:true
+mod-mc.xtremeidiots.com.	1	IN	A	192.95.22.174 ; cf_tags=cf-proxied:false
+sf3.xtremeidiots.com.	1	IN	A	192.95.38.141 ; cf_tags=cf-proxied:false
+stats.xtremeidiots.com.	1	IN	A	144.217.22.232 ; cf_tags=cf-proxied:true
+tcadmin.xtremeidiots.com.	1	IN	A	51.79.83.13 ; cf_tags=cf-proxied:true
+test.xtremeidiots.com.	1	IN	A	144.217.22.232 ; cf_tags=cf-proxied:true
+ts.xtremeidiots.com.	1	IN	A	192.95.39.66 ; cf_tags=cf-proxied:false
+www.xtremeidiots.com.	1	IN	A	144.217.22.232 ; cf_tags=cf-proxied:true
+xtremeidiots.com.	1	IN	A	144.217.22.232 ; cf_tags=cf-proxied:true
+
+;; CNAME Records
+autodiscover.xtremeidiots.com.	3600	IN	CNAME	autodiscover.outlook.com. ; cf_tags=cf-proxied:false
+enterpriseenrollment.xtremeidiots.com.	3600	IN	CNAME	enterpriseenrollment.manage.microsoft.com. ; cf_tags=cf-proxied:false
+enterpriseregistration.xtremeidiots.com.	3600	IN	CNAME	enterpriseregistration.windows.net. ; cf_tags=cf-proxied:false
+lyncdiscover.xtremeidiots.com.	3600	IN	CNAME	webdir.online.lync.com. ; cf_tags=cf-proxied:false
+portal.xtremeidiots.com.	1	IN	CNAME	app-portal-web-prd-uksouth-fe584e15256a.azurewebsites.net. ; cf_tags=cf-proxied:false
+selector1-azurecomm-prod-net._domainkey.xtremeidiots.com.	3600	IN	CNAME	selector1-azurecomm-prod-net._domainkey.azurecomm.net. ; cf_tags=cf-proxied:false
+selector2-azurecomm-prod-net._domainkey.xtremeidiots.com.	3600	IN	CNAME	selector2-azurecomm-prod-net._domainkey.azurecomm.net. ; cf_tags=cf-proxied:false
+sip.xtremeidiots.com.	3600	IN	CNAME	sipdir.online.lync.com. ; cf_tags=cf-proxied:false
+
+;; MX Records
+xtremeidiots.com.	3600	IN	MX	0 xtremeidiots-com.mail.protection.outlook.com.
+
+;; SRV Records
+_sipfederationtls._tcp.xtremeidiots.com.	3600	IN	SRV	100 1 5061 sipfed.online.lync.com.
+_sip._tls.xtremeidiots.com.	3600	IN	SRV	100 1 443 sipdir.online.lync.com.
+_ts3._udp.ts.xtremeidiots.com.	1	IN	SRV	1 1 9182 ts.xtremeidiots.com.
+
+;; TXT Records
+asuid.portal.xtremeidiots.com.	1	IN	TXT	"BDBD8BC935C8905D5B7678B11047530953788118A6EC6223639484FD72437651"
+_dnsauth.portal.xtremeidiots.com.	1	IN	TXT	"s9lyvdr9z5s2bjfl7gl0s0pglm3qdqcg"
+google._domainkey.xtremeidiots.com.	1	IN	TXT	"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArubo6nvYzXyiZDHXu1pUpsp/QHWSXgXUpCAYaVIJM9VKVgTC83Kf9WOpoUnoTvmz0qcHNhrJihrZeXlhCVYsK+rbJZsqmWydR2V4sVgFgna6GTi+X6kuR46T8PILRX/k5/hnTAi3w+jGDrZ7xNGiqQuiCkaifLdvRppRkXiz2l8XjddGEzfb46hQFtKLGPsYl" "2NuaBay8BBLO0iJ2RXoKdnGieBv345dwLx7jaTg3jE8TKz5zmUUS51i4VKL4usw3nay1F5NGuVmgfVpsNFpV2QTMC48cyB2VvsqySYtps+vYBjRR7mIlWCr3jBEEbioUkJkxEF1kEm1HG9alE2gTQIDAQAB"
+mandrill._domainkey.xtremeidiots.com.	1	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrLHiExVd55zd/IQ/J/mRwSRMAocV/hMB3jXwaHH36d9NaVynQFYV8NaWi69c1veUtRzGt7yAioXqLj7Z4TeEUoOLgrKsn8YnckGs9i3B3tVFB+Ch/4mPhXWiNfNdynHWBcPcbJ8kjEQ2U8y78dHZj1YeRXXVvWob2OaKynO8/lQIDAQAB;"
+xtremeidiots.com.	3600	IN	TXT	"ms-domain-verification=1dbcb9a5-f9b7-4725-b222-d5b44445f2bd"
+xtremeidiots.com.	3600	IN	TXT	"v=spf1 include:spf.protection.outlook.com -all"
+xtremeidiots.com.	1	IN	TXT	"google-site-verification=VSeQG9SAzJJb9xKKL-T43TwuUfLIkli-UcU6UDN7AR0"
+xtremeidiots.com.	3600	IN	TXT	"v=spf1 mx a:spf.mandrillapp.com a:_spf.google.com include:spf.protection.outlook.com ~all"
+xtremeidiots.com.	1	IN	TXT	"MS=ms76092282"

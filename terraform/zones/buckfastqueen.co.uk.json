@@ -1,0 +1,64 @@
+{
+  "name": "buckfastqueen.co.uk",
+  "dns_provider": "cloudflare",
+  "zone_id": "480b82523bea00cb5b300fb60d7b67b9",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "217.160.0.33",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "217.160.0.33",
+      "proxied": true
+    },
+    {
+      "type": "AAAA",
+      "name": "@",
+      "ttl": 1,
+      "content": "2001:8d8:100f:f000::254",
+      "proxied": true
+    },
+    {
+      "type": "AAAA",
+      "name": "www",
+      "ttl": 1,
+      "content": "2001:8d8:100f:f000::254",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "_domainconnect",
+      "ttl": 1,
+      "content": "_domainconnect.1and1.com",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 1,
+      "content": "adsredir.ionos.info",
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 10,
+      "content": "mx00.ionos.co.uk"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 10,
+      "content": "mx01.ionos.co.uk"
+    }
+  ]
+}

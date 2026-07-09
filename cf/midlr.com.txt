@@ -1,0 +1,52 @@
+;;
+;; Domain:     midlr.com.
+;; Exported:   2026-07-09 15:23:14
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+midlr.com	3600	IN	SOA	gabe.ns.cloudflare.com. dns.cloudflare.com. 2053527719 10000 2400 604800 3600
+
+;; NS Records
+midlr.com.	86400	IN	NS	gabe.ns.cloudflare.com.
+midlr.com.	86400	IN	NS	iris.ns.cloudflare.com.
+
+;; CNAME Records
+autodiscover.midlr.com.	3600	IN	CNAME	autodiscover.outlook.com. ; cf_tags=cf-proxied:false
+enterpriseenrollment.midlr.com.	3600	IN	CNAME	enterpriseenrollment.manage.microsoft.com. ; cf_tags=cf-proxied:false
+enterpriseregistration.midlr.com.	3600	IN	CNAME	enterpriseregistration.windows.net. ; cf_tags=cf-proxied:false
+lyncdiscover.midlr.com.	3600	IN	CNAME	webdir.online.lync.com. ; cf_tags=cf-proxied:false
+sip.midlr.com.	3600	IN	CNAME	sipdir.online.lync.com. ; cf_tags=cf-proxied:false
+www.midlr.com.	1	IN	CNAME	midlr-app-jacob.azurewebsites.net. ; cf_tags=cf-proxied:true
+
+;; MX Records
+midlr.com.	3600	IN	MX	0 midlr-com.mail.protection.outlook.com.
+
+;; SRV Records
+_sipfederationtls._tcp.midlr.com.	3600	IN	SRV	100 1 5061 sipfed.online.lync.com.
+_sip._tls.midlr.com.	3600	IN	SRV	100 1 443 sipdir.online.lync.com.
+
+;; TXT Records
+asuid.www.midlr.com.	1	IN	TXT	"C075B21DD93CF3A5068CCD102CAD8F897ABA519285E86A80138B26D1D56703B6"
+midlr.com.	1	IN	TXT	"google-site-verification=CGKpKpdaZ_R49cNGOP5x4pRwv8YDfxxZAlMgio4nrHo"
+midlr.com.	3600	IN	TXT	"v=spf1 include:spf.protection.outlook.com -all"
+midlr.com.	3600	IN	TXT	"MS=ms65417230"

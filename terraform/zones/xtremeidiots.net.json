@@ -1,0 +1,140 @@
+{
+  "name": "xtremeidiots.net",
+  "dns_provider": "cloudflare",
+  "zone_id": "c1a18b90879d2e5fc2afecef7fb04594",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "ftp",
+      "ttl": 1,
+      "content": "144.217.22.233",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "ftp-tca",
+      "ttl": 1,
+      "content": "158.69.3.21",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "minecraft-ftp",
+      "ttl": 1,
+      "content": "144.217.255.171",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "minecraft-rdp",
+      "ttl": 1,
+      "content": "144.217.255.171",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "multicraft",
+      "ttl": 1,
+      "content": "144.217.255.171",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "redirect",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "sourcebans",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "sourcebans-mysql",
+      "ttl": 1,
+      "content": "144.217.22.234",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 3600,
+      "content": "autodiscover.outlook.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseenrollment",
+      "ttl": 3600,
+      "content": "enterpriseenrollment.manage.microsoft.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseregistration",
+      "ttl": 3600,
+      "content": "enterpriseregistration.windows.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "lyncdiscover",
+      "ttl": 3600,
+      "content": "webdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "sip",
+      "ttl": 3600,
+      "content": "sipdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 0,
+      "content": "xtremeidiots-net.mail.protection.outlook.com"
+    },
+    {
+      "type": "SRV",
+      "name": "_sip._tls",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 443,
+        "target": "sipdir.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_sipfederationtls._tcp",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 5061,
+        "target": "sipfed.online.lync.com"
+      }
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "MS=ms93878704"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:spf.protection.outlook.com -all"
+    }
+  ]
+}

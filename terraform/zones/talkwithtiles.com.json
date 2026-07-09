@@ -1,0 +1,116 @@
+{
+  "name": "talkwithtiles.com",
+  "dns_provider": "cloudflare",
+  "zone_id": "598826a3528b935426cf789cfd1864d5",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "CNAME",
+      "name": "@",
+      "ttl": 1,
+      "content": "games-app-echo.azurewebsites.net",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 3600,
+      "content": "autodiscover.outlook.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseenrollment",
+      "ttl": 3600,
+      "content": "enterpriseenrollment.manage.microsoft.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseregistration",
+      "ttl": 3600,
+      "content": "enterpriseregistration.windows.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "lyncdiscover",
+      "ttl": 3600,
+      "content": "webdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "sip",
+      "ttl": 3600,
+      "content": "sipdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "www",
+      "ttl": 1,
+      "content": "games-app-echo.azurewebsites.net",
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 0,
+      "content": "talkwithtiles-com.mail.protection.outlook.com"
+    },
+    {
+      "type": "SRV",
+      "name": "_sip._tls",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 443,
+        "target": "sipdir.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_sipfederationtls._tcp",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 5061,
+        "target": "sipfed.online.lync.com"
+      }
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=1ceB4EmXkNGlYuTPgMd4K9Bj9zD81Jv9XrNFIb5n2S4"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "MS=ms43281192"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "asuid.www",
+      "ttl": 1,
+      "content": "C075B21DD93CF3A5068CCD102CAD8F897ABA519285E86A80138B26D1D56703B6"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey",
+      "ttl": 1,
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkBkc54x+du5jnmjT62Re5GUsANEsJpX1RMh0anMhIUSwPfqMPXgE/cpTzUCfx3dP6bfOXx9avAigtP7i7kgW9KYUnO+A+ZOGtezDKwF4DX+8oTVJZnK+1myvHGgv+WMVo32jxveOylGKtt4BWW8sSJX1YtivqfvTWK/mlKODekUP3DqDAlM/xcxZNQoOSDUlpUnuJLGk/qJ5dKZrzk+N4LEfeAgWJ+adXOH7RoTNHrz4/dwxzKDmaEZ0X7MBB8wiziFOnrOJ+2Ou0ZyYotbfViktrzHAFl4JwjoBk4xfoL8R7pgNV4SRiF/U8u5ueXaU4BRIPM31+ZNX1Jn8PLJaMwIDAQAB"
+    }
+  ]
+}
