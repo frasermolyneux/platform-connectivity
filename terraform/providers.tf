@@ -28,5 +28,9 @@ provider "azurerm" {
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  # Environments without Cloudflare zones (dev has no dns_zones_path) do not receive
+  # the CLOUDFLARE_API_KEY secret, so the token is empty. Supply a valid-format
+  # placeholder so the provider's client-side format check passes; it is never used
+  # because no Cloudflare resources or data sources are evaluated there.
+  api_token = var.cloudflare_api_token != "" ? var.cloudflare_api_token : "placeholder_unused_token"
 }
