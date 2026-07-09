@@ -28,9 +28,10 @@ provider "azurerm" {
 }
 
 provider "cloudflare" {
-  # Environments without Cloudflare zones (dev has no dns_zones_path) do not receive
-  # the CLOUDFLARE_API_KEY secret, so the token is empty. Supply a valid-format
-  # placeholder so the provider's client-side format check passes; it is never used
-  # because no Cloudflare resources or data sources are evaluated there.
-  api_token = var.cloudflare_api_token != "" ? var.cloudflare_api_token : "placeholder_unused_token"
+  # Only the environment that manages Cloudflare zones (dns_zones_path set — i.e. prd)
+  # uses the real token. Other environments (dev) have no Cloudflare resources, so use
+  # a valid-format placeholder and ignore the CLOUDFLARE_API_KEY secret entirely — it
+  # may be absent or malformed there and the provider validates the token format at
+  # configuration time regardless of whether any Cloudflare resources exist.
+  api_token = var.dns_zones_path != "" ? var.cloudflare_api_token : "placeholder_unused_token"
 }
