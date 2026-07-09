@@ -51,6 +51,22 @@ variable "private_link_zones_file" {
   default     = ""
 }
 
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token used to manage Cloudflare DNS records. Supplied via TF_VAR_cloudflare_api_token (secrets.CLOUDFLARE_API_KEY) in CI; leave empty when no Cloudflare zones are managed."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "dns_delegations" {
+  description = "Subdomains delegated from a Cloudflare parent zone to a new Azure DNS child zone. Empty by default; add entries to activate delegation. The parent_zone must be a Cloudflare-managed zone in terraform/zones/."
+  type = list(object({
+    subdomain   = string # e.g. "internal"
+    parent_zone = string # Cloudflare zone name, e.g. "xtremeidiots.com"
+  }))
+  default = []
+}
+
 variable "tags" {
   description = "Map of tags to apply to all resources"
   type        = map(string)

@@ -1,0 +1,111 @@
+{
+  "name": "mx-mail.io",
+  "dns_provider": "cloudflare",
+  "zone_id": "b383f5cd939db579a11bb35881b69dfd",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "15.197.172.60",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "*",
+      "ttl": 1,
+      "content": "15.197.172.60",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "15.197.172.60",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 3600,
+      "content": "autodiscover.outlook.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseenrollment",
+      "ttl": 3600,
+      "content": "enterpriseenrollment.manage.microsoft.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseregistration",
+      "ttl": 3600,
+      "content": "enterpriseregistration.windows.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "lyncdiscover",
+      "ttl": 3600,
+      "content": "webdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "sip",
+      "ttl": 3600,
+      "content": "sipdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 0,
+      "content": "mxmail-io0e.mail.protection.outlook.com"
+    },
+    {
+      "type": "SRV",
+      "name": "_sip._tls",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 443,
+        "target": "sipdir.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_sipfederationtls._tcp",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 5061,
+        "target": "sipfed.online.lync.com"
+      }
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "MS=ms67988408"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf.google.com include:spf.protection.outlook.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey",
+      "ttl": 1,
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvYyT+D0OU77gT172CpYXP/yVE9xII2XzxM/9FepuS9euoG/VkPz5QazLLA/1yrIXhXKdQ4qqtVvP8d0DfVkelQWvDgJKHByjHN9iYGTZKIrhikf7rgbTSgMb/oepyIAdmaGyooFmB2nwA3swb/P96I02kpsUcEVIpu1SjsMijTm2hNpTX0H7DirzowN0wHMJe+B1mz/RxzfEpBm9ecoDOyagHwbAH53GcPLMua6RgIY32TjA4MmoDYxWO25SFaRzQiPqOL8DVBitlGWNlEkV66lAsJ1T7HvjsPaH8nJKI5otxkiT48jLOT2/OzMAp4BpW0d/5hjbkmoIA6ucogGgiwIDAQAB"
+    }
+  ]
+}

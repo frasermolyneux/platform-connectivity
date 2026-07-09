@@ -1,0 +1,100 @@
+{
+  "name": "bishopsbees.co.uk",
+  "dns_provider": "cloudflare",
+  "zone_id": "6814667c53187fb42753077d29e02599",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "staging",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 5,
+      "content": "alt1.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 5,
+      "content": "alt2.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 10,
+      "content": "alt3.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 10,
+      "content": "alt4.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 1,
+      "priority": 1,
+      "content": "aspmx.l.google.com"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "facebook-domain-verification=y3e092wjsg3jb467rfnd8809zhnggt"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=b-b9AQZwMqSQxpEsGiYU3Ojgl7GVeGBfp0_HbShhpWo"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=PzPosMaVrZSdkqH6_GDA6jnOZAr6Bl4G-ttK19-GhKw"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf.google.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "asuid",
+      "ttl": 1,
+      "content": "094C19A879ADBD321825791B5F1433ECB226343E000DED0F02CF2391AB10C282"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey",
+      "ttl": 1,
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg9xNROLn/nic+vyH2CdxXxUPGWj23gzCxmyP5Jx5MRhMsyRN0rV2Eu11o6iIbo/nfWp9oqEOhQLDeF6fnhS0NvGKFoTJLlDr9iUeUKffBXl9RO7j0BAiwBiNeQY2FkePzK+Dv3f1MhRXS8XYCil/B3Vt5b5geIPua7Yd6GX/IRFb848q7OCkLD+MBoE/PH1iLx+1PsiEbvfaMwUat853Dt7mWuUtPyFv0O1o2Nj46FAC9FoWMyed8cfVvHVKlIF8Y/dqXkC3OEuJNABQKfjJ4v9W4kPHtXCVBOz66FSSWgCeQbhJUJjXYYgF1z/1pU+LtWRC8Qid8zJLC7nsVG+llQIDAQAB"
+    }
+  ]
+}

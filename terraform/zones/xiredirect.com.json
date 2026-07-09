@@ -1,0 +1,98 @@
+{
+  "name": "xiredirect.com",
+  "dns_provider": "cloudflare",
+  "zone_id": "ee5fd6749fdc7c0c324ca05cff08050e",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "198.27.126.226",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "198.27.126.226",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 3600,
+      "content": "autodiscover.outlook.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseenrollment",
+      "ttl": 3600,
+      "content": "enterpriseenrollment.manage.microsoft.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseregistration",
+      "ttl": 3600,
+      "content": "enterpriseregistration.windows.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "lyncdiscover",
+      "ttl": 3600,
+      "content": "webdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "sip",
+      "ttl": 3600,
+      "content": "sipdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 0,
+      "content": "xiredirect-com.mail.protection.outlook.com"
+    },
+    {
+      "type": "SRV",
+      "name": "_sip._tls",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 443,
+        "target": "sipdir.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_sipfederationtls._tcp",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 5061,
+        "target": "sipfed.online.lync.com"
+      }
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "MS=ms53518622"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:spf.protection.outlook.com -all"
+    }
+  ]
+}

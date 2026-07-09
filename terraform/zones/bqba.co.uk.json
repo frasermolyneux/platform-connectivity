@@ -1,0 +1,22 @@
+{
+  "name": "bqba.co.uk",
+  "dns_provider": "cloudflare",
+  "zone_id": "6b36318afaf0973baf273bb44b35daad",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    }
+  ]
+}

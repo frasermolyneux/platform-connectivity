@@ -21,6 +21,8 @@ jobs:
     environment: Development
     concurrency:
       group: ${{ github.repository }}-dev
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
     steps:
       - uses: frasermolyneux/actions/terraform-plan@terraform-plan/v1.4
         with:

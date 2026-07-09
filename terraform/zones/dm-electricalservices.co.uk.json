@@ -1,0 +1,69 @@
+{
+  "name": "dm-electricalservices.co.uk",
+  "dns_provider": "cloudflare",
+  "zone_id": "e61e3b9dc39f8499992540d375e2f31e",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 5,
+      "content": "alt1.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 5,
+      "content": "alt2.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 10,
+      "content": "alt3.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 10,
+      "content": "alt4.aspmx.l.google.com"
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 1,
+      "content": "aspmx.l.google.com"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "google-site-verification=WMP13AiawWjWNjihai8Fds3xOmJJTzs1-i0nGkXHYtk"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf.google.com -all"
+    }
+  ]
+}

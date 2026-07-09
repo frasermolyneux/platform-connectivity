@@ -1,102 +1,208 @@
 {
-    "name": "xtremeidiots.com",
-    "dns_provider": "cloudflare",
-    "a_records": [
-        {
-            "name": "112",
-            "records": [
-                "192.99.235.196"
-            ]
-        },
-        {
-            "name": "sf3",
-            "records": [
-                "192.95.38.141"
-            ]
-        },
-        {
-            "name": "mod-mc",
-            "records": [
-                "192.95.22.174"
-            ]
-        },
-        {
-            "name": "@",
-            "records": [
-                "144.217.22.232"
-            ]
-        },
-        {
-            "name": "www",
-            "records": [
-                "144.217.22.232"
-            ]
-        },
-        {
-            "name": "cdn",
-            "records": [
-                "144.217.22.232"
-            ]
-        },
-        {
-            "name": "test",
-            "records": [
-                "144.217.22.232"
-            ]
-        },
-        {
-            "name": "stats",
-            "records": [
-                "144.217.22.232"
-            ]
-        },
-        {
-            "name": "tcadmin",
-            "records": [
-                "51.79.83.13"
-            ]
-        },
-        {
-            "name": "ts",
-            "records": [
-                "192.95.39.66"
-            ]
-        },
-        {
-            "name": "mw2c4x",
-            "records": [
-                "74.91.116.93"
-            ]
-        }
-    ],
-    "aaaa_records": [],
-    "cname_records": [
-        {
-            "name": "portal",
-            "record": "webapp-admin-portal-prd-uksouth.azurewebsites.net."
-        },
-        {
-            "name": "autodiscover",
-            "record": "autodiscover.outlook.com."
-        },
-        {
-            "name": "enterpriseenrollment",
-            "record": "enterpriseenrollment.manage.microsoft.com."
-        },
-        {
-            "name": "enterpriseregistration",
-            "record": "enterpriseregistration.windows.net."
-        },
-        {
-            "name": "lyncdiscover",
-            "record": "webdir.online.lync.com."
-        },
-        {
-            "name": "sip",
-            "record": "sipdir.online.lync.com."
-        }
-    ],
-    "mx_records": [],
-    "txt_records": [],
-    "srv_records": []
+  "name": "xtremeidiots.com",
+  "dns_provider": "cloudflare",
+  "zone_id": "b596004d516e2ffe840c76a58b81060c",
+  "backup_to_azure": false,
+  "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "112",
+      "ttl": 1,
+      "content": "192.99.235.196",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "cdn",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "mod-mc",
+      "ttl": 1,
+      "content": "192.95.22.174",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "sf3",
+      "ttl": 1,
+      "content": "192.95.38.141",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "stats",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "tcadmin",
+      "ttl": 1,
+      "content": "51.79.83.13",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "test",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "A",
+      "name": "ts",
+      "ttl": 1,
+      "content": "192.95.39.66",
+      "proxied": false
+    },
+    {
+      "type": "A",
+      "name": "www",
+      "ttl": 1,
+      "content": "144.217.22.232",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover",
+      "ttl": 3600,
+      "content": "autodiscover.outlook.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseenrollment",
+      "ttl": 3600,
+      "content": "enterpriseenrollment.manage.microsoft.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "enterpriseregistration",
+      "ttl": 3600,
+      "content": "enterpriseregistration.windows.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "lyncdiscover",
+      "ttl": 3600,
+      "content": "webdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "portal",
+      "ttl": 1,
+      "content": "app-portal-web-prd-uksouth-fe584e15256a.azurewebsites.net",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "sip",
+      "ttl": 3600,
+      "content": "sipdir.online.lync.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "@",
+      "ttl": 3600,
+      "priority": 0,
+      "content": "xtremeidiots-com.mail.protection.outlook.com"
+    },
+    {
+      "type": "SRV",
+      "name": "_sip._tls",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 443,
+        "target": "sipdir.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_sipfederationtls._tcp",
+      "ttl": 3600,
+      "data": {
+        "priority": 100,
+        "weight": 1,
+        "port": 5061,
+        "target": "sipfed.online.lync.com"
+      }
+    },
+    {
+      "type": "SRV",
+      "name": "_ts3._udp.ts",
+      "ttl": 1,
+      "data": {
+        "priority": 1,
+        "weight": 1,
+        "port": 9182,
+        "target": "ts.xtremeidiots.com"
+      }
+    },
+    {
+      "type": "TXT",
+      "name": "_dnsauth.portal",
+      "ttl": 1,
+      "content": "s9lyvdr9z5s2bjfl7gl0s0pglm3qdqcg"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=VSeQG9SAzJJb9xKKL-T43TwuUfLIkli-UcU6UDN7AR0"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "ms-domain-verification=1dbcb9a5-f9b7-4725-b222-d5b44445f2bd"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "MS=ms76092282"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 mx a:spf.mandrillapp.com a:_spf.google.com include:spf.protection.outlook.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "asuid.portal",
+      "ttl": 1,
+      "content": "BDBD8BC935C8905D5B7678B11047530953788118A6EC6223639484FD72437651"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey",
+      "ttl": 1,
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArubo6nvYzXyiZDHXu1pUpsp/QHWSXgXUpCAYaVIJM9VKVgTC83Kf9WOpoUnoTvmz0qcHNhrJihrZeXlhCVYsK+rbJZsqmWydR2V4sVgFgna6GTi+X6kuR46T8PILRX/k5/hnTAi3w+jGDrZ7xNGiqQuiCkaifLdvRppRkXiz2l8XjddGEzfb46hQFtKLGPsYl2NuaBay8BBLO0iJ2RXoKdnGieBv345dwLx7jaTg3jE8TKz5zmUUS51i4VKL4usw3nay1F5NGuVmgfVpsNFpV2QTMC48cyB2VvsqySYtps+vYBjRR7mIlWCr3jBEEbioUkJkxEF1kEm1HG9alE2gTQIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "mandrill._domainkey",
+      "ttl": 1,
+      "content": "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrLHiExVd55zd/IQ/J/mRwSRMAocV/hMB3jXwaHH36d9NaVynQFYV8NaWi69c1veUtRzGt7yAioXqLj7Z4TeEUoOLgrKsn8YnckGs9i3B3tVFB+Ch/4mPhXWiNfNdynHWBcPcbJ8kjEQ2U8y78dHZj1YeRXXVvWob2OaKynO8/lQIDAQAB;"
+    }
+  ]
 }
