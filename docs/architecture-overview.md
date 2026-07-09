@@ -17,12 +17,12 @@ Each zone JSON declares a `dns_provider` of either `azure` (default) or `cloudfl
 - **Azure-managed zones** use the grouped schema (`a_records`, `cname_records`, ...) and are provisioned as `azurerm_dns_zone` + record resources.
 - **Cloudflare-managed zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`), plus a `zone_id` and a `backup_to_azure` flag. They are provisioned as `cloudflare_dns_record` resources against the existing Cloudflare zone (referenced by `zone_id`; the zone itself is not created by Terraform). The Cloudflare provider authenticates with `var.cloudflare_api_token` (supplied in CI as `TF_VAR_cloudflare_api_token` from the `CLOUDFLARE_API_KEY` secret).
 
-Ownership is split the same way as Azure zones: platform-connectivity holds the bulk of the (otherwise unmanaged) records, while workloads may attach their own records to the same zone — Azure via RBAC, Cloudflare via a scoped token. Records owned by other stacks (e.g. platform-notifications ACS records on `xtremeidiots.com`) are carved out during conversion and never managed here.
+Ownership is split the same way as Azure zones: platform-connectivity holds the bulk of the (otherwise unmanaged) records, while workloads may attach their own records to the same zone — Azure via RBAC, Cloudflare via a scoped token. Records owned by other stacks (e.g. platform-notifications ACS records on `xtremeidiots.com`) are carved out and never managed here.
 
-### Converting and adopting Cloudflare records
+### Adopting Cloudflare records
 
-- `scripts/Convert-CloudflareZones.ps1` converts Cloudflare BIND exports (`cf/*.txt`) into the managed `terraform/zones/*.json`, capturing proxy state, normalising TTLs, dropping SOA/apex-NS, and applying the carve-outs. The `cf/*.txt` files are archival; the JSON is the managed source of truth.
-- `scripts/Export-CloudflareRecordIds.ps1` queries the Cloudflare API and writes `cf/record_ids.json`, mapping each managed record to its Cloudflare record ID. `terraform/cloudflare_dns_imports.tf` uses this to `import` existing records so `apply` adopts rather than recreates them. When the file is absent, no imports are attempted.
+- `terraform/zones/*.json` is the managed source of truth for Cloudflare records. It was originally generated from the Cloudflare dashboard's BIND export during migration (capturing proxy state, normalised TTLs, SOA/apex-NS dropped, other stacks' records carved out); edit the JSON directly going forward.
+- `scripts/Export-CloudflareRecordIds.ps1` queries the Cloudflare API and writes `cf/record_ids.json`, mapping each managed record to its Cloudflare record ID. `terraform/cloudflare_dns_imports.tf` uses this to `import` existing records so `apply` adopts rather than recreates them. When the file is absent, no imports are attempted. Once the initial adoption apply has succeeded, the import blocks, `cf/record_ids.json`, and this script can be removed.
 
 ### Backup mirroring
 
