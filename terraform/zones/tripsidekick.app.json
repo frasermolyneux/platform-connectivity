@@ -1,0 +1,9 @@
+{
+    "name": "tripsidekick.app",
+    "dns_provider": "cloudflare",
+    "management": "terraform",
+    "adopt_existing": true,
+    "plan_profile": "free",
+    "backup_to_azure": false,
+    "records": []
+}

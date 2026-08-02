@@ -25,6 +25,8 @@ jobs:
       group: ${{ github.repository }}-${{ inputs.environment }}
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
+      TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_cloudflare_adopted_zone_keys: ${{ inputs.environment == 'prd' && (vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]') || '[]' }}
     steps:
       - uses: frasermolyneux/actions/terraform-destroy@terraform-destroy/v1.3
         with:

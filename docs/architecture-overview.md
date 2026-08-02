@@ -15,14 +15,32 @@ This repository deploys tenant platform connectivity resources using Terraform.
 Each zone JSON declares a `dns_provider` of either `azure` (default) or `cloudflare`:
 
 - **Azure-managed zones** use the grouped schema (`a_records`, `cname_records`, ...) and are provisioned as `azurerm_dns_zone` + record resources.
-- **Cloudflare-managed zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`), plus a `zone_id` and a `backup_to_azure` flag. They are provisioned as `cloudflare_dns_record` resources against the existing Cloudflare zone (referenced by `zone_id`; the zone itself is not created by Terraform). The Cloudflare provider authenticates with `var.cloudflare_api_token` (supplied in CI as `TF_VAR_cloudflare_api_token` from the `CLOUDFLARE_API_KEY` secret).
+- **Cloudflare zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`) and set `management` to either `external` or `terraform`. Missing `management` defaults to `external` for compatibility with existing definitions.
+
+External Cloudflare zones retain a committed `zone_id`; Terraform manages only their configured records. Terraform-managed zones set `management` to `terraform` and omit `zone_id`. For these zones, Terraform manages:
+
+- The zone and authoritative name servers
+- DNSSEC when `dnssec_enabled` is omitted or `true`
+- Baseline zone settings selected by `plan_profile` (`free` or `pro`) with optional per-zone `settings` overrides
+- DNS records
+- One zone-level custom firewall ruleset, unless `waf_custom_rules_enabled` is `false`
+
+The shared custom firewall ruleset stays within Cloudflare Free limits. It blocks probes for common sensitive files and directories, and applies Managed Challenge to common automated WordPress administration probes. It intentionally does not deploy rate limiting, Bot Fight Mode, Cloudflare managed rulesets, regex expressions, or application-specific controls.
+
+The Cloudflare provider authenticates with `var.cloudflare_api_token`, supplied in CI as `TF_VAR_cloudflare_api_token` from the `CLOUDFLARE_API_KEY` secret. Terraform-managed zones also require `var.cloudflare_account_id`; the real account ID is supplied outside source control.
 
 Ownership is split the same way as Azure zones: platform-connectivity holds the bulk of the (otherwise unmanaged) records, while workloads may attach their own records to the same zone — Azure via RBAC, Cloudflare via a scoped token. Records owned by other stacks (e.g. platform-notifications ACS records on `xtremeidiots.com`) are carved out and never managed here.
 
-### Adopting Cloudflare records
+The `dns_zones` output keeps the same shape for Azure, external Cloudflare, and Terraform-managed Cloudflare zones. Consumers continue to receive each zone's ID, name, name servers, and `dns_provider` without needing to know its ownership mode.
+
+### Adopting Cloudflare resources
 
 - `terraform/zones/*.json` is the managed source of truth for Cloudflare records. It was originally generated from the Cloudflare dashboard's BIND export during migration (capturing proxy state, normalised TTLs, SOA/apex-NS dropped, other stacks' records carved out); edit the JSON directly going forward.
-- The existing Cloudflare records were adopted into Terraform state via one-time `import` blocks during the initial rollout. Those import blocks and their record-ID export have since been removed; ongoing changes are made by editing `terraform/zones/*.json`.
+- An existing zone moving to `management: terraform` (and into the protected `CLOUDFLARE_ADOPTED_ZONE_KEYS` set, with `adopt_existing: true`) is adopted through data-source-driven `import` blocks in `cloudflare_imports.tf`. The `cloudflare_zone`, `cloudflare_dns_records`, and `cloudflare_rulesets` data sources read the live zone at plan time and the import blocks bind each object by its discovered ID, so no identifiers are committed and adoption runs through the normal `deploy-prd` plan/apply. Records are declared in the zone JSON `records[]`: a record that also exists live is imported, one that does not is created, and an empty zone simply has no records to import.
+- A `cloudflare_ruleset` owns the complete custom-rules phase, so an existing custom-firewall ruleset is imported (not recreated) and a plan-time precondition fails if more than one entrypoint ruleset exists; reconcile its rules into `cloudflare_waf.tf` before apply.
+- Import blocks are idempotent no-ops once an object is in state, so they remain in place and coexist with day-2 record additions and removals. New domains created through Terraform are never imported.
+- Cloudflare account, zone, DNSSEC, record, and ruleset identifiers are discovered at plan time by the data sources. Do not commit or guess them.
+- The Cloudflare general managed ruleset ID `efb7b8c949ac4650a09736fc376e9aee` is not deployed by this stack. It is reserved as a possible future plan-specific extension after entitlement and desired behavior are verified.
 
 ### Backup mirroring
 

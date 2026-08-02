@@ -50,6 +50,8 @@ jobs:
       group: ${{ github.repository }}-prd
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
+      TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_cloudflare_adopted_zone_keys: ${{ vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]' }}
     steps:
       - uses: frasermolyneux/actions/terraform-plan-and-apply@terraform-plan-and-apply/v1.4
         with:

@@ -14,11 +14,11 @@ output "dns_zones" {
       }
     },
     {
-      for key, z in local.cloudflare_zones : z.name => {
-        id                  = z.zone_id
+      for key, z in local.active_cloudflare_zones : z.name => {
+        id                  = local.cloudflare_zone_ids[z.name]
         name                = z.name
         resource_group_name = null
-        name_servers        = []
+        name_servers        = try(cloudflare_zone.managed[key].name_servers, [])
         dns_provider        = "cloudflare"
       } if !try(z.backup_to_azure, false)
     }

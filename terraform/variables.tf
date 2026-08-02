@@ -58,6 +58,18 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID that owns Terraform-managed zones. Required when a zone definition sets management to terraform."
+  type        = string
+  default     = ""
+}
+
+variable "cloudflare_adopted_zone_keys" {
+  description = "Zone definition keys approved for Terraform management after inventory and import. Empty by default so declared zones remain inactive until adoption is complete."
+  type        = set(string)
+  default     = []
+}
+
 variable "dns_delegations" {
   description = "Subdomains delegated from a Cloudflare parent zone to a new Azure DNS child zone. Empty by default; add entries to activate delegation. The parent_zone must be a Cloudflare-managed zone in terraform/zones/."
   type = list(object({
