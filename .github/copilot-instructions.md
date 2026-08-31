@@ -1,28 +1,41 @@
-# Copilot Instructions
+# Copilot instructions
 
-> Shared conventions: see [`.github-copilot/.github/instructions/terraform.instructions.md`](../../.github-copilot/.github/instructions/terraform.instructions.md) (sibling repo) for the standard Terraform layout, providers, remote-state pattern, validation commands, and CI/CD workflows.
+`platform-connectivity` is the Terraform source of truth for shared Azure and Cloudflare DNS connectivity in the Molyneux.IO tenant. Keep workload-owned records and application-specific controls in their owning repositories.
 
-## Project Overview
+## Layout and contracts
 
-Terraform-only repository that provisions platform connectivity infrastructure on Azure: DNS resource groups, public DNS zones with records, and Azure Private Link DNS zones for the Molyneux.IO tenant.
+- `terraform/*.tf` contains the root configuration; there are no child modules.
+- `terraform/zones/*.json` defines public zones and records. Azure zones use grouped record collections; Cloudflare zones use `records[]` and explicit ownership settings.
+- `terraform/private_link_zones/prd.json` lists production Private Link DNS zones.
+- `terraform/tfvars/{dev,prd}.tfvars` selects environment behavior; matching backend files are under `terraform/backends/`.
+- Dev intentionally creates only the DNS resource group. Prd enables public DNS and Private Link zones.
+- `terraform/remote_state.tf` reads `platform-workloads` state. Preserve the shapes of outputs in `terraform/outputs.tf` because other platform repositories consume them.
 
-## Repository Specifics
+Terraform must satisfy `>= 1.15.6`. Provider compatibility is committed in `terraform/providers.tf`: AzureRM `~> 5.0.1` and Cloudflare `~> 5.23.0`. `.terraform.lock.hcl` is local-only and must remain ignored.
 
-- `terraform/zones/` — JSON files defining public DNS zones and their records (one file per domain).
-- `terraform/private_link_zones/` — JSON files defining private link zone lists per environment.
+## Validation and planning
 
-## Key Patterns
+For Terraform or Terraform-owned JSON changes:
 
-- **JSON-driven DNS zones**: Each domain is defined in a JSON file under `terraform/zones/` containing the zone name and all its records. Terraform dynamically loads these files and creates resources.
-- **Environment gating**: Dev creates only the resource group (no `dns_zones_path` set). Prd creates everything (zones, records, private link zones) by setting `dns_zones_path` and `private_link_zones_file` in tfvars.
-- Resource group naming: `rg-platform-dns-{environment}-{location}-{instance}`.
+```pwsh
+terraform -chdir=terraform fmt -check -recursive
+terraform -chdir=terraform init -backend=false -upgrade
+terraform -chdir=terraform validate
+```
 
-## Adding a New DNS Zone
+Run `git diff --check` for every change. Markdown or Copilot-configuration-only changes do not require Terraform validation.
 
-1. Create a JSON file under `terraform/zones/` (e.g., `newdomain.com.json`).
-2. Follow the schema: `name`, `a_records`, `aaaa_records`, `cname_records`, `mx_records`, `txt_records`, `srv_records`.
-3. The zone and its records will be automatically picked up by Terraform.
+Use repository workflows for state-backed plans and all applies:
 
-## Adding a New Private Link Zone
+- PRs receive a dev plan when ready for review.
+- Add `run-prd-plan` only when a production plan is required.
+- Never run a local apply, direct import, targeted apply, or state move/removal.
 
-1. Add the zone name to the appropriate environment JSON file in `terraform/private_link_zones/`.
+## Universal constraints
+
+- Azure authentication and state access use OIDC/Azure AD; never add client secrets or credentials.
+- Do not commit discovered Cloudflare identifiers, generated state, plans, or lock files.
+- Cloudflare adoption is protected and fail-closed; follow [development workflows](../docs/development-workflows.md) before changing ownership or import behavior.
+- Treat provider, backend, environment, output, DNS-zone ownership, and remote-state changes as high blast radius.
+
+See the [architecture overview](../docs/architecture-overview.md) and [development workflows](../docs/development-workflows.md) for detailed repository behavior.
