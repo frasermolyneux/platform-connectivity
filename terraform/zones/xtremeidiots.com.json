@@ -22,7 +22,7 @@
       "type": "A",
       "name": "cdn",
       "ttl": 1,
-      "content": "144.217.22.232",
+      "content": "192.95.23.11",
       "proxied": true
     },
     {
@@ -71,7 +71,7 @@
       "type": "A",
       "name": "www",
       "ttl": 1,
-      "content": "144.217.22.232",
+      "content": "192.95.23.11",
       "proxied": true
     },
     {
