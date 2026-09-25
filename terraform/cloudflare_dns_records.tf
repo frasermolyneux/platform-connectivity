@@ -60,9 +60,11 @@ resource "cloudflare_dns_record" "txt" {
 resource "cloudflare_dns_record" "srv" {
   for_each = local.cf_srv_records
 
-  zone_id = each.value.zone_id
-  name    = each.value.name
-  type    = "SRV"
-  ttl     = each.value.ttl
-  data    = each.value.data
+  # Cloudflare also persists SRV priority at the record level; keep both representations aligned.
+  zone_id  = each.value.zone_id
+  name     = each.value.name
+  type     = "SRV"
+  ttl      = each.value.ttl
+  priority = each.value.data.priority
+  data     = each.value.data
 }

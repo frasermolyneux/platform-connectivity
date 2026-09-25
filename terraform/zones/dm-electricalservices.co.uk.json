@@ -8,14 +8,14 @@
       "type": "A",
       "name": "@",
       "ttl": 1,
-      "content": "144.217.22.232",
+      "content": "5.196.80.194",
       "proxied": true
     },
     {
       "type": "A",
       "name": "www",
       "ttl": 1,
-      "content": "144.217.22.232",
+      "content": "5.196.80.194",
       "proxied": true
     },
     {
