@@ -6,20 +6,6 @@
   "records": [
     {
       "type": "A",
-      "name": "ftp",
-      "ttl": 1,
-      "content": "144.217.22.233",
-      "proxied": false
-    },
-    {
-      "type": "A",
-      "name": "ftp-tca",
-      "ttl": 1,
-      "content": "158.69.3.21",
-      "proxied": false
-    },
-    {
-      "type": "A",
       "name": "redirect",
       "ttl": 1,
       "content": "192.95.23.11",
