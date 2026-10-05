@@ -13,44 +13,9 @@
     },
     {
       "type": "A",
-      "name": "112",
-      "ttl": 1,
-      "content": "192.99.235.196",
-      "proxied": false
-    },
-    {
-      "type": "A",
       "name": "cdn",
       "ttl": 1,
       "content": "192.95.23.11",
-      "proxied": true
-    },
-    {
-      "type": "A",
-      "name": "mod-mc",
-      "ttl": 1,
-      "content": "192.95.22.174",
-      "proxied": false
-    },
-    {
-      "type": "A",
-      "name": "sf3",
-      "ttl": 1,
-      "content": "192.95.38.141",
-      "proxied": false
-    },
-    {
-      "type": "A",
-      "name": "stats",
-      "ttl": 1,
-      "content": "144.217.22.232",
-      "proxied": true
-    },
-    {
-      "type": "A",
-      "name": "tcadmin",
-      "ttl": 1,
-      "content": "51.79.83.13",
       "proxied": true
     },
     {
