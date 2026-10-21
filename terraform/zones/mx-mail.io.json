@@ -119,7 +119,7 @@
       "type": "TXT",
       "name": "_dmarc",
       "ttl": 3600,
-      "content": "v=DMARC1; p=none; rua=mailto:postmaster@mx-mail.io; fo=1"
+      "content": "v=DMARC1; p=reject; rua=mailto:postmaster@mx-mail.io; fo=1"
     }
   ]
 }
