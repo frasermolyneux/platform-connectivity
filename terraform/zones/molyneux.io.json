@@ -23,6 +23,14 @@
         {
             "name": "lyncdiscover",
             "record": "webdir.online.lync.com."
+        },
+        {
+            "name": "selector1._domainkey",
+            "record": "selector1-molyneux-io._domainkey.MolyneuxIO.r-v1.dkim.mail.microsoft."
+        },
+        {
+            "name": "selector2._domainkey",
+            "record": "selector2-molyneux-io._domainkey.MolyneuxIO.r-v1.dkim.mail.microsoft."
         }
     ],
     "mx_records": [
@@ -36,7 +44,20 @@
             ]
         }
     ],
-    "txt_records": [],
+    "txt_records": [
+        {
+            "name": "@",
+            "records": [
+                "v=spf1 include:spf.protection.outlook.com -all"
+            ]
+        },
+        {
+            "name": "_dmarc",
+            "records": [
+                "v=DMARC1; p=none; rua=mailto:admin@molyneux.io"
+            ]
+        }
+    ],
     "srv_records": [
         {
             "name": "_sip._tls",
