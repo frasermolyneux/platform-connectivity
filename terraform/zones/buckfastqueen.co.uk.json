@@ -59,6 +59,12 @@
       "ttl": 1,
       "priority": 10,
       "content": "mx01.ionos.co.uk"
+    },
+    {
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf-eu.ionos.com ~all"
     }
   ]
 }

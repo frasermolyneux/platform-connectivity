@@ -40,36 +40,11 @@
       "proxied": false
     },
     {
-      "type": "CNAME",
-      "name": "lyncdiscover",
-      "ttl": 3600,
-      "content": "webdir.online.lync.com",
-      "proxied": false
-    },
-    {
-      "type": "CNAME",
-      "name": "sip",
-      "ttl": 3600,
-      "content": "sipdir.online.lync.com",
-      "proxied": false
-    },
-    {
       "type": "MX",
       "name": "@",
       "ttl": 3600,
       "priority": 0,
       "content": "xiredirect-com.mail.protection.outlook.com"
-    },
-    {
-      "type": "SRV",
-      "name": "_sip._tls",
-      "ttl": 3600,
-      "data": {
-        "priority": 100,
-        "weight": 1,
-        "port": 443,
-        "target": "sipdir.online.lync.com"
-      }
     },
     {
       "type": "SRV",

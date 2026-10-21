@@ -17,14 +17,6 @@
             "record": "enterpriseenrollment.manage.microsoft.com."
         },
         {
-            "name": "sip",
-            "record": "sipdir.online.lync.com."
-        },
-        {
-            "name": "lyncdiscover",
-            "record": "webdir.online.lync.com."
-        },
-        {
             "name": "selector1._domainkey",
             "record": "selector1-molyneux-io._domainkey.MolyneuxIO.r-v1.dkim.mail.microsoft."
         },
@@ -59,17 +51,6 @@
         }
     ],
     "srv_records": [
-        {
-            "name": "_sip._tls",
-            "records": [
-                {
-                    "priority": 100,
-                    "weight": 1,
-                    "port": 443,
-                    "target": "sipdir.online.lync.com."
-                }
-            ]
-        },
         {
             "name": "_sipfederationtls._tcp",
             "records": [
