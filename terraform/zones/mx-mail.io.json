@@ -94,7 +94,19 @@
       "type": "TXT",
       "name": "_dmarc",
       "ttl": 3600,
-      "content": "v=DMARC1; p=reject; rua=mailto:postmaster@mx-mail.io; fo=1"
+      "content": "v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io; fo=1"
+    },
+    {
+      "type": "TXT",
+      "name": "molyneux.io._report._dmarc",
+      "ttl": 3600,
+      "content": "v=DMARC1"
+    },
+    {
+      "type": "TXT",
+      "name": "xtremeidiots.com._report._dmarc",
+      "ttl": 3600,
+      "content": "v=DMARC1"
     }
   ]
 }
