@@ -80,14 +80,14 @@ run `terraform import` or mutate production state from a local shell.
 
 ### ACS apex TXT ownership handoff
 
-The existing `molyneux.io/@` TXT set must remain live throughout transfer to
-`platform-notifications`. First isolate it at
-`azurerm_dns_txt_record.notification_apex[0]` with the declarative move; the
-production plan must show no Azure record changes or deletions. After that
-revision is deployed, a separate revision can remove its configuration using
-`removed { from = azurerm_dns_txt_record.notification_apex }` with
-`lifecycle { destroy = false }`, and remove only the corresponding apex JSON
-entry. Apply that release before the receiving repository imports `/TXT/@`.
+The existing `molyneux.io/@` TXT set remains live throughout transfer to
+`platform-notifications`. The first revision isolated it at
+`azurerm_dns_txt_record.notification_apex[0]` using a declarative move, deployed
+with zero Azure record changes or deletions. This separate release removes its
+configuration with a `removed` block and `destroy = false`, removing only the
+corresponding apex JSON entry. Its production plan must forget exactly that
+isolated set and show zero create, update or delete operations. Apply the release
+before the receiving repository imports `/TXT/@` and preserves its existing SPF.
 Never delete the live record set, use local state commands, or remove unrelated
 TXT, SPF, MX, DKIM or DMARC records during the handoff.
 
