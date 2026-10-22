@@ -46,12 +46,6 @@
     ],
     "txt_records": [
         {
-            "name": "@",
-            "records": [
-                "v=spf1 include:spf.protection.outlook.com -all"
-            ]
-        },
-        {
             "name": "_dmarc",
             "records": [
                 "v=DMARC1; p=reject; rua=mailto:admin@molyneux.io"

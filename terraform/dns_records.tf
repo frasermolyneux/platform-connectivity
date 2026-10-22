@@ -50,10 +50,7 @@ resource "azurerm_dns_mx_record" "records" {
 }
 
 resource "azurerm_dns_txt_record" "records" {
-  for_each = {
-    for key, record in local.txt_records : key => record
-    if key != "molyneux.io/@"
-  }
+  for_each = local.txt_records
 
   name                = each.value.name
   zone_name           = azurerm_dns_zone.zones[each.value.zone_key].name
@@ -69,26 +66,11 @@ resource "azurerm_dns_txt_record" "records" {
   }
 }
 
-# Isolate the existing set before a separate, non-destructive ownership release.
-moved {
-  from = azurerm_dns_txt_record.records["molyneux.io/@"]
-  to   = azurerm_dns_txt_record.notification_apex[0]
-}
+removed {
+  from = azurerm_dns_txt_record.notification_apex
 
-resource "azurerm_dns_txt_record" "notification_apex" {
-  count = contains(keys(local.txt_records), "molyneux.io/@") ? 1 : 0
-
-  name                = "@"
-  zone_name           = azurerm_dns_zone.zones[local.txt_records["molyneux.io/@"].zone_key].name
-  resource_group_name = azurerm_resource_group.dns.name
-  ttl                 = local.txt_records["molyneux.io/@"].ttl
-  tags                = var.tags
-
-  dynamic "record" {
-    for_each = local.txt_records["molyneux.io/@"].records
-    content {
-      value = record.value
-    }
+  lifecycle {
+    destroy = false
   }
 }
 
