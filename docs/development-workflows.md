@@ -77,6 +77,20 @@ they stay in place and coexist with day-2 record additions and removals. Never
 run `terraform import` or mutate production state from a local shell.
 
 ## Conventions
+
+### ACS apex TXT ownership handoff
+
+The existing `molyneux.io/@` TXT set must remain live throughout transfer to
+`platform-notifications`. First isolate it at
+`azurerm_dns_txt_record.notification_apex[0]` with the declarative move; the
+production plan must show no Azure record changes or deletions. After that
+revision is deployed, a separate revision can remove its configuration using
+`removed { from = azurerm_dns_txt_record.notification_apex }` with
+`lifecycle { destroy = false }`, and remove only the corresponding apex JSON
+entry. Apply that release before the receiving repository imports `/TXT/@`.
+Never delete the live record set, use local state commands, or remove unrelated
+TXT, SPF, MX, DKIM or DMARC records during the handoff.
+
 - DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
 - Cloudflare zones default to external ownership. Set `management` to `terraform` only when the zone and its controls will be adopted into this state.
 - Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, and `waf_custom_rules_enabled`.
