@@ -68,6 +68,20 @@
       "proxied": false
     },
     {
+      "type": "CNAME",
+      "name": "selector1._domainkey",
+      "ttl": 3600,
+      "content": "selector1-xtremeidiots-com._domainkey.MolyneuxIO.p-v1.dkim.mail.microsoft",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "selector2._domainkey",
+      "ttl": 3600,
+      "content": "selector2-xtremeidiots-com._domainkey.MolyneuxIO.p-v1.dkim.mail.microsoft",
+      "proxied": false
+    },
+    {
       "type": "MX",
       "name": "@",
       "ttl": 3600,
