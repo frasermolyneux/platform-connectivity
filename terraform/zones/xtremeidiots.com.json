@@ -62,6 +62,20 @@
     },
     {
       "type": "CNAME",
+      "name": "mte1._domainkey",
+      "ttl": 3600,
+      "content": "dkim1.mandrillapp.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "mte2._domainkey",
+      "ttl": 3600,
+      "content": "dkim2.mandrillapp.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
       "name": "portal",
       "ttl": 1,
       "content": "app-portal-web-prd-uksouth-fe584e15256a.azurewebsites.net",
@@ -109,6 +123,12 @@
         "port": 9182,
         "target": "ts.xtremeidiots.com"
       }
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc",
+      "ttl": 3600,
+      "content": "v=DMARC1; p=none"
     },
     {
       "type": "TXT",
