@@ -68,6 +68,13 @@
       "proxied": false
     },
     {
+      "type": "CNAME",
+      "name": "status",
+      "ttl": 1,
+      "content": "mxstatus.io",
+      "proxied": true
+    },
+    {
       "type": "MX",
       "name": "@",
       "ttl": 3600,
