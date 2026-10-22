@@ -48,7 +48,7 @@
         {
             "name": "_dmarc",
             "records": [
-                "v=DMARC1; p=reject; rua=mailto:admin@molyneux.io"
+                "v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io"
             ]
         }
     ],
