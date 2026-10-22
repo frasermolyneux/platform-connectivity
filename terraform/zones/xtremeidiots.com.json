@@ -122,12 +122,6 @@
     },
     {
       "type": "TXT",
-      "name": "@",
-      "ttl": 3600,
-      "content": "v=spf1 mx a:spf.mandrillapp.com a:_spf.google.com include:spf.protection.outlook.com ~all"
-    },
-    {
-      "type": "TXT",
       "name": "asuid.portal",
       "ttl": 1,
       "content": "BDBD8BC935C8905D5B7678B11047530953788118A6EC6223639484FD72437651"
