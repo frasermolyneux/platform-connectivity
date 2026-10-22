@@ -1,7 +1,15 @@
 {
     "name": "molyneux.io",
     "dns_provider": "azure",
-    "a_records": [],
+    "a_records": [
+        {
+            "name": "radar",
+            "ttl": 300,
+            "records": [
+                "5.196.80.194"
+            ]
+        }
+    ],
     "aaaa_records": [],
     "cname_records": [
         {
