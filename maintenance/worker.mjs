@@ -19,7 +19,9 @@ export default {
     });
     const browser = ['GET', 'HEAD'].includes(request.method)
       && request.headers.get('Accept')?.toLowerCase().includes('text/html');
-    if (statusUrl && browser && environment.MODE === 'redirect') {
+    const navigation = browser && request.headers.get('Sec-Fetch-Mode') === 'navigate'
+      && request.headers.get('Sec-Fetch-Dest') === 'document';
+    if (statusUrl && navigation && environment.MODE === 'redirect') {
       headers.set('Location', statusUrl);
       return new Response(null, { status: 302, headers });
     }

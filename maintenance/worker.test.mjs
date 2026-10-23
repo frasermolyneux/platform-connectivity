@@ -25,7 +25,10 @@ test('page mode is a self-contained noncacheable 503 without accessing the origi
 
 test('redirect mode redirects browser navigation only, without forwarding paths or queries', async () => {
   const redirect = { ...environment, MODE: 'redirect' };
-  const response = await worker.fetch(request('bishopsbees.co.uk'), redirect);
+  const navigation = request('bishopsbees.co.uk');
+  navigation.headers.set('Sec-Fetch-Mode', 'navigate');
+  navigation.headers.set('Sec-Fetch-Dest', 'document');
+  const response = await worker.fetch(navigation, redirect);
   assert.equal(response.status, 302);
   assert.equal(response.headers.get('Location'), 'https://mxstatus.io/');
   for (const [method, accept] of [['POST', 'text/html'], ['GET', '*/*'], ['GET', 'application/json']]) {
@@ -33,6 +36,17 @@ test('redirect mode redirects browser navigation only, without forwarding paths 
     assert.equal(blocked.status, 503);
     assert.equal(blocked.headers.get('Location'), null);
     assert.equal((await blocked.json()).statusPage, 'https://status.xtremeidiots.com/');
+  }
+});
+
+test('HTML subrequests and clients without top-level navigation metadata stay at 503 in redirect mode', async () => {
+  for (const [mode, destination] of [['cors', 'empty'], ['no-cors', 'iframe'], ['', '']]) {
+    const html = request('www.xtremeidiots.com');
+    if (mode) html.headers.set('Sec-Fetch-Mode', mode);
+    if (destination) html.headers.set('Sec-Fetch-Dest', destination);
+    const response = await worker.fetch(html, { ...environment, MODE: 'redirect' });
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('Location'), null);
   }
 });
 
