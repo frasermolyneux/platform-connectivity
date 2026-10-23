@@ -35,12 +35,15 @@ The `dns_zones` output keeps the same shape for Azure, external Cloudflare, and 
 
 ### Hostname origin TLS overrides
 
-An explicit `origin_tls_hostnames` list opts a zone into one shared
+An explicit `origin_tls_hostnames` list opts an existing external zone into one shared
 `http_config_settings` entrypoint that sets Full (strict) origin TLS only for
 those exact, declared proxied record hostnames. This is available without
 adopting the zone or changing its default SSL mode, so existing HTTP/HTTPS
 workloads remain unaffected. The deployment token needs `Config Settings Write`
 only for opted-in zones; the runtime DNS-01 credential does not.
+
+Terraform-managed zones already use the strict baseline and reject this opt-in.
+Inventory and import discovery therefore never depend on a not-yet-created zone.
 
 Wildcards, undeclared/unproxied hostnames and duplicate entries are rejected.
 Ownership uses a unique `terraform_data` identity retained in this state, not a

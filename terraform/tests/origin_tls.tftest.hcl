@@ -64,3 +64,15 @@ run "duplicate_hostname_is_rejected" {
 
   expect_failures = [cloudflare_ruleset.origin_tls["xtremeidiots.net"]]
 }
+
+run "new_managed_zone_override_is_rejected_explicitly" {
+  command = plan
+
+  variables {
+    dns_zones_path               = "tests/fixtures/managed"
+    cloudflare_account_id        = "00000000000000000000000000000000"
+    cloudflare_adopted_zone_keys = ["new.invalid"]
+  }
+
+  expect_failures = [terraform_data.origin_tls_owner["new.invalid"]]
+}

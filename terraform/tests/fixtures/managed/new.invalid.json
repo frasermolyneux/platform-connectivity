@@ -1,0 +1,15 @@
+{
+  "name": "new.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "origin_tls_hostnames": ["maps.new.invalid"],
+  "records": [
+    {
+      "type": "A",
+      "name": "maps",
+      "content": "192.0.2.1",
+      "proxied": true,
+      "ttl": 1
+    }
+  ]
+}
