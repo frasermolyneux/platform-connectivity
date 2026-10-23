@@ -35,6 +35,9 @@ jobs:
           AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ env.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ env.AZURE_SUBSCRIPTION_ID }}
+      - name: Test hostname origin TLS safeguards
+        working-directory: terraform
+        run: terraform test -no-color
 
   terraform-plan-and-apply-dev:
     permissions:

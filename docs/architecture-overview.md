@@ -43,8 +43,12 @@ workloads remain unaffected. The deployment token needs `Config Settings Write`
 only for opted-in zones; the runtime DNS-01 credential does not.
 
 Wildcards, undeclared/unproxied hostnames and duplicate entries are rejected.
-An existing configuration entrypoint owned elsewhere blocks the plan: coordinate
-reviewed preservation/adoption with that owner rather than replacing its rules.
+Ownership uses a unique `terraform_data` identity retained in this state, not a
+shared display name. An existing configuration entrypoint without that identity
+blocks creation: coordinate reviewed preservation/adoption with its owner.
+If the ruleset binding alone is lost, a data-source-driven import rebinds only
+the entrypoint matching the retained identity, rather than creating a replacement.
+Losing the ownership identity itself fails closed and requires reviewed recovery.
 Workload-owned configuration phases remain outside this stack. Destruction of
 the managed origin TLS entrypoint is protected and requires explicit review.
 

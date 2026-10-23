@@ -11,11 +11,39 @@ data "cloudflare_rulesets" "origin_tls" {
   zone_id = local.cloudflare_zone_ids[each.value.name]
 }
 
+resource "terraform_data" "origin_tls_owner" {
+  for_each = local.cloudflare_origin_tls_zones
+
+  input = each.value.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+locals {
+  cloudflare_origin_tls_imports = merge([
+    for key, zone in local.cloudflare_origin_tls_zones : {
+      for ruleset in data.cloudflare_rulesets.origin_tls[key].rulesets :
+      key => "zones/${local.cloudflare_zone_ids[zone.name]}/${ruleset.id}"
+      if ruleset.phase == "http_config_settings" &&
+      startswith(ruleset.name, "origin-tls-") &&
+      ruleset.name == "origin-tls-${terraform_data.origin_tls_owner[key].id}"
+    }
+  ]...)
+}
+
+import {
+  for_each = local.cloudflare_origin_tls_imports
+  to       = cloudflare_ruleset.origin_tls[each.key]
+  id       = each.value
+}
+
 resource "cloudflare_ruleset" "origin_tls" {
   for_each = local.cloudflare_origin_tls_zones
 
   zone_id     = local.cloudflare_zone_ids[each.value.name]
-  name        = "Terraform-managed hostname origin TLS"
+  name        = "origin-tls-${terraform_data.origin_tls_owner[each.key].id}"
   description = "Strict origin TLS only for explicitly selected proxied hostnames"
   kind        = "zone"
   phase       = "http_config_settings"
@@ -55,8 +83,11 @@ resource "cloudflare_ruleset" "origin_tls" {
 
     precondition {
       condition = alltrue([
-        for ruleset in data.cloudflare_rulesets.origin_tls[each.key].result :
-        ruleset.phase != "http_config_settings" || ruleset.name == "Terraform-managed hostname origin TLS"
+        for ruleset in data.cloudflare_rulesets.origin_tls[each.key].rulesets :
+        ruleset.phase != "http_config_settings" || (
+          startswith(ruleset.name, "origin-tls-") &&
+          ruleset.name == "origin-tls-${terraform_data.origin_tls_owner[each.key].id}"
+        )
       ])
       error_message = "An existing configuration entrypoint is not owned by this stack. Stop for reviewed preservation/adoption; never replace its rules."
     }

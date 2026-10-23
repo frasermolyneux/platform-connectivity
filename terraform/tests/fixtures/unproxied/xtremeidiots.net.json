@@ -1,0 +1,15 @@
+{
+  "name": "xtremeidiots.net",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000000",
+  "origin_tls_hostnames": ["maps.xtremeidiots.net"],
+  "records": [
+    {
+      "type": "A",
+      "name": "maps",
+      "content": "192.0.2.1",
+      "proxied": false,
+      "ttl": 300
+    }
+  ]
+}
