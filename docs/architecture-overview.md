@@ -17,7 +17,7 @@ Each zone JSON declares a `dns_provider` of either `azure` (default) or `cloudfl
 - **Azure-managed zones** use the grouped schema (`a_records`, `cname_records`, ...) and are provisioned as `azurerm_dns_zone` + record resources.
 - **Cloudflare zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`) and set `management` to either `external` or `terraform`. Missing `management` defaults to `external` for compatibility with existing definitions.
 
-External Cloudflare zones retain a committed `zone_id`; Terraform manages only their configured records. Terraform-managed zones set `management` to `terraform` and omit `zone_id`. For these zones, Terraform manages:
+External Cloudflare zones retain a committed `zone_id`; Terraform manages their configured records and any explicitly enabled hostname origin TLS overrides below, not their zone-wide settings. Terraform-managed zones set `management` to `terraform` and omit `zone_id`. For these zones, Terraform manages:
 
 - The zone and authoritative name servers
 - DNSSEC when `dnssec_enabled` is omitted or `true`
@@ -32,6 +32,21 @@ The Cloudflare provider authenticates with `var.cloudflare_api_token`, supplied 
 Ownership is split the same way as Azure zones: platform-connectivity holds the bulk of the (otherwise unmanaged) records, while workloads may attach their own records to the same zone — Azure via RBAC, Cloudflare via a scoped token. Records owned by other stacks (e.g. platform-notifications ACS records on `xtremeidiots.com`) are carved out and never managed here.
 
 The `dns_zones` output keeps the same shape for Azure, external Cloudflare, and Terraform-managed Cloudflare zones. Consumers continue to receive each zone's ID, name, name servers, and `dns_provider` without needing to know its ownership mode.
+
+### Hostname origin TLS overrides
+
+An explicit `origin_tls_hostnames` list opts a zone into one shared
+`http_config_settings` entrypoint that sets Full (strict) origin TLS only for
+those exact, declared proxied record hostnames. This is available without
+adopting the zone or changing its default SSL mode, so existing HTTP/HTTPS
+workloads remain unaffected. The deployment token needs `Config Settings Write`
+only for opted-in zones; the runtime DNS-01 credential does not.
+
+Wildcards, undeclared/unproxied hostnames and duplicate entries are rejected.
+An existing configuration entrypoint owned elsewhere blocks the plan: coordinate
+reviewed preservation/adoption with that owner rather than replacing its rules.
+Workload-owned configuration phases remain outside this stack. Destruction of
+the managed origin TLS entrypoint is protected and requires explicit review.
 
 ### Adopting Cloudflare resources
 

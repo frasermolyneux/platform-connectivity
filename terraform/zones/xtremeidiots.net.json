@@ -3,6 +3,9 @@
   "dns_provider": "cloudflare",
   "zone_id": "c1a18b90879d2e5fc2afecef7fb04594",
   "backup_to_azure": false,
+  "origin_tls_hostnames": [
+    "maps.xtremeidiots.net"
+  ],
   "records": [
     {
       "type": "A",
