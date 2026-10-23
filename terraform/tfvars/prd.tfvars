@@ -15,6 +15,7 @@ platform_workloads_state = {
 
 dns_zones_path          = "zones"
 private_link_zones_file = "private_link_zones/prd.json"
+maintenance_enabled     = true
 
 tags = {
   Environment = "prd",
