@@ -8,6 +8,7 @@ on:
       - "hotfix/**"
     paths:
       - 'terraform/**'
+      - 'maintenance/**'
       - '.github/workflows/build-and-test.yml'
 
 permissions: {}
@@ -24,6 +25,12 @@ jobs:
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
     steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22.x"
+      - name: Test maintenance Worker and approved hosts
+        run: node --test maintenance/worker.test.mjs
       - uses: frasermolyneux/actions/terraform-plan@terraform-plan/v1.4
         with:
           terraform-folder: "terraform"

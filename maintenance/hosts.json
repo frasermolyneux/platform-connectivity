@@ -1,0 +1,23 @@
+[
+  {"hostname":"maintenance-check.bishopsbees.co.uk","zone":"bishopsbees.co.uk","site":"mx","canary":true},
+  {"hostname":"bishopsbees.co.uk","zone":"bishopsbees.co.uk","site":"mx"},
+  {"hostname":"www.bishopsbees.co.uk","zone":"bishopsbees.co.uk","site":"mx"},
+  {"hostname":"staging.bishopsbees.co.uk","zone":"bishopsbees.co.uk","site":"mx"},
+  {"hostname":"bqba.co.uk","zone":"bqba.co.uk","site":"mx"},
+  {"hostname":"www.bqba.co.uk","zone":"bqba.co.uk","site":"mx"},
+  {"hostname":"buckfastqueen.co.uk","zone":"buckfastqueen.co.uk","site":"mx"},
+  {"hostname":"www.buckfastqueen.co.uk","zone":"buckfastqueen.co.uk","site":"mx"},
+  {"hostname":"dm-electricalservices.co.uk","zone":"dm-electricalservices.co.uk","site":"mx"},
+  {"hostname":"www.dm-electricalservices.co.uk","zone":"dm-electricalservices.co.uk","site":"mx"},
+  {"hostname":"moanclub.com","zone":"moanclub.com","site":"mx"},
+  {"hostname":"www.moanclub.com","zone":"moanclub.com","site":"mx"},
+  {"hostname":"mx-mail.io","zone":"mx-mail.io","site":"mx"},
+  {"hostname":"www.mx-mail.io","zone":"mx-mail.io","site":"mx"},
+  {"hostname":"queensforsale.co.uk","zone":"queensforsale.co.uk","site":"mx"},
+  {"hostname":"www.queensforsale.co.uk","zone":"queensforsale.co.uk","site":"mx"},
+  {"hostname":"xtremeidiots.com","zone":"xtremeidiots.com","site":"xi"},
+  {"hostname":"www.xtremeidiots.com","zone":"xtremeidiots.com","site":"xi"},
+  {"hostname":"cdn.xtremeidiots.com","zone":"xtremeidiots.com","site":"xi"},
+  {"hostname":"maps.xtremeidiots.net","zone":"xtremeidiots.net","site":"xi"},
+  {"hostname":"redirect.xtremeidiots.net","zone":"xtremeidiots.net","site":"xi"}
+]

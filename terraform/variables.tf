@@ -84,3 +84,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "maintenance_enabled" {
+  description = "Deploy the shared maintenance Workers without creating routes, subscriptions, paid storage, or changing zone plans."
+  type        = bool
+  default     = false
+}

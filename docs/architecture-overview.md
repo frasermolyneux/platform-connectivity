@@ -64,6 +64,40 @@ the managed origin TLS entrypoint is protected and requires explicit review.
 - Cloudflare account, zone, DNSSEC, record, and ruleset identifiers are discovered at plan time by the data sources. Do not commit or guess them.
 - The Cloudflare general managed ruleset ID `efb7b8c949ac4650a09736fc376e9aee` is not deployed by this stack. It is reserved as a possible future plan-specific extension after entitlement and desired behavior are verified.
 
+### Shared maintenance edge
+
+`maintenance/hosts.json` explicitly registers exact proxied web hostnames and
+their status brand. It excludes status destinations, wildcard catch-alls and
+DNS discovery/mail records. `terraform/maintenance.tf` deploys two stateless
+Worker modes from `maintenance/worker.mjs`, gated to production. There is no
+Worker storage, account subscription or zone-plan change.
+
+The `maintenance_runtime` output is consumed by `platform-baremetal`, which
+delivers it and a separate scoped runtime credential through the status workload
+vault. `platform-workloads` provisions the credentials: connectivity can deploy
+Worker code; the runtime can manage routes in approved zones and read DNS and
+usage analytics, but cannot deploy code or change billing.
+
+**Active maintenance routes are not Terraform resources.** The status controller
+alone creates/removes exact-host routes after explicit operator confirmation.
+Deploying connectivity must not clear or reset those operational routes.
+Worker updates retain blocking responses even for an unrecognised hostname;
+they never fall through to the origin. Restore active routes before retiring a
+hostname from the registry.
+
+To enrol another host, first configure an explicit proxied web DNS record, then
+register its hostname/zone/brand. Extend runtime token zone scope when required.
+Deploy workloads permissions, connectivity, and baremetal metadata in that order,
+then reconcile the status application to load current secret mounts. Do not
+enable proxying for unrelated DNS-only services as collateral work.
+
+Worker tests use Node's built-in runner (`node --test maintenance/worker.test.mjs`);
+Terraform tests cover production gating alongside the existing TLS safeguards.
+The isolated `maintenance-check.bishopsbees.co.uk` custom domain has a tiny
+Worker-owned normal response, not a production application origin. It is the only
+canary registry exception to existing proxied DNS. Live lifecycle acceptance must
+use this hostname rather than switching a user's website off.
+
 ### Backup mirroring
 
 Setting `backup_to_azure: true` on a Cloudflare zone JSON additionally mirrors its records into a non-authoritative Azure DNS zone (a cold standby). Cutover is manual — repoint the registrar name servers to the Azure zone. Off by default.
