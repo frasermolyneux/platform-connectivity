@@ -92,6 +92,7 @@ Never delete the live record set, use local state commands, or remove unrelated
 TXT, SPF, MX, DKIM or DMARC records during the handoff.
 
 - DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
+- An explicit empty `origin_tls_hostnames` list clears retired hostname rules while retaining the protected, stack-owned configuration entrypoint. Omit the property only for zones this stack has never owned. The `xtremeidiots.com` configuration phase is already owned by the status edge stack; its exact-host maps rule must be maintained there, not by creating a competing entrypoint.
 - Cloudflare zones default to external ownership. Set `management` to `terraform` only when the zone and its controls will be adopted into this state.
 - Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, and `waf_custom_rules_enabled`.
 - Private link zones are listed in `terraform/private_link_zones/prd.json`.

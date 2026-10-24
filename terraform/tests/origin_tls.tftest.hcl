@@ -30,18 +30,16 @@ variables {
   }
 }
 
-run "empty_configuration_phase" {
+run "retired_hostname_keeps_empty_owned_configuration_phase" {
   command = plan
 
   assert {
     condition = (
       length(cloudflare_ruleset.origin_tls) == 1 &&
-      length(cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules) == 1 &&
-      cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules[0].expression == "http.host eq \"maps.xtremeidiots.net\"" &&
-      cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules[0].action_parameters.ssl == "strict" &&
+      length(cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules) == 0 &&
       length(cloudflare_zone_setting.managed) == 0
     )
-    error_message = "Only the opted-in maps hostname may receive strict origin TLS; external zone settings must remain unmanaged."
+    error_message = "Retiring maps must clear its old rule without destroying the protected zone entrypoint or managing external zone settings."
   }
 }
 

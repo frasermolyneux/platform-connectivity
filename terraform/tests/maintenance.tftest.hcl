@@ -46,7 +46,8 @@ run "production_deploys_worker_modes_and_exact_host_registry" {
       length(cloudflare_workers_custom_domain.maintenance_canary) == 1 &&
       output.maintenance_runtime.version == 1 &&
       contains([for host in output.maintenance_runtime.hosts : host.hostname], "www.xtremeidiots.com") &&
-      contains([for host in output.maintenance_runtime.hosts : host.hostname], "maps.xtremeidiots.net") &&
+      contains([for host in output.maintenance_runtime.hosts : host.hostname], "maps.xtremeidiots.com") &&
+      !contains([for host in output.maintenance_runtime.hosts : host.hostname], "maps.xtremeidiots.net") &&
       !contains([for host in output.maintenance_runtime.hosts : host.hostname], "status.xtremeidiots.com")
     )
     error_message = "Production must expose independently controlled approved hosts and never the status destination."
