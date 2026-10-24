@@ -1,7 +1,7 @@
 locals {
   cloudflare_origin_tls_requested_zones = {
     for key, zone in local.active_cloudflare_zones : key => zone
-    if length(try(zone.origin_tls_hostnames, [])) > 0
+    if can(zone.origin_tls_hostnames)
   }
   cloudflare_origin_tls_zones = {
     for key, zone in local.cloudflare_origin_tls_requested_zones : key => zone

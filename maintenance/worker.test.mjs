@@ -51,7 +51,7 @@ test('HTML subrequests and clients without top-level navigation metadata stay at
 });
 
 test('HEAD keeps response semantics without a body; unregistered hosts never fall through', async () => {
-  const response = await worker.fetch(request('maps.xtremeidiots.net', 'HEAD'), environment);
+  const response = await worker.fetch(request('maps.xtremeidiots.com', 'HEAD'), environment);
   assert.equal(response.status, 503);
   assert.equal(await response.text(), '');
   const unknown = await worker.fetch(request('unknown.example'), { ...environment, MODE: 'redirect' });
@@ -73,4 +73,6 @@ test('registry admits exact proxied web hosts only and never includes status or 
       || zone.records.some(record => record.proxied && ['A', 'AAAA', 'CNAME'].includes(record.type)
       && (record.name === '@' ? zone.name : `${record.name}.${zone.name}`) === host.hostname));
   }
+  assert.ok(seen.has('maps.xtremeidiots.com'));
+  assert.ok(!seen.has('maps.xtremeidiots.net'));
 });
