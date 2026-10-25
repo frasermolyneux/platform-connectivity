@@ -3,6 +3,13 @@
     "dns_provider": "azure",
     "a_records": [
         {
+            "name": "idp",
+            "ttl": 300,
+            "records": [
+                "5.196.80.194"
+            ]
+        },
+        {
             "name": "radar",
             "ttl": 300,
             "records": [
