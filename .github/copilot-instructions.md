@@ -11,7 +11,7 @@
 - Dev intentionally creates only the DNS resource group. Prd enables public DNS and Private Link zones.
 - `terraform/remote_state.tf` reads `platform-workloads` state. Preserve the shapes of outputs in `terraform/outputs.tf` because other platform repositories consume them.
 
-Terraform must satisfy `>= 1.15.6`. Provider compatibility is committed in `terraform/providers.tf`: AzureRM `~> 5.0.1` and Cloudflare `~> 5.23.0`. `.terraform.lock.hcl` is local-only and must remain ignored.
+Terraform compatibility is defined by `terraform/providers.tf`; preserve its reviewed AzureRM/Cloudflare bounds. Commit each root's `.terraform-version` and `.terraform.lock.hcl`. Select the exact root CLI pin before invoking Terraform; normal initialization uses `-lockfile=readonly`. Regenerate provider selections only in a reviewed dependency-update PR; never commit state, plans, or `.terraform/`.
 
 ## Validation and planning
 
@@ -19,7 +19,7 @@ For Terraform or Terraform-owned JSON changes:
 
 ```pwsh
 terraform -chdir=terraform fmt -check -recursive
-terraform -chdir=terraform init -backend=false -upgrade
+terraform -chdir=terraform init -backend=false -lockfile=readonly
 terraform -chdir=terraform validate
 ```
 
@@ -34,7 +34,7 @@ Use repository workflows for state-backed plans and all applies:
 ## Universal constraints
 
 - Azure authentication and state access use OIDC/Azure AD; never add client secrets or credentials.
-- Do not commit discovered Cloudflare identifiers, generated state, plans, or lock files.
+- Do not commit discovered Cloudflare identifiers, generated state, or plans. Commit the reviewed root provider lock.
 - Cloudflare adoption is protected and fail-closed; follow [development workflows](../docs/development-workflows.md) before changing ownership or import behavior.
 - Treat provider, backend, environment, output, DNS-zone ownership, and remote-state changes as high blast radius.
 

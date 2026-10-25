@@ -33,7 +33,7 @@ For Terraform or Terraform-owned JSON changes:
 
 ```pwsh
 terraform -chdir=terraform fmt -check -recursive
-terraform -chdir=terraform init -backend=false -upgrade
+terraform -chdir=terraform init -backend=false -lockfile=readonly
 terraform -chdir=terraform validate
 git diff --check
 ```
@@ -42,11 +42,11 @@ Use the PR workflows for state-backed plans. A production plan is opt-in through
 
 ## Material constraints
 
-- Terraform `>= 1.15.6`; AzureRM `~> 5.0.1`; Cloudflare `~> 5.23.0`.
+- Use the compatibility constraints in `terraform/providers.tf`, the exact CLI pin in `terraform/.terraform-version`, and provider selections in `terraform/.terraform.lock.hcl`.
 - Dev intentionally creates only the DNS resource group. Prd enables public zones and Private Link zones through its tfvars.
 - State and remote state use Azure AD/OIDC. Do not add credentials, client secrets, or state identifiers discovered at runtime.
 - Do not run local `terraform import`, move/remove state, or change state addresses without an explicit migration task.
-- `.terraform.lock.hcl` is generated locally and ignored. Provider constraints in `providers.tf` are the committed compatibility boundary.
+- Commit each root's `.terraform-version` and `.terraform.lock.hcl`. Select the exact root CLI pin before invoking Terraform; normal initialization uses `-lockfile=readonly`. Regenerate provider selections only in a reviewed dependency-update PR; never commit state, plans, or `.terraform/`.
 - Cloudflare adoption is fail-closed through protected repository configuration owned by `platform-workloads`; review `docs/development-workflows.md` before changing adoption or import behavior.
 - DNS, provider, backend, output, or environment changes have tenant-wide blast radius and require an appropriate state-backed plan.
 
