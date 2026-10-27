@@ -33,6 +33,10 @@ variables {
 run "retired_hostname_keeps_empty_owned_configuration_phase" {
   command = plan
 
+  variables {
+    dns_zones_path = "tests/fixtures/retired"
+  }
+
   assert {
     condition = (
       length(cloudflare_ruleset.origin_tls) == 1 &&
@@ -40,6 +44,24 @@ run "retired_hostname_keeps_empty_owned_configuration_phase" {
       length(cloudflare_zone_setting.managed) == 0
     )
     error_message = "Retiring maps must clear its old rule without destroying the protected zone entrypoint or managing external zone settings."
+  }
+}
+
+run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
+  command = plan
+
+  assert {
+    condition = (
+      toset([for rule in cloudflare_ruleset.origin_tls["talkwithtiles.com"].rules : rule.expression]) ==
+      toset(["http.host eq \"talkwithtiles.com\"", "http.host eq \"www.talkwithtiles.com\""]) &&
+      alltrue([
+        for rule in cloudflare_ruleset.origin_tls["talkwithtiles.com"].rules :
+        rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
+      ]) &&
+      length(cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules) == 0 &&
+      length(cloudflare_zone_setting.managed) == 0
+    )
+    error_message = "Talk must enforce strict origin TLS only for its two proxied hosts without changing retired maps or external zone settings."
   }
 }
 
