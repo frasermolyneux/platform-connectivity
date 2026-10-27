@@ -3,6 +3,7 @@
   "dns_provider": "cloudflare",
   "zone_id": "598826a3528b935426cf789cfd1864d5",
   "backup_to_azure": false,
+  "legacy_apex_redirect_disabled": true,
   "origin_tls_hostnames": [
     "talkwithtiles.com",
     "www.talkwithtiles.com"

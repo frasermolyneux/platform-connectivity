@@ -10,6 +10,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.28.1"
     }
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.4.2"
+    }
   }
 
   backend "azurerm" {}

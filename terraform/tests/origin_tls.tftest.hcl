@@ -2,6 +2,17 @@ mock_provider "azurerm" {}
 
 mock_provider "cloudflare" {}
 
+mock_provider "external" {
+  mock_data "external" {
+    defaults = { result = { id = "00000000000000000000000000000001" } }
+  }
+}
+
+override_resource {
+  target = cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"]
+  values = { id = "00000000000000000000000000000001" }
+}
+
 override_data {
   target = data.terraform_remote_state.platform_workloads
   values = {
@@ -62,6 +73,22 @@ run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
       length(cloudflare_zone_setting.managed) == 0
     )
     error_message = "Talk must enforce strict origin TLS only for its two proxied hosts without changing retired maps or external zone settings."
+  }
+}
+
+run "legacy_redirect_is_imported_disabled_without_changing_its_target" {
+  command = plan
+
+  assert {
+    condition = (
+      length(cloudflare_page_rule.legacy_apex_redirect) == 1 &&
+      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].status == "disabled" &&
+      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].target == "https://talkwithtiles.com/*" &&
+      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].actions.forwarding_url.url == "https://www.talkwithtiles.com/" &&
+      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].actions.forwarding_url.status_code == 301 &&
+      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].priority == 1
+    )
+    error_message = "Only the explicitly opted-in legacy redirect may be adopted, retaining its exact configuration except disabled status."
   }
 }
 

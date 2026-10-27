@@ -49,9 +49,11 @@ jobs:
             -backend-config=backends/dev.backend.hcl
           terraform -chdir=terraform validate
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/dev.tfvars
-      - name: Test hostname origin TLS safeguards
+      - name: Test hostname and legacy redirect safeguards
         working-directory: terraform
-        run: terraform test -no-color
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          terraform test -no-color
 
   terraform-plan-and-apply-dev:
     permissions:
