@@ -3,7 +3,25 @@
   "dns_provider": "cloudflare",
   "zone_id": "598826a3528b935426cf789cfd1864d5",
   "backup_to_azure": false,
+  "origin_tls_hostnames": [
+    "talkwithtiles.com",
+    "www.talkwithtiles.com"
+  ],
   "records": [
+    {
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "5.196.80.194",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "www",
+      "ttl": 1,
+      "content": "talkwithtiles.com",
+      "proxied": true
+    },
     {
       "type": "CNAME",
       "name": "autodiscover",
