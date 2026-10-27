@@ -1,6 +1,17 @@
 mock_provider "azurerm" {}
 mock_provider "cloudflare" {}
 
+mock_provider "external" {
+  mock_data "external" {
+    defaults = { result = { id = "00000000000000000000000000000001" } }
+  }
+}
+
+override_resource {
+  target = cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"]
+  values = { id = "00000000000000000000000000000001" }
+}
+
 override_data {
   target = data.terraform_remote_state.platform_workloads
   values = { outputs = {} }

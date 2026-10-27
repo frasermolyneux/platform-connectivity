@@ -83,6 +83,24 @@ run `terraform import` or mutate production state from a local shell.
 
 ## Conventions
 
+### Retiring the legacy Talk apex redirect
+
+`legacy_apex_redirect_disabled` opts the external Talk zone into adoption of its
+existing HTTPS apex-to-www Page Rule. Normal full plans discover its identifier
+with a read-only Cloudflare lookup, then the import block adopts it and changes
+only `status` to `disabled`. Its target, destination, status code and priority
+must match the reviewed contract; missing, duplicate, truncated or changed rules
+fail closed. No identifiers or credentials are committed. Discovery receives
+the existing `TF_VAR_cloudflare_api_token` through the process environment, never
+the external data query or state. The provider cannot list legacy Page Rules,
+so the pinned external provider supplies this read-only lookup.
+
+The scoped `Page Rules Write` grant for `talkwithtiles.com` is owned by
+`platform-workloads`. Review a full Production plan showing exactly one import
+and one status update, with no create/delete or unrelated rule changes, before
+merging. The retained disabled rule is protected against destruction; it does
+not transfer ownership of the zone or any other forwarding rule.
+
 ### ACS apex TXT ownership handoff
 
 The existing `molyneux.io/@` TXT set remains live throughout transfer to
