@@ -1,0 +1,8 @@
+{
+  "name": "xtremeidiots.net",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000000",
+  "backup_to_azure": false,
+  "origin_tls_hostnames": [],
+  "records": []
+}

@@ -24,6 +24,11 @@ jobs:
       group: ${{ github.repository }}-dev
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_AZUREAD: "true"
+      ARM_USE_OIDC: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -31,14 +36,17 @@ jobs:
           node-version: "22.x"
       - name: Test maintenance Worker and approved hosts
         run: node --test maintenance/worker.test.mjs
-      - uses: frasermolyneux/actions/terraform-plan@terraform-plan/v2.0.0
+      - uses: frasermolyneux/actions/terraform-setup@terraform-setup/v1.0.0
         with:
           terraform-folder: "terraform"
-          terraform-var-file: "tfvars/dev.tfvars"
-          terraform-backend-file: "backends/dev.backend.hcl"
-          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          terraform_wrapper: "false"
+      - name: Review Development without saving credential-bearing plan artifacts
+        run: |
+          set -euo pipefail
+          terraform -chdir=terraform init -input=false -lockfile=readonly \
+            -backend-config=backends/dev.backend.hcl
+          terraform -chdir=terraform validate
+          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/dev.tfvars
       - name: Test hostname origin TLS safeguards
         working-directory: terraform
         run: terraform test -no-color

@@ -19,6 +19,11 @@ terraform -chdir=terraform validate
 
 Backend-aware plans require access to the Azure state backend and the environment's Azure and Cloudflare credentials. Use the supported GitHub Actions workflows for authoritative plans and all applies. Never run `terraform apply` from a local machine.
 
+Branch/PR plan jobs use the shared pinned setup, read-only provider initialization,
+validation and an unsaved redacted full plan. They never upload a binary plan:
+even a harmless displayed plan can contain the Cloudflare token or sensitive
+existing state. Apply jobs retain their existing same-job plan/apply path.
+
 ## Cloudflare zones: new domains vs adopting existing ones
 
 Cloudflare zones default to external ownership (record-only). Setting a zone's
