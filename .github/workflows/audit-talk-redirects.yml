@@ -53,12 +53,13 @@ jobs:
                   return {key: safe(item) for key, item in value.items()}
               if isinstance(value, list):
                   return [safe(item) for item in value]
-              if isinstance(value, str) and value.startswith(("https://", "http://")):
+              if isinstance(value, str):
                   url = urllib.parse.urlsplit(value)
-                  return urllib.parse.urlunsplit((
-                      url.scheme, url.netloc, url.path,
-                      "REDACTED" if url.query else "", "REDACTED" if url.fragment else "",
-                  ))
+                  if url.scheme in ("https", "http"):
+                      return urllib.parse.urlunsplit((
+                          url.scheme, url.netloc.rsplit("@", 1)[-1], url.path,
+                          "REDACTED" if url.query else "", "REDACTED" if url.fragment else "",
+                      ))
               return value
 
           pages = read("pagerules")
