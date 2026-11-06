@@ -152,6 +152,22 @@ data "cloudflare_ruleset" "existing_custom_firewall" {{
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Resource precondition failed", result.stderr)
 
+    def test_plain_rules_without_action_parameters(self):
+        for action in ("block", "managed_challenge"):
+            for desired in ("omitted", "null"):
+                with self.subTest(action=action, desired=desired):
+                    zone = copy.deepcopy(self.zone)
+                    ruleset = copy.deepcopy(self.ruleset)
+                    zone_rule = zone["waf_custom_ruleset"]["rules"][2]
+                    live_rule = ruleset["rules"][2]
+                    zone_rule["action"] = live_rule["action"] = action
+                    zone_rule.pop("action_parameters")
+                    live_rule.pop("action_parameters")
+                    if desired == "null":
+                        zone_rule["action_parameters"] = None
+                    result = self.plan(ruleset, zone)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

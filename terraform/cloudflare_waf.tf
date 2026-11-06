@@ -49,14 +49,14 @@ resource "cloudflare_ruleset" "zone_custom_firewall" {
               contains(["ref", "description", "expression", "action", "enabled", "action_parameters", "logging"], key)
             ]) &&
             alltrue([
-              for key in keys(expected.action_parameters) :
+              for key in try(keys(expected.action_parameters), []) :
               contains(["products", "response"], key)
             ]) &&
             alltrue(try([for key in keys(expected.logging) : key == "enabled"], [])) &&
-            alltrue([
+            alltrue(try([
               for key, value in data.cloudflare_ruleset.existing_custom_firewall[each.key].rules[index].action_parameters :
               value == null || contains(["products", "response"], key)
-            ])
+            ], []))
           )
         ]),
         false
