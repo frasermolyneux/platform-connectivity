@@ -130,6 +130,56 @@ version. Discovery requires the live value `latest`, and the imported plan
 must show no changes before applying; do not assume the provider can preserve
 an arbitrary pinned version.
 
+#### Optional plan-only rehearsal for PR #71
+
+The `xtremeidiots-adoption-plan` job is a one-off rehearsal, not activation.
+It runs only on a `rehearse-xtremeidiots-adoption` label-add event by
+`frasermolyneux` on non-draft PR #71, from the same repository and
+`frasermolyneux-cloudflare-zone-adoption` branch into `main`. It checks out
+the exact event head, checks both the event and live PR against that checkout,
+requires the live base to match the event and be an ancestor of that head, and
+requires an exact PR comment by `frasermolyneux`:
+
+```text
+/approve-xtremeidiots-adoption-plan <40-character-head-commit-sha>
+```
+
+The comment must contain only that command and the full lowercase SHA.
+Review the entire exact commit, including workflow, scripts, Terraform, and
+external data sources, before providing the comment or adding the label.
+Adding the label is the explicit request to run; an existing label, a push,
+or an ordinary `run-prd-plan` event does not request this job. A new head
+requires a new approval and a new label-add event. Removing an approval or
+label before the final guard check prevents the plan; approval is reusable
+for the same commit, so remove the comment when no longer intended.
+The label must exist before it can be added; creating it and running this job
+require separate authorization. PR comment/label write access is needed for
+the designated account. Do not treat this guard as a security boundary against
+an unreviewed PR author: PR workflow and Terraform code execute with the job's
+credentials and could alter or bypass it. Production has no required
+environment reviewers; restrict write, label, and production-secret access.
+
+The job reads the existing Production `CLOUDFLARE_ADOPTED_ZONE_KEYS`, rejects
+missing or malformed values, and adds only `xtremeidiots.com` to an in-process
+set passed to this single full `terraform plan` using `-var`. It does not update
+the protected variable, upload a plan, run apply, or write imports to state.
+The regular production plan and deployment workflows do not receive the
+override, including scheduled applies. The job still uses Production's
+Cloudflare secret, Azure OIDC identity and real state backend; the Cloudflare
+token's effective access, including Page Rules, must work. Planning obtains a
+production state lock and may modify backend lock metadata; it can contend
+with deployments and failed/cancelled runs may require lock recovery. Plan
+and discovery output can reveal sensitive state or identifiers despite
+redaction: restrict Actions log access and do not publish raw logs. No saved
+binary plan is available to apply later.
+
+Refresh inventory and establish ownership before any rehearsal. Stop on
+unexpected changes, failed authorization, insufficient token access, or
+drift. This preview does not authorize or ensure safety of a later import:
+production activation and any apply require separate approval and a fresh
+reviewed plan. Setting the persistent key early can allow a scheduled deploy
+to apply the adoption without that review.
+
 ## Conventions
 
 ### Retiring the legacy Talk apex redirect

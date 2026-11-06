@@ -38,6 +38,8 @@ jobs:
           node-version: "22.x"
       - name: Test maintenance Worker and approved hosts
         run: node --test maintenance/worker.test.mjs
+      - name: Test adoption rehearsal authorization
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
       - uses: frasermolyneux/actions/terraform-setup@terraform-setup/v1.1.0
         with:
           terraform-folder: "terraform"
@@ -112,3 +114,48 @@ jobs:
             -backend-config=backends/prd.backend.hcl
           terraform -chdir=terraform validate
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars
+
+  xtremeidiots-adoption-plan:
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      id-token: write
+    if: github.repository == 'frasermolyneux/platform-connectivity' && github.event.pull_request.number == 71 && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'frasermolyneux-cloudflare-zone-adoption' && github.event.pull_request.base.ref == 'main' && github.event.action == 'labeled' && github.event.label.name == 'rehearse-xtremeidiots-adoption' && github.actor == 'frasermolyneux'
+    environment: Production
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.repository }}-prd
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: frasermolyneux/actions/terraform-setup@terraform-setup/v1.1.0
+        with:
+          terraform-folder: "terraform"
+          terraform_wrapper: "false"
+      - name: Review the explicitly approved adoption plan without saving it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
+          TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_adopted_zone_keys: ${{ vars.CLOUDFLARE_ADOPTED_ZONE_KEYS }}
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_AZUREAD: "true"
+          ARM_USE_OIDC: "true"
+        run: |
+          set -euo pipefail
+          adoption_keys="$(python3 .github/scripts/xtremeidiots_adoption_plan.py)"
+          terraform -chdir=terraform init -input=false -lockfile=readonly \
+            -backend-config=backends/prd.backend.hcl
+          terraform -chdir=terraform validate
+          adoption_keys="$(python3 .github/scripts/xtremeidiots_adoption_plan.py)"
+          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars \
+            -var="cloudflare_adopted_zone_keys=${adoption_keys}"
