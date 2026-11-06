@@ -62,10 +62,36 @@ resource "cloudflare_zone_dnssec" "managed" {
   status  = "active"
 }
 
+data "external" "preserved_settings" {
+  for_each = {
+    for key, zone in local.cloudflare_zones_to_adopt : key => zone
+    if try(zone.preserve_settings, false)
+  }
+
+  program = ["python3", "${path.module}/scripts/verify_preserved_settings.py"]
+  query = {
+    zone_id = data.cloudflare_zone.adopt[each.key].zone_id
+    settings = jsonencode(merge(
+      local.cloudflare_zone_setting_profiles[try(each.value.plan_profile, "free")],
+      try(each.value.settings, {})
+    ))
+  }
+}
+
 resource "cloudflare_zone_setting" "managed" {
   for_each = local.managed_cloudflare_zone_settings
 
   zone_id    = cloudflare_zone.managed[each.value.zone_key].id
   setting_id = each.value.setting_id
   value      = each.value.value
+
+  lifecycle {
+    precondition {
+      condition = !try(local.managed_cloudflare_zones[each.value.zone_key].preserve_settings, false) || try(
+        data.external.preserved_settings[each.value.zone_key].result.verified == "true",
+        false
+      )
+      error_message = "The existing Cloudflare setting ${each.value.setting_id} for ${each.value.zone_key} differs from its reviewed preservation snapshot."
+    }
+  }
 }

@@ -29,16 +29,18 @@ The shared custom firewall ruleset stays within Cloudflare Free limits. It block
 
 `xtremeidiots.com` is staged for a preservation-first adoption, but its protected
 adoption key must remain unset until the handoff is separately approved. Its
-zone settings and custom firewall snapshot preserve the inventoried Pro
-configuration rather than applying the shared baseline. With
+editable zone settings and custom firewall snapshot preserve the inventoried
+Pro configuration rather than applying the shared baseline. With
 `waf_preserve_existing`, adoption requires one existing custom-firewall
 entrypoint matching the reviewed snapshot, in order, and uses the existing
 rule references discovered at plan time. Drift fails the precondition; this
 is a preservation guard, not a way to deploy changes to that ruleset.
 Cloudflare AI Crawl Control can also edit this phase, so coordinate its
 management before any later change. The managed WAF, rate-limit and redirect
-phases, legacy Page Rules, and status-edge-owned configuration phase remain
-outside this stack's ownership.
+entrypoints and the two legacy Page Rules are also staged for preservation-first
+adoption. Their imports are gated by the same protected adoption key and by
+read-only discovery that rejects drift. The status-edge-owned configuration
+phase remains outside this stack's ownership.
 
 The Cloudflare provider authenticates with `var.cloudflare_api_token`, supplied in CI as `TF_VAR_cloudflare_api_token` from the `CLOUDFLARE_API_KEY` secret. Terraform-managed zones also require `var.cloudflare_account_id`; the real account ID is supplied outside source control.
 

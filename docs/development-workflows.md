@@ -94,9 +94,13 @@ run `terraform import` or mutate production state from a local shell.
 ### Staged xtremeidiots.com handoff
 
 The zone is declared for adoption but remains external until its protected
-key is approved and enabled. Its settings preserve the live Full SSL mode,
-disabled DNSSEC, security level, HTTPS rewrites, TLS 1.3 mode, hotlink
-protection, image optimization and browser cache TTL. The custom-firewall
+key is approved and enabled. The snapshot includes all 48 editable settings
+returned by the zone inventory, including Full SSL mode, security level,
+HTTPS rewrites, TLS 1.3 mode, hotlink protection, image optimization and
+browser cache TTL. Non-editable settings remain unmanaged. Read-only discovery
+fails closed if a selected setting is missing, no longer editable or differs
+from the snapshot; review the production plan for provider support and no
+setting updates. DNSSEC remains disabled. The custom-firewall
 snapshot retains both hotlink exceptions and the AI Crawl Control rule in
 their existing order, including their actions and response. Its
 `waf_preserve_existing` guard reads the whole entrypoint and fails if it is
@@ -110,11 +114,21 @@ edits; do not rely on Terraform and AI Crawl Control independently editing the
 phase. Re-inventory before the production plan and stop on any mismatch. Review
 the plan for no zone setting, DNS, DNSSEC, ruleset replacement, rule, or other
 behavior changes, and for no duplicate imports of already-managed DNS records.
-The existing managed WAF, apex rate limits, apex redirect, legacy Page Rules,
-status-edge configuration phase and workload-owned DNS remain untouched.
-The guarded snapshot is not a mechanism for deploying new firewall rules:
-later protection changes require a separate reviewed ownership and rollout
-design, with client and traffic validation and rollback.
+The existing managed WAF, apex rate limits, apex redirect, and legacy Page
+Rules are staged for adoption with their current actions, order, thresholds,
+and overrides. Discovery verifies the complete reviewed phase and Page Rule
+snapshots, resolves IDs without committing them, and fails if live behavior
+differs. The pipeline token needs zone-scoped Page Rules Write for the Page
+Rule imports; grant it through `platform-workloads` before activation. The
+status-edge configuration phase and workload-owned DNS stay with their
+existing owners. The guarded snapshots are not a mechanism for deploying
+new rules: later protection changes require a separate reviewed ownership and
+rollout design, with client and traffic validation and rollback.
+
+The pinned Cloudflare provider does not expose a managed ruleset execution
+version. Discovery requires the live value `latest`, and the imported plan
+must show no changes before applying; do not assume the provider can preserve
+an arbitrary pinned version.
 
 ## Conventions
 

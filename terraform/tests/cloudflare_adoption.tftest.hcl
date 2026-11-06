@@ -134,3 +134,80 @@ run "preservation_rejects_missing_firewall" {
 
   expect_failures = [cloudflare_ruleset.zone_custom_firewall["example.invalid"]]
 }
+
+run "preserved_controls_stay_inactive_before_adoption" {
+  command = plan
+
+  variables {
+    dns_zones_path = "tests/fixtures/preserved-controls"
+  }
+
+  assert {
+    condition = (
+      length(cloudflare_ruleset.preserved) == 0 &&
+      length(cloudflare_page_rule.preserved) == 0 &&
+      length(data.external.preserved_rulesets) == 0 &&
+      length(data.external.preserved_page_rules) == 0
+    )
+    error_message = "Preserved zone controls must not be discovered or owned before adoption is enabled."
+  }
+}
+
+run "activated_adoption_preserves_existing_controls" {
+  command = plan
+
+  variables {
+    dns_zones_path               = "tests/fixtures/preserved-controls"
+    cloudflare_account_id        = "00000000000000000000000000000000"
+    cloudflare_adopted_zone_keys = ["example.invalid"]
+  }
+
+  override_data {
+    target = data.cloudflare_zone.adopt["example.invalid"]
+    values = { zone_id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_data {
+    target = data.external.preserved_rulesets["example.invalid"]
+    values = {
+      result = {
+        http_ratelimit_id = "00000000000000000000000000000003"
+        http_ratelimit_rules = jsonencode([{
+          ref        = "00000000000000000000000000000004"
+          action     = "managed_challenge"
+          enabled    = true
+          expression = "true"
+          ratelimit = {
+            characteristics     = ["ip.src", "cf.colo.id"]
+            period              = 10
+            requests_per_period = 50
+            mitigation_timeout  = 0
+          }
+        }])
+      }
+    }
+  }
+  override_data {
+    target = data.external.preserved_page_rules["example.invalid"]
+    values = { result = { test = "00000000000000000000000000000005" } }
+  }
+  override_resource {
+    target = cloudflare_ruleset.preserved["example.invalid|http_ratelimit"]
+  }
+  override_resource {
+    target = cloudflare_page_rule.preserved["example.invalid|test"]
+  }
+
+  assert {
+    condition = (
+      cloudflare_ruleset.preserved["example.invalid|http_ratelimit"].phase == "http_ratelimit" &&
+      cloudflare_ruleset.preserved["example.invalid|http_ratelimit"].rules[0].ratelimit.requests_per_period == 50 &&
+      cloudflare_page_rule.preserved["example.invalid|test"].actions.ssl == "full" &&
+      cloudflare_page_rule.preserved["example.invalid|test"].status == "active"
+    )
+    error_message = "Activated adoption must preserve the discovered rate-limit and Page Rule configuration."
+  }
+}

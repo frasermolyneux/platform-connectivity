@@ -1,0 +1,38 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "zone_id": "00000000000000000000000000000001",
+  "dnssec_enabled": false,
+  "waf_custom_rules_enabled": false,
+  "preserve_rulesets": true,
+  "preserved_rulesets": {
+    "http_ratelimit": {
+      "name": "default",
+      "description": "",
+      "rules": [{
+        "action": "managed_challenge",
+        "enabled": true,
+        "expression": "true",
+        "ratelimit": {
+          "characteristics": ["ip.src", "cf.colo.id"],
+          "period": 10,
+          "requests_per_period": 50,
+          "mitigation_timeout": 0
+        }
+      }]
+    }
+  },
+  "preserve_page_rules": true,
+  "page_rules": {
+    "test": {
+      "target": "https://example.invalid/*",
+      "priority": 1,
+      "status": "active",
+      "actions": { "ssl": "full" },
+      "api_actions": [{ "id": "ssl", "value": "full" }]
+    }
+  },
+  "records": []
+}
