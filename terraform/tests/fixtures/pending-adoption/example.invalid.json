@@ -1,0 +1,17 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "zone_id": "00000000000000000000000000000001",
+  "origin_tls_hostnames": ["www.example.invalid"],
+  "records": [
+    {
+      "type": "A",
+      "name": "www",
+      "content": "192.0.2.1",
+      "proxied": true,
+      "ttl": 1
+    }
+  ]
+}

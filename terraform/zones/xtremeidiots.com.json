@@ -1,6 +1,56 @@
 {
   "name": "xtremeidiots.com",
   "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "plan_profile": "pro",
+  "dnssec_enabled": false,
+  "settings": {
+    "automatic_https_rewrites": "off",
+    "security_level": "essentially_off",
+    "ssl": "full",
+    "tls_1_3": "zrt",
+    "hotlink_protection": "on",
+    "polish": "lossy",
+    "browser_cache_ttl": 1382400
+  },
+  "waf_preserve_existing": true,
+  "waf_custom_ruleset": {
+    "name": "default",
+    "description": "",
+    "rules": [
+      {
+        "description": "Allow embedded profile photos",
+        "expression": "(http.request.uri.path contains \"/profile/\")",
+        "action": "skip",
+        "enabled": true,
+        "action_parameters": { "products": ["hot"] },
+        "logging": { "enabled": true }
+      },
+      {
+        "description": "Bypass hotlink for local host or portal",
+        "expression": "(http.referer contains \"xtremeidiots.com\")",
+        "action": "skip",
+        "enabled": true,
+        "action_parameters": { "products": ["hot"] },
+        "logging": { "enabled": true }
+      },
+      {
+        "ref": "[CF AI Audit]",
+        "description": "AI Crawl Control - Block AI bots by User Agent",
+        "expression": "(http.request.uri.path ne \"/robots.txt\" and ((http.user_agent contains \"Amazonbot\") or (http.user_agent contains \"Anchor Browser\") or (http.user_agent contains \"Applebot\") or (http.user_agent contains \"archive.org_bot\") or (http.user_agent contains \"Arquivo-web-crawler\") or (http.user_agent contains \"Baiduspider\") or (http.user_agent contains \"bingbot\") or (http.user_agent contains \"Bytespider\") or (http.user_agent contains \"CCBot\") or (http.user_agent contains \"ClaudeBot\") or (http.user_agent contains \"FacebookBot\") or (http.user_agent contains \"Google-CloudVertexBot\") or (http.user_agent contains \"Manus-User\") or (http.user_agent contains \"meta-externalagent\") or (http.user_agent contains \"meta-externalfetcher\") or (http.user_agent contains \"Novellum\") or (http.user_agent contains \"PerplexityBot\") or (http.user_agent contains \"PetalBot\") or (http.user_agent contains \"ProRataInc\") or (http.user_agent contains \"Terracotta\") or (http.user_agent contains \"TikTokSpider\") or (http.user_agent contains \"Timpibot\")))",
+        "action": "block",
+        "enabled": true,
+        "action_parameters": {
+          "response": {
+            "content": "{\"message\":\"Please contact the site owner for access.\"}",
+            "content_type": "application/json",
+            "status_code": 403
+          }
+        }
+      }
+    ]
+  },
   "zone_id": "b596004d516e2ffe840c76a58b81060c",
   "backup_to_azure": false,
   "records": [

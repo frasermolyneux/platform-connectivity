@@ -5,7 +5,7 @@ locals {
   }
   cloudflare_origin_tls_zones = {
     for key, zone in local.cloudflare_origin_tls_requested_zones : key => zone
-    if try(zone.management, "external") == "external"
+    if contains(keys(local.legacy_cloudflare_zones), key)
   }
 }
 
@@ -24,7 +24,7 @@ resource "terraform_data" "origin_tls_owner" {
     prevent_destroy = true
 
     precondition {
-      condition     = try(each.value.management, "external") == "external"
+      condition     = contains(keys(local.legacy_cloudflare_zones), each.key)
       error_message = "Hostname origin TLS overrides require an existing external zone. Terraform-managed zones already use the strict baseline; remove origin_tls_hostnames."
     }
   }

@@ -14,8 +14,15 @@ Run formatting and validation locally without applying infrastructure:
 
 ```bash
 terraform -chdir=terraform fmt -check -recursive
+terraform -chdir=terraform init -backend=false -lockfile=readonly
 terraform -chdir=terraform validate
+python -m unittest discover -s terraform/scripts -p 'test_*.py'
+terraform -chdir=terraform test
 ```
+
+Select the exact Terraform version from `terraform/.terraform-version` first.
+The custom-firewall preservation test uses the installed provider against a local
+fake API and isolated temporary state; it does not contact Cloudflare.
 
 Backend-aware plans require access to the Azure state backend and the environment's Azure and Cloudflare credentials. Use the supported GitHub Actions workflows for authoritative plans and all applies. Never run `terraform apply` from a local machine.
 
@@ -51,7 +58,10 @@ identifiers are committed and no bespoke workflow is involved —
 blocks bind each object by its discovered ID.
 
 1. Ensure `terraform/zones/<domain>.json` has `management: terraform`,
-   `adopt_existing: true`, and the correct `plan_profile`.
+   `adopt_existing: true`, and the correct `plan_profile`. Retain the existing
+   `zone_id` while the protected adoption key is absent: the zone and its
+   records stay externally managed until activation, and a missing ID fails
+   planning instead of dropping those records.
 2. Declare the desired records in `records[]`:
    - An empty or newly created zone with no live records needs nothing here —
      add whatever records you want Terraform to create.
@@ -60,7 +70,7 @@ blocks bind each object by its discovered ID.
      by the ID the `cloudflare_dns_records` data source discovers); any not yet
      live is created. Live records you omit stay unmanaged.
 3. If the zone already has a custom-firewall ruleset, reconcile its rules into
-   `cloudflare_waf.tf` before proceeding — the ruleset resource owns the whole
+   a reviewed `waf_custom_ruleset` snapshot before proceeding — the ruleset resource owns the whole
    `http_request_firewall_custom` phase, so an incomplete rule list would replace
    the live rules on apply. New-ish domains usually have no such ruleset and it
    is created fresh (a plan-time precondition fails loudly if more than one
@@ -80,6 +90,31 @@ blocks bind each object by its discovered ID.
 Import blocks are idempotent — once an object is in state they are skipped, so
 they stay in place and coexist with day-2 record additions and removals. Never
 run `terraform import` or mutate production state from a local shell.
+
+### Staged xtremeidiots.com handoff
+
+The zone is declared for adoption but remains external until its protected
+key is approved and enabled. Its settings preserve the live Full SSL mode,
+disabled DNSSEC, security level, HTTPS rewrites, TLS 1.3 mode, hotlink
+protection, image optimization and browser cache TTL. The custom-firewall
+snapshot retains both hotlink exceptions and the AI Crawl Control rule in
+their existing order, including their actions and response. Its
+`waf_preserve_existing` guard reads the whole entrypoint and fails if it is
+missing or differs from the snapshot; discovered default rule references are
+not committed. The rule name must remain `default`: changing it forces a
+replacement with the pinned provider.
+
+AI Crawl Control can change the same custom-firewall phase Terraform would own.
+Before activation, coordinate a single owner and freeze or reconcile dashboard
+edits; do not rely on Terraform and AI Crawl Control independently editing the
+phase. Re-inventory before the production plan and stop on any mismatch. Review
+the plan for no zone setting, DNS, DNSSEC, ruleset replacement, rule, or other
+behavior changes, and for no duplicate imports of already-managed DNS records.
+The existing managed WAF, apex rate limits, apex redirect, legacy Page Rules,
+status-edge configuration phase and workload-owned DNS remain untouched.
+The guarded snapshot is not a mechanism for deploying new firewall rules:
+later protection changes require a separate reviewed ownership and rollout
+design, with client and traffic validation and rollback.
 
 ## Conventions
 
