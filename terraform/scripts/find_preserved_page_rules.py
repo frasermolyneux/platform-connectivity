@@ -48,6 +48,8 @@ def discover(query, token):
                 or rule["status"] != snapshot["status"]
                 or not re.fullmatch(r"[0-9a-f]{32}", rule["id"])):
             raise ValueError("Page Rule differs from the reviewed snapshot.")
+        if rule["id"] in result.values():
+            raise ValueError("Page Rule snapshots must match distinct live rules.")
         result[key] = rule["id"]
     return result
 

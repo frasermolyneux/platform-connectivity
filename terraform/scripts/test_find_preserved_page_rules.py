@@ -66,6 +66,12 @@ class PreservedPageRuleTests(unittest.TestCase):
         with patch("urllib.request.urlopen", return_value=response), self.assertRaises(ValueError):
             discover({**QUERY, "rules": json.dumps(expected)}, "disposable-token")
 
+    def test_duplicate_snapshot_cannot_claim_same_live_rule_twice(self):
+        snapshots = {"first": SNAPSHOTS["first"], "duplicate": SNAPSHOTS["first"]}
+        response = io.BytesIO(json.dumps({"success": True, "result": RULES}).encode())
+        with patch("urllib.request.urlopen", return_value=response), self.assertRaises(ValueError):
+            discover({**QUERY, "rules": json.dumps(snapshots)}, "disposable-token")
+
 
 if __name__ == "__main__":
     unittest.main()
