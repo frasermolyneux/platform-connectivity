@@ -18,18 +18,23 @@ def discover(query, token):
     if not re.fullmatch(r"[0-9a-f]{32}", zone_id) or not token or not snapshots:
         raise DiscoveryMismatch("Invalid discovery configuration.")
 
-    def get(path, params=None):
+    def get(path, operation, params=None):
         url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/{path}"
         if params:
             url += "?" + urllib.parse.urlencode(params)
         request = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            payload = json.load(response)
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                payload = json.load(response)
+        except urllib.error.HTTPError as error:
+            raise DiscoveryMismatch(
+                f"Cloudflare {operation} returned HTTP {error.code}."
+            ) from None
         if not payload.get("success"):
             raise DiscoveryMismatch("Cloudflare rejected ruleset discovery.")
         return payload
 
-    listing = get("rulesets", {"per_page": 50})
+    listing = get("rulesets", "ruleset listing", {"per_page": 50})
     targets = listing["result"]
     info = listing.get("result_info") or {}
     if not isinstance(info, dict) or not isinstance(info.get("cursors") or {}, dict):
@@ -51,7 +56,7 @@ def discover(query, token):
         if phase not in {"http_request_firewall_managed", "http_ratelimit",
                          "http_request_dynamic_redirect"}:
             raise DiscoveryMismatch("Unreviewed ruleset phase.")
-        live = get(f"rulesets/phases/{phase}/entrypoint")["result"]
+        live = get(f"rulesets/phases/{phase}/entrypoint", f"{phase} entrypoint")["result"]
         if (live["name"] != snapshot["name"] or live.get("description", "") != snapshot["description"]
                 or live["phase"] != phase or live["kind"] != "zone"
                 or not re.fullmatch(r"[0-9a-f]{32}", live["id"])

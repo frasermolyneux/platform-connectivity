@@ -105,7 +105,7 @@ class PreservedRulesetTests(unittest.TestCase):
         for error, expected in (
             ("mismatch", "Zone entrypoint inventory differs from the reviewed ownership map."),
             ("malformed", "Ruleset discovery failed (KeyError)"),
-            ("api", "Ruleset discovery failed (HTTPError)"),
+            ("api", "Cloudflare ruleset listing returned HTTP 403."),
         ):
             stderr = io.StringIO()
             payload = {"success": True, "result": []} if error == "mismatch" else {"success": True}
@@ -123,6 +123,21 @@ class PreservedRulesetTests(unittest.TestCase):
             self.assertNotIn("private-token", stderr.getvalue())
             self.assertNotIn("secret.invalid", stderr.getvalue())
             self.assertNotIn("sensitive details", stderr.getvalue())
+
+    def test_http_error_reports_only_fixed_entrypoint_and_status(self):
+        from urllib.error import HTTPError
+        stderr = io.StringIO()
+        listing = io.BytesIO(json.dumps({"success": True, "result": TARGETS}).encode())
+        failure = HTTPError("https://secret.invalid/token", 401, "sensitive details", {}, None)
+        with patch("sys.stdin", io.StringIO(json.dumps({
+            "zone_id": ZONE, "rulesets": json.dumps(SNAPSHOTS)
+        }))), patch.dict("os.environ", {"TF_VAR_cloudflare_api_token": "private-token"}), \
+                patch("urllib.request.urlopen", side_effect=[listing, failure]), \
+                contextlib.redirect_stderr(stderr):
+            self.assertEqual(main(), 1)
+        self.assertIn("Cloudflare http_request_firewall_managed entrypoint returned HTTP 401.", stderr.getvalue())
+        for secret in ("secret.invalid", "sensitive details", "private-token", ZONE):
+            self.assertNotIn(secret, stderr.getvalue())
 
 
 if __name__ == "__main__":
