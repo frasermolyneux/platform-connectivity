@@ -17,7 +17,7 @@ Each zone JSON declares a `dns_provider` of either `azure` (default) or `cloudfl
 - **Azure-managed zones** use the grouped schema (`a_records`, `cname_records`, ...) and are provisioned as `azurerm_dns_zone` + record resources.
 - **Cloudflare zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`) and set `management` to either `external` or `terraform`. Missing `management` defaults to `external` for compatibility with existing definitions.
 
-External Cloudflare zones retain a committed `zone_id`; Terraform manages their configured records and any explicitly enabled hostname origin TLS overrides below, not their zone-wide settings. Terraform-managed zones set `management` to `terraform` and omit `zone_id`. For these zones, Terraform manages:
+External Cloudflare zones retain a committed `zone_id`; Terraform manages their configured records and any explicitly enabled hostname origin TLS overrides below, not their zone-wide settings. Existing zones staged for adoption retain that ID until the protected adoption key is enabled, so their records and external-zone TLS behavior remain intact. Terraform-managed zones set `management` to `terraform`; activated zones use their discovered ID. For these zones, Terraform manages:
 
 - The zone and authoritative name servers
 - DNSSEC when `dnssec_enabled` is omitted or `true`
@@ -26,6 +26,19 @@ External Cloudflare zones retain a committed `zone_id`; Terraform manages their 
 - One zone-level custom firewall ruleset, unless `waf_custom_rules_enabled` is `false`
 
 The shared custom firewall ruleset stays within Cloudflare Free limits. It blocks probes for common sensitive files and directories, and applies Managed Challenge to common automated WordPress administration probes. It intentionally does not deploy rate limiting, Bot Fight Mode, Cloudflare managed rulesets, regex expressions, or application-specific controls.
+
+`xtremeidiots.com` is staged for a preservation-first adoption, but its protected
+adoption key must remain unset until the handoff is separately approved. Its
+zone settings and custom firewall snapshot preserve the inventoried Pro
+configuration rather than applying the shared baseline. With
+`waf_preserve_existing`, adoption requires one existing custom-firewall
+entrypoint matching the reviewed snapshot, in order, and uses the existing
+rule references discovered at plan time. Drift fails the precondition; this
+is a preservation guard, not a way to deploy changes to that ruleset.
+Cloudflare AI Crawl Control can also edit this phase, so coordinate its
+management before any later change. The managed WAF, rate-limit and redirect
+phases, legacy Page Rules, and status-edge-owned configuration phase remain
+outside this stack's ownership.
 
 The Cloudflare provider authenticates with `var.cloudflare_api_token`, supplied in CI as `TF_VAR_cloudflare_api_token` from the `CLOUDFLARE_API_KEY` secret. Terraform-managed zones also require `var.cloudflare_account_id`; the real account ID is supplied outside source control.
 

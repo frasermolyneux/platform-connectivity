@@ -1,0 +1,7 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "records": []
+}

@@ -1,0 +1,22 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "zone_id": "00000000000000000000000000000001",
+  "dnssec_enabled": false,
+  "waf_preserve_existing": true,
+  "waf_custom_ruleset": {
+    "name": "default",
+    "description": "",
+    "rules": [{
+      "description": "Allow images",
+      "expression": "true",
+      "action": "skip",
+      "enabled": true,
+      "action_parameters": { "products": ["hot"] },
+      "logging": { "enabled": true }
+    }]
+  },
+  "records": []
+}

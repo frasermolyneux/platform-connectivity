@@ -15,6 +15,19 @@ check "cloudflare_adopted_zone_keys" {
   }
 }
 
+resource "terraform_data" "pending_cloudflare_adoption" {
+  for_each = local.pending_cloudflare_adoptions
+
+  input = each.value.name
+
+  lifecycle {
+    precondition {
+      condition     = try(trimspace(each.value.zone_id) != "", false)
+      error_message = "Existing Cloudflare zone ${each.value.name} must retain its external zone_id while adoption is pending, so its records remain managed."
+    }
+  }
+}
+
 resource "cloudflare_zone" "managed" {
   for_each = local.managed_cloudflare_zones
 

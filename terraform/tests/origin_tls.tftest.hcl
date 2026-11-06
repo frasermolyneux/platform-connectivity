@@ -76,6 +76,30 @@ run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
   }
 }
 
+run "xtremeidiots_pending_adoption_retains_live_baseline" {
+  command = plan
+
+  assert {
+    condition = (
+      contains(keys(local.pending_cloudflare_adoptions), "xtremeidiots.com") &&
+      !contains(keys(cloudflare_zone.managed), "xtremeidiots.com") &&
+      !contains(keys(cloudflare_ruleset.zone_custom_firewall), "xtremeidiots.com") &&
+      !local.cloudflare_zones["xtremeidiots.com"].dnssec_enabled &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.ssl == "full" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.security_level == "essentially_off" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.automatic_https_rewrites == "off" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.tls_1_3 == "zrt" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.hotlink_protection == "on" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.polish == "lossy" &&
+      local.cloudflare_zones["xtremeidiots.com"].settings.browser_cache_ttl == 1382400 &&
+      length(local.cloudflare_zones["xtremeidiots.com"].waf_custom_ruleset.rules) == 3 &&
+      cloudflare_dns_record.cname["xtremeidiots.com|CNAME|portal|app-portal-web-prd-uksouth-fe584e15256a.azurewebsites.net"].proxied == false &&
+      cloudflare_dns_record.a["xtremeidiots.com|A|cdn|192.95.23.11"].proxied == true
+    )
+    error_message = "The staged zone must retain its inventoried settings and integrations without activating zone-wide management."
+  }
+}
+
 run "legacy_redirect_is_imported_disabled_without_changing_its_target" {
   command = plan
 
