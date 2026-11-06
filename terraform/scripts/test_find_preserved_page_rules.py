@@ -1,10 +1,11 @@
 import copy
+import contextlib
 import io
 import json
 import unittest
 from unittest.mock import patch
 
-from find_preserved_page_rules import discover
+from find_preserved_page_rules import discover, main
 
 
 SNAPSHOTS = {
@@ -71,6 +72,28 @@ class PreservedPageRuleTests(unittest.TestCase):
         response = io.BytesIO(json.dumps({"success": True, "result": RULES}).encode())
         with patch("urllib.request.urlopen", return_value=response), self.assertRaises(ValueError):
             discover({**QUERY, "rules": json.dumps(snapshots)}, "disposable-token")
+
+    def test_main_reports_safe_mismatch_but_sanitizes_untrusted_errors(self):
+        for error, expected in (
+            ("mismatch", "Page Rule inventory differs from the reviewed snapshot."),
+            ("malformed", "Page Rule discovery failed (KeyError)"),
+            ("api", "Page Rule discovery failed (HTTPError)"),
+        ):
+            stderr = io.StringIO()
+            payload = {"success": True, "result": []} if error == "mismatch" else {"success": True}
+            side_effect = None
+            if error == "api":
+                from urllib.error import HTTPError
+                side_effect = HTTPError("https://secret.invalid/token", 403, "sensitive details", {}, None)
+            with self.subTest(error=error), patch("sys.stdin", io.StringIO(json.dumps(QUERY))), \
+                    patch.dict("os.environ", {"TF_VAR_cloudflare_api_token": "private-token"}), \
+                    patch("urllib.request.urlopen", return_value=io.BytesIO(json.dumps(payload).encode()),
+                          side_effect=side_effect), contextlib.redirect_stderr(stderr):
+                self.assertEqual(main(), 1)
+            self.assertIn(expected, stderr.getvalue())
+            self.assertNotIn("private-token", stderr.getvalue())
+            self.assertNotIn("secret.invalid", stderr.getvalue())
+            self.assertNotIn("sensitive details", stderr.getvalue())
 
 
 if __name__ == "__main__":

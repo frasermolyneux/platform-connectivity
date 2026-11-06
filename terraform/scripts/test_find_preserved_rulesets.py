@@ -1,12 +1,13 @@
 import copy
 import io
 import json
+import contextlib
 from pathlib import Path
 import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
-from find_preserved_rulesets import discover
+from find_preserved_rulesets import discover, main
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,6 +100,29 @@ class PreservedRulesetTests(unittest.TestCase):
         ):
             with self.subTest(targets=targets, info=info), self.assertRaises(ValueError):
                 self.run_discovery(ENTRYPOINTS, targets, info)
+
+    def test_main_reports_safe_mismatch_but_sanitizes_untrusted_errors(self):
+        for error, expected in (
+            ("mismatch", "Zone entrypoint inventory differs from the reviewed ownership map."),
+            ("malformed", "Ruleset discovery failed (KeyError)"),
+            ("api", "Ruleset discovery failed (HTTPError)"),
+        ):
+            stderr = io.StringIO()
+            payload = {"success": True, "result": []} if error == "mismatch" else {"success": True}
+            side_effect = None
+            if error == "api":
+                from urllib.error import HTTPError
+                side_effect = HTTPError("https://secret.invalid/token", 403, "sensitive details", {}, None)
+            with self.subTest(error=error), patch("sys.stdin", io.StringIO(json.dumps({
+                "zone_id": ZONE, "rulesets": json.dumps(SNAPSHOTS)
+            }))), patch.dict("os.environ", {"TF_VAR_cloudflare_api_token": "private-token"}), \
+                    patch("urllib.request.urlopen", return_value=io.BytesIO(json.dumps(payload).encode()),
+                          side_effect=side_effect), contextlib.redirect_stderr(stderr):
+                self.assertEqual(main(), 1)
+            self.assertIn(expected, stderr.getvalue())
+            self.assertNotIn("private-token", stderr.getvalue())
+            self.assertNotIn("secret.invalid", stderr.getvalue())
+            self.assertNotIn("sensitive details", stderr.getvalue())
 
 
 if __name__ == "__main__":
