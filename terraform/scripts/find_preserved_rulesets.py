@@ -25,7 +25,7 @@ def discover(query, token):
             raise ValueError("Cloudflare rejected ruleset discovery.")
         return payload
 
-    listing = get("rulesets", {"per_page": 100})
+    listing = get("rulesets", {"per_page": 50})
     targets = listing["result"]
     info = listing.get("result_info") or {}
     if not isinstance(info, dict) or not isinstance(info.get("cursors") or {}, dict):

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from find_preserved_rulesets import discover
 
@@ -48,6 +48,7 @@ class PreservedRulesetTests(unittest.TestCase):
             path = urlparse(request.full_url).path
             self.assertEqual(request.get_method(), "GET")
             if path.endswith("/rulesets"):
+                self.assertEqual(parse_qs(urlparse(request.full_url).query), {"per_page": ["50"]})
                 result = targets
             else:
                 phase = path.split("/")[-2]
