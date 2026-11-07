@@ -83,13 +83,28 @@ blocker is required before rollout.
 
 The pinned Cloudflare provider schema accepts an explicit
 `logging = { enabled = false }`, which produces a known value in a synthetic
-local plan. This controls rule-match logging, so it is an additional behavior
-choice, not proof that the omitted value is false. The local plan's provider
-dry run returned an authentication warning; acceptance for this production
-configuration rule and subsequent provider behavior are unverified. Moreover,
-the current guard rejects all non-null logging settings, including explicit
-false. Do not configure or permit that setting without a separately reviewed
-scope decision and an authoritative, read-only production plan.
+local plan. Cloudflare's [API schema][cloudflare-api-schema] defines
+`rulesets_SetConfigRule` in terms of `rulesets_Rule`, which includes an optional
+`logging` object; its `enabled` field controls whether a rule match generates a
+log. The schema does not define the value when logging is omitted. Explicit
+false is an additional behavior choice, not proof of the omitted default.
+The local plan's provider dry run returned an authentication warning;
+acceptance for this production configuration rule and subsequent provider
+behavior are unverified. Moreover, the current guard rejects all non-null
+logging settings, including explicit false. Do not configure or permit that
+setting without a separately reviewed scope decision and an authoritative,
+read-only production plan.
+
+[cloudflare-api-schema]: https://github.com/cloudflare/api-schemas/blob/main/openapi.json
+
+Cloudflare documents that [Full (strict)][strict-mode] follows [Full mode][full-mode]
+with additional origin certificate validation: plain HTTP visitor requests use
+plain HTTP to the origin, while HTTPS requests use HTTPS. It is not the
+`origin_pull` SSL-only mode. Verify the actual HTTP and HTTPS behavior after an
+authorized deployment; this plan guard cannot establish live traffic behavior.
+
+[strict-mode]: https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/
+[full-mode]: https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full/
 
 The workflow creates a saved plan in the runner's private temporary directory,
 validates its JSON, checks its SHA-256, and applies that same binary file in the
