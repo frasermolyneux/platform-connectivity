@@ -50,6 +50,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: read
     environment: Production
     needs: terraform-plan-and-apply-dev
     runs-on: ubuntu-latest
@@ -95,7 +96,17 @@ jobs:
           test ! -e "$plan.metadata.json"
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out=plan.tfplan
           digest=$(sha256sum "$plan" | cut -d' ' -f1)
-          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py
+          merge_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/74" --jq 'if .merged == true and .base.ref == "main" then .merge_commit_sha else empty end')
+          [[ "$merge_sha" =~ ^[0-9a-f]{40}$ ]]
+          associated=$(gh api "repos/$GITHUB_REPOSITORY/commits/$merge_sha/pulls" --jq "[.[] | select(.number == 74 and .merged_at != null and .base.ref == \"main\" and .merge_commit_sha == \"$merge_sha\")] | length")
+          [[ "$associated" == 1 ]]
+          comparison=$(gh api "repos/$GITHUB_REPOSITORY/compare/$merge_sha...$GITHUB_SHA" --jq '[.base_commit.sha, .merge_base_commit.sha, .status] | @tsv')
+          [[ "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'identical || "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'ahead ]]
+          guard_args=()
+          if [[ "$GITHUB_SHA" == "$merge_sha" ]]; then
+            guard_args+=(--require-noop)
+          fi
+          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py "${guard_args[@]}"
           echo "$digest  $plan" | sha256sum --check --status
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - name: Bind saved plan to source and toolchain

@@ -55,6 +55,15 @@ including for manual dispatch. If the TLS addition is pending, an ordinary plan
 that also contains unrelated changes is rejected in its entirety; first resolve
 the exact TLS addition through its dedicated guarded workflow. Removing this
 temporary restriction and restoring the shared production action requires review.
+On the merge commit of the preparatory PR #74, including a manual dispatch or
+rerun of that same commit, the ordinary saved plan additionally must contain
+only no-op resource and output changes, no drift or unknowns, and no unresolved
+checks. The job fails closed if it cannot resolve the merged PR's commit from
+GitHub; it validates, stores and applies the same saved plan and publishes the
+normal receipt for an attempted apply. Subsequent commits use the ordinary
+target-only guard. If `main` advances before that first job runs, its current-main
+check fails; a later commit is not covered by this one-time no-op guard and needs
+its own coordination and review.
 As before, non-scheduled production runs require the dev job to succeed. A
 queued run whose commit is no longer current `main` fails rather than applying
 stale configuration. An unrelated push that does not match the deployment
