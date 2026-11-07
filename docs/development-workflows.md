@@ -4,7 +4,8 @@
 - **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
 - **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
-- **deploy-prd**: Triggered on push to main, weekly schedule (Thu 03:00 UTC), or manual dispatch. Applies dev first, then prd.
+- **deploy-prd**: Triggered on push to main, weekly schedule, or manual dispatch. The ordinary production apply is paused; non-scheduled runs still apply dev.
+- **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition. It is fail-closed pending the prerequisites below.
 - **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
 - **destroy-environment**: Manual dispatch with environment choice (dev/prd).
 
@@ -40,6 +41,48 @@ bundle can contain credentials or sensitive state, even when the displayed plan
 has no changes. Restrict blob access and manage retention separately; the action
 does not create the container or configure its access or retention.
 
+## Guarded strict TLS rollout
+
+The ordinary `deploy-prd` production job is intentionally disabled for every
+trigger, including merges and the schedule. Other production changes are also
+paused; restoring a general production deployment path requires separate review.
+The manually dispatched destroy workflow is separate and is not authorized by
+this procedure. Do not merge or deploy #73 until all authorization conditions
+have been demonstrated.
+
+This change cannot disable historical workflow revisions. Existing branches,
+queued jobs, and reruns of older `main` runs may still invoke the old unguarded
+production apply. The current Production environment has no protection rules
+or branch policy. Before relying on the pause, enforce an external,
+non-bypassable production deployment policy that blocks legacy workflow
+revisions and reruns, and establish that no legacy apply is already running or
+queued. A branch restriction alone does not block reruns of old `main` commits.
+These controls are outside this repository and are not implemented here.
+
+The guarded workflow can run only on the current `main` commit, after the
+workflow and target change have passed normal PR review and checks. Before
+rollout, independently verify the origin certificate and renewal readiness.
+The Production environment does not currently require a human reviewer; this
+workflow's authorization is for the exact machine-validated scope below, not
+for an arbitrary production plan.
+
+The plan must be a complete, drift-free in-place update of the existing
+`xtremeidiots.net` configuration ruleset from no rules to exactly the specified
+host, action, and strict TLS setting. Imports, moves, replacements, deletions,
+other resource or output changes, deferred changes, and unknown non-metadata
+values are rejected. The previously observed production plan has an unknown
+`logging` value on the new rule; the guard rejects it. Do not weaken the guard
+or assume that value is harmless: resolving and independently reviewing this
+blocker is required before rollout.
+
+The workflow creates a saved plan in the runner's private temporary directory,
+validates its JSON, checks its SHA-256, and applies that same binary file in the
+same job. It checks that main has not advanced before planning or applying.
+Terraform's own state serial check still applies. These checks cannot prevent
+out-of-band changes between refresh and apply or establish certificate health;
+operators must control that window and verify the origin separately. Never put
+the binary plan or its JSON representation in public artifacts or logs.
+
 ## Cloudflare zones: new domains vs adopting existing ones
 
 Cloudflare zones default to external ownership (record-only). Setting a zone's
@@ -54,7 +97,8 @@ Terraform creates everything from scratch. There is nothing to import.
 1. Create `terraform/zones/<domain>.json` with `dns_provider: cloudflare`,
    `management: terraform`, the intended `plan_profile`, `records`, and flags.
 2. Add the zone key to the Production `CLOUDFLARE_ADOPTED_ZONE_KEYS` variable.
-3. Merge; `deploy-prd` creates the zone, DNSSEC, settings, WAF, and records.
+3. After the ordinary production deployment path is restored, merge and deploy;
+   that path creates the zone, DNSSEC, settings, WAF, and records.
 4. Point the registrar's nameservers at the Cloudflare-assigned NS.
 
 ### Existing domain (already in Cloudflare) — adopt via data-source import
@@ -94,7 +138,8 @@ blocks bind each object by its discovered ID.
 5. Run the production plan through **PR Verify** with the `run-prd-plan` label.
    Review it for any unexpected create/replace/delete on imported objects and any
    intended settings hardening before approval.
-6. Merge; `deploy-prd` performs the import and reconciles.
+6. After the ordinary production deployment path is restored, merge and deploy;
+   that path performs the import and reconciliation.
 
 Import blocks are idempotent — once an object is in state they are skipped, so
 they stay in place and coexist with day-2 record additions and removals. Never

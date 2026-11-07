@@ -45,26 +45,4 @@ jobs:
           AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-  terraform-plan-and-apply-prd:
-    if: ${{ !failure() && !cancelled() && (needs.terraform-plan-and-apply-dev.result == 'success' || github.event_name == 'schedule') }}
-    permissions:
-      contents: read
-      id-token: write
-    environment: Production
-    needs: terraform-plan-and-apply-dev
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.repository }}-prd
-    env:
-      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
-      TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      TF_VAR_cloudflare_adopted_zone_keys: ${{ vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]' }}
-    steps:
-      - uses: frasermolyneux/actions/terraform-plan-and-apply@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778 # terraform-plan-and-apply/v6.0.0
-        with:
-          terraform-folder: "terraform"
-          terraform-var-file: "tfvars/prd.tfvars"
-          terraform-backend-file: "backends/prd.backend.hcl"
-          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  # Production is intentionally paused; see deploy-strict-origin-tls.yml.
