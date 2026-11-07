@@ -69,10 +69,15 @@ run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
         for rule in cloudflare_ruleset.origin_tls["talkwithtiles.com"].rules :
         rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
       ]) &&
-      length(cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules) == 0 &&
+      toset([for rule in cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules : rule.expression]) ==
+      toset(["http.host eq \"redirect.xtremeidiots.net\""]) &&
+      alltrue([
+        for rule in cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules :
+        rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
+      ]) &&
       length(cloudflare_zone_setting.managed) == 0
     )
-    error_message = "Talk must enforce strict origin TLS only for its two proxied hosts without changing retired maps or external zone settings."
+    error_message = "Talk and the XtremeIdiots redirect must enforce strict origin TLS only for their selected proxied hosts without changing external zone settings."
   }
 }
 
