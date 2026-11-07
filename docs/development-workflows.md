@@ -40,9 +40,10 @@ pre-existing private `tfplan` container in the initialized backend account. A
 bundle can contain credentials or sensitive state, even when the displayed plan
 has no changes. Restrict blob access and manage retention separately; the action
 does not create the container or configure its access or retention. During the
-guarded strict TLS rollout, the temporary ordinary production job uses a private
-runner-local plan instead of the shared action and does not upload that bundle
-or publish its apply receipt.
+guarded strict TLS rollout, the ordinary production job uses the same pinned
+plan-storage and execution-receipt actions directly after scope validation.
+An apply receipt is published only if the apply step was attempted; a plan,
+guard, storage, or pre-apply failure does not represent an attempted apply.
 
 ## Guarded strict TLS rollout
 

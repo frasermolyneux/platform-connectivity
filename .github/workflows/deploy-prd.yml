@@ -70,23 +70,71 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: frasermolyneux/actions/terraform-setup@594500f81ee7fdb65616bba793f8cdf9025d57b2
+      - name: Checkout pinned plan metadata helper
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: frasermolyneux/actions
+          ref: 977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
+          path: .shared-terraform-actions
+          persist-credentials: false
+      - id: toolchain
+        uses: frasermolyneux/actions/terraform-setup@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
         with:
           terraform-folder: terraform
           terraform_wrapper: "false"
-      - name: Validate and apply the same saved plan
+      - name: Plan and validate ordinary production scope
+        id: plan
         run: |
           set -euo pipefail
           umask 077
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
           terraform -chdir=terraform init -input=false -lockfile=readonly -backend-config=backends/prd.backend.hcl
           terraform -chdir=terraform validate
-          plan="$RUNNER_TEMP/ordinary-prd.tfplan"
-          trap 'rm -f -- "$plan"' EXIT
-          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out="$plan"
+          plan="$GITHUB_WORKSPACE/terraform/plan.tfplan"
+          test ! -e "$plan"
+          test ! -e "$plan.metadata.json"
+          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out=plan.tfplan
           digest=$(sha256sum "$plan" | cut -d' ' -f1)
           terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py
           echo "$digest  $plan" | sha256sum --check --status
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - name: Bind saved plan to source and toolchain
+        env:
+          TF_CONTEXT: ${{ steps.toolchain.outputs.directory }}
+          TF_PLAN: plan.tfplan
+          TF_ENVIRONMENT: ""
+          TF_VAR_FILE: tfvars/prd.tfvars
+        run: node .shared-terraform-actions/terraform-setup/context.cjs save-plan
+      - name: Store Terraform plan
+        uses: frasermolyneux/actions/terraform-plan-storage@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
+        with:
+          operation: upload
+          context-directory: ${{ steps.toolchain.outputs.directory }}
+          plan-file-name: plan.tfplan
+          plan-artifact-name: terraform-plan
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify the saved plan before apply
+        env:
+          PLAN_DIGEST: ${{ steps.plan.outputs.digest }}
+        run: |
+          set -euo pipefail
+          plan="$GITHUB_WORKSPACE/terraform/plan.tfplan"
+          echo "$PLAN_DIGEST  $plan" | sha256sum --check --status
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-          echo "Applying ordinary production saved plan SHA-256: $digest"
-          terraform -chdir=terraform apply -input=false -auto-approve "$plan"
+          echo "Applying ordinary production saved plan SHA-256: $PLAN_DIGEST"
+      - name: Apply the validated saved plan
+        id: apply
+        run: terraform -chdir=terraform apply -input=false -auto-approve "$GITHUB_WORKSPACE/terraform/plan.tfplan"
+      - name: Publish Terraform apply execution evidence
+        if: always() && (steps.apply.outcome == 'success' || steps.apply.outcome == 'failure' || steps.apply.outcome == 'cancelled')
+        uses: frasermolyneux/actions/terraform-receipt@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
+        with:
+          context-directory: ${{ steps.toolchain.outputs.directory }}
+          operation: apply
+          outcome: ${{ steps.apply.outcome == 'success' && 'success' || 'failure' }}
+          terraform-var-file: tfvars/prd.tfvars
+      - name: Remove local saved plan
+        if: always()
+        run: rm -f -- terraform/plan.tfplan terraform/plan.tfplan.metadata.json
