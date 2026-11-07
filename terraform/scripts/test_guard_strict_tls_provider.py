@@ -10,7 +10,6 @@ import tempfile
 import threading
 import unittest
 
-from guard_ordinary_prd_plan import validate as validate_ordinary
 from guard_strict_tls_plan import Rejected, validate
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -127,37 +126,9 @@ resource "cloudflare_ruleset" "origin_tls" {{
                     self.assertEqual(len(server.requests[0]["rules"]), 1)
                     self.assertNotIn("logging", server.requests[0]["rules"][0])
                     self.assertEqual(server.requests[0]["rules"][0]["action_parameters"], {"ssl": "strict"})
-                    with self.assertRaises(Rejected):
-                        validate_ordinary(parsed, ZONE)
-
                     empty_config = config[:config.index("  rules = [{")] + '''  rules = []
 }
-resource "terraform_data" "unrelated" {
-  input = "ordinary change"
-}
 '''
-                    (work / "main.tf").write_text(empty_config)
-                    plan = subprocess.run([terraform, "plan", "-input=false", "-no-color", "-out=plan.tfplan"],
-                                          cwd=work, env=env, capture_output=True, text=True)
-                    self.assertEqual(plan.returncode, 0, plan.stdout + plan.stderr)
-                    shown = subprocess.run([terraform, "show", "-json", "plan.tfplan"], cwd=work,
-                                           capture_output=True, text=True, check=True)
-                    parsed = json.loads(shown.stdout)
-                    validate_ordinary(parsed, ZONE)
-                    with self.assertRaises(Rejected):
-                        validate_ordinary(parsed, ZONE, require_noop=True)
-                    self.assertTrue(any(
-                        item["address"] == "terraform_data.unrelated"
-                        and item["change"]["actions"] == ["create"]
-                        for item in parsed["resource_changes"]
-                    ))
-                    (work / "main.tf").write_text(empty_config.split('resource "terraform_data"')[0])
-                    plan = subprocess.run([terraform, "plan", "-input=false", "-no-color", "-out=plan.tfplan"],
-                                          cwd=work, env=env, capture_output=True, text=True)
-                    self.assertEqual(plan.returncode, 0, plan.stdout + plan.stderr)
-                    shown = subprocess.run([terraform, "show", "-json", "plan.tfplan"], cwd=work,
-                                           capture_output=True, text=True, check=True)
-                    validate_ordinary(json.loads(shown.stdout), ZONE, require_noop=True)
                     rule = {
                         "id": "00000000000000000000000000000004",
                         "ref": "origin_strict_redirect_xtremeidiots_net",
@@ -168,7 +139,7 @@ resource "terraform_data" "unrelated" {
                     }
                     ruleset["rules"] = [rule]
                     (work / "terraform.tfstate").write_text(json.dumps(state))
-                    (work / "main.tf").write_text(empty_config.split('resource "terraform_data"')[0])
+                    (work / "main.tf").write_text(empty_config)
                     server.requests.clear()
                     plan = subprocess.run([terraform, "plan", "-input=false", "-no-color", "-out=plan.tfplan"],
                                           cwd=work, env=env, capture_output=True, text=True)
@@ -179,8 +150,6 @@ resource "terraform_data" "unrelated" {
                     validate(parsed, ZONE, "remove")
                     with self.assertRaises(Rejected):
                         validate(parsed, ZONE, "add")
-                    with self.assertRaises(Rejected):
-                        validate_ordinary(parsed, ZONE)
                     self.assertEqual(len(server.requests), 1)
                     self.assertEqual(server.requests[0].get("rules"), [])
                 finally:

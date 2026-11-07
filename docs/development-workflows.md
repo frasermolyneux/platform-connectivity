@@ -4,8 +4,8 @@
 - **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
 - **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
-- **deploy-prd**: Triggered on push to main, weekly schedule, or manual dispatch. Ordinary production deploys apply a saved plan only when the guarded `.net` TLS ruleset is unchanged; non-scheduled runs still apply dev.
-- **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition or its exact removal. It is fail-closed pending the prerequisites below.
+- **deploy-prd**: Triggered on matching pushes to main, weekly schedule, or manual dispatch. Non-scheduled runs apply dev first, then prd; scheduled runs apply prd only.
+- **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition or its exact removal. Coordinate with ordinary deployments before use.
 - **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
 - **destroy-environment**: Manual dispatch with environment choice (dev/prd).
 
@@ -39,119 +39,33 @@ bundle containing the binary plan, metadata and provider lock via OIDC to the
 pre-existing private `tfplan` container in the initialized backend account. A
 bundle can contain credentials or sensitive state, even when the displayed plan
 has no changes. Restrict blob access and manage retention separately; the action
-does not create the container or configure its access or retention. During the
-guarded strict TLS rollout, the ordinary production job uses the same pinned
-plan-storage and execution-receipt actions directly after scope validation.
-An apply receipt is published only if the apply step was attempted; a plan,
-guard, storage, or pre-apply failure does not represent an attempted apply.
+does not create the container or configure its access or retention.
 
 ## Guarded strict TLS rollout
 
-The ordinary `deploy-prd` production job remains available for unrelated changes.
-It validates and applies the same saved plan, rejecting any change, drift, import,
-move, or unknown value in the `xtremeidiots.net` origin TLS ruleset. It also
-rejects an absent target and deferred changes. It runs only on current `main`,
-including for manual dispatch. If the TLS addition is pending, an ordinary plan
-that also contains unrelated changes is rejected in its entirety; first resolve
-the exact TLS addition through its dedicated guarded workflow. Removing this
-temporary restriction and restoring the shared production action requires review.
-On the merge commit of the preparatory PR #74, including a manual dispatch or
-rerun of that same commit, the ordinary saved plan additionally must contain
-only no-op resource and output changes, no drift or unknowns, and no unresolved
-checks. The job fails closed if it cannot resolve the merged PR's commit from
-GitHub; it validates, stores and applies the same saved plan and publishes the
-normal receipt for an attempted apply. Subsequent commits use the ordinary
-target-only guard. If `main` advances before that first job runs, its current-main
-check fails; a later commit is not covered by this one-time no-op guard and needs
-its own coordination and review.
-The deployment workflow's preceding development job also validates and
-applies a drift-free no-op saved plan on the merge commits of both #74 and #73,
-preserving the private plan bundle and attempted-apply receipt. Until #73 is
-confirmed merged, it also requires no-op dev plans on intervening main commits
-to avoid a race with stale GitHub PR status. If #73 is closed unmerged or its
-identity or merge ancestry cannot be verified, it fails closed. If the dev
-guard fails, production does not run, so intervening unrelated deployments that
-also require dev changes must wait. Later main commits after #73's merge use the
-existing shared dev plan-and-apply action.
-After #73 merges, let its ordinary production job finish before dispatching the
-dedicated guarded job; otherwise the single-pending concurrency queue can
-displace work. If the guarded rollout fails, do not bypass the guard: inspect
-the failed job and plan scope, coordinate other production jobs, and prepare
-and review a corrective change. Use the separately authorized exact removal
-path below if its prerequisites are met. Restore ordinary deployment behavior
-promptly through a separately reviewed change after the rollout or if the
-rollout is abandoned; until then the temporary guards remain in force.
-For that restoration, open a separate PR based on then-current `main` and
-restore `.github/workflows/deploy-prd.yml` to the pre-rollout version at commit
-`7d5ab52b7da57ea6ef9b656d2928758cd9f1c79b`, reconciling any intervening
-intentional changes. Include the directly affected workflow contract tests and
-documentation in that PR so the restored workflow passes the normal checks;
-do not include unrelated changes. Run PR checks without a skip instruction on
-the PR head. Coordinate and wait for
-all relevant dev and production jobs to finish; do not merge until the strict
-TLS operation has completed or the rollout has been explicitly abandoned.
+The ordinary `deploy-prd` jobs use the shared plan-and-apply action for dev and
+production. They no longer enforce the temporary no-op or TLS target guards,
+or check that the commit is current `main`. Manual dispatch on other refs and
+reruns of stale commits retain their pre-rollout behavior. Coordinate and review
+ordinary deployments accordingly; a matching main push can apply TLS changes
+without using the dedicated workflow below.
 
-To avoid the restored workflow immediately applying an independently generated
-plan on the restoration merge, use a squash merge with `[skip ci]` **only in
-the resulting merge commit message**, not in the PR head. GitHub documents that
-[skip instructions][skip-workflows] suppress `push` and `pull_request` runs
-for that commit; consequently neither dev nor production apply is run on the
-restoration merge, rather than relying on a previously reviewed plan. Confirm
-that the repository permits the squash commit message and that all required PR
-checks passed before merging; skipped checks can remain pending and block
-branch protection. This skips *all* push-triggered workflows for that commit,
-including Code Quality scanning and the main-only Terraform Toolchain binary
-observation, not just deployment. PR checks do not replace these main-specific
-effects. One candidate is a separately reviewed, non-skipped docs-only follow-up
-on current `main`: the current Code Quality and Terraform Toolchain workflows
-run on any main push, whereas `deploy-prd` filters to `terraform/**`,
-`maintenance/**`, and its own workflow file. That checks the follow-up commit,
-not the restoration commit; confirm this is acceptable and verify the actual
-changed paths and workflow definitions before relying on it. Alternatively,
-the toolchain observation supports manual dispatch after coordination. Do not
-treat skipped main checks as passed. This does not stop
-already queued jobs, scheduled, manual, or other event types, and is not a
-protection against historical reruns or direct writes. After merge, verify the
-merge commit and absence of deployment jobs before allowing other operations.
+The restoration itself requires a separately authorized merge after the guarded
+rollout has completed and relevant jobs have finished. The proposed squash
+merge uses `[skip ci]` only in the merge commit message, after all required PR
+checks pass. This skips all push workflows on that commit, including Code
+Quality and the main-only Terraform Toolchain binary observation. A separately
+reviewed non-skipped docs-only follow-up outside `deploy-prd` paths can exercise
+those workflows on a different SHA, not replace checks on the restoration SHA.
+Reassess intervening main changes, workflow definitions, paths, and job outcomes
+before relying on that follow-up. Skip instructions do not stop queued jobs,
+schedules, manual dispatches, historical reruns, or direct writes.
 
-Restoration returns both environments to the original shared action, including
-non-main manual dispatch and its previous behavior for stale runs. Subsequent
-ordinary deployments are no longer covered by the temporary target guard or
-no-op scope, so their normal authorization and review process applies. A
-separately reviewed restoration PR and its merge are not authorized by this
-procedure alone.
-
-[skip-workflows]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs
-Manual `deploy-prd` dispatch from a non-main ref is rejected before the dev
-apply; use `deploy-dev` for development-only work.
-As before, non-scheduled production runs require the dev job to succeed. A
-queued run whose commit is no longer current `main` fails rather than applying
-stale configuration. An unrelated push that does not match the deployment
-workflow's path filters does not start a replacement run; manually dispatch
-`deploy-prd` on current `main` after checking the failed run and coordinating
-with other production jobs.
-The manually dispatched destroy workflow is separate and is not authorized by
-this procedure. Do not merge or deploy #73 until all authorization conditions
-have been demonstrated.
-
-This change cannot disable historical workflow revisions. Existing branches,
-queued jobs, and reruns of older `main` runs may still invoke the old unguarded
-production apply. The current Production environment has no protection rules
-or branch policy. [Disabling the legacy workflow in GitHub][disable-workflow]
-prevents new triggers and reruns while it stays disabled, but does not cancel
-existing runs and can be reversed by an authorized user; it is an operational
-stop, not an in-repository enforcement mechanism. Before rollout, inspect
-queued and active production jobs, and coordinate against starting historical
-workflow revisions or reruns. This is a residual operational risk: a historical
-run can still bypass both guards. A branch restriction alone does not block
-reruns of old `main` commits. The ordinary, guarded and destroy jobs share the
-production concurrency group, but historical or other workflows and direct
-access must be assessed separately; concurrency does not stop out-of-band writes.
-GitHub's default concurrency queue allows only one pending job; a newer
-production-group job, including a PR plan, can cancel a pending deployment.
-Check job outcomes rather than assuming a queued deployment will run.
-
-[disable-workflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
+The ordinary, guarded and destroy jobs share the production concurrency group,
+but other workflows and direct access must be assessed separately; concurrency
+does not stop out-of-band writes. GitHub's default concurrency queue allows only
+one pending job; a newer production-group job, including a PR plan, can cancel
+a pending deployment. Check job outcomes rather than assuming it will run.
 
 The guarded workflow can run only on the current `main` commit, after the
 workflow and target change have passed normal PR review and checks. Before
@@ -204,11 +118,13 @@ out-of-band changes between refresh and apply or establish certificate health;
 operators must control that window and verify the origin separately. Never put
 the binary plan or its JSON representation in public artifacts or logs.
 
-For rollback, obtain separate authorization, review and merge a configuration
-change restoring the `.net` `origin_tls_hostnames` list to `[]`, then dispatch
-the dedicated workflow on current `main` with operation `remove`. The ordinary
-deployment guard rejects the target change. The removal guard requires an
-in-place update of the same existing entrypoint containing exactly the known
+For rollback, obtain separate authorization and a reviewed deployment plan before
+changing the `.net` `origin_tls_hostnames` list to `[]`. A matching main push
+starts the ordinary deployment, which can apply the change without the dedicated
+guard. Do not assume merging a configuration revert and then dispatching the
+guarded workflow is safe; coordinate a separately reviewed procedure that controls
+ordinary and other production runs first. The dedicated workflow's `remove` guard
+requires an in-place update of the same existing entrypoint containing exactly the known
 strict rule, to an empty rule list, with no other resource or output changes,
 drift, imports, moves, replacement, deletion, or critical unknown values. It
 requires the existing rule's logging to be absent/null; if Cloudflare returns
@@ -232,7 +148,7 @@ Terraform creates everything from scratch. There is nothing to import.
    `management: terraform`, the intended `plan_profile`, `records`, and flags.
 2. Add the zone key to the Production `CLOUDFLARE_ADOPTED_ZONE_KEYS` variable.
 3. Merge and deploy through the ordinary production path; that path creates the
-   zone, DNSSEC, settings, WAF, and records, provided the TLS guard passes.
+   zone, DNSSEC, settings, WAF, and records.
 4. Point the registrar's nameservers at the Cloudflare-assigned NS.
 
 ### Existing domain (already in Cloudflare) — adopt via data-source import
@@ -273,7 +189,7 @@ blocks bind each object by its discovered ID.
    Review it for any unexpected create/replace/delete on imported objects and any
    intended settings hardening before approval.
 6. Merge and deploy through the ordinary production path; that path performs the
-   import and reconciliation, provided the TLS guard passes.
+   import and reconciliation.
 
 Import blocks are idempotent — once an object is in state they are skipped, so
 they stay in place and coexist with day-2 record additions and removals. Never
@@ -339,7 +255,7 @@ TXT, SPF, MX, DKIM or DMARC records during the handoff.
 
 - DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
 - An explicit empty `origin_tls_hostnames` list clears retired hostname rules while retaining the protected, stack-owned configuration entrypoint. Omit the property only for zones this stack has never owned. The `xtremeidiots.com` configuration phase is already owned by the status edge stack; its exact-host maps rule must be maintained there, not by creating a competing entrypoint.
-- `redirect.xtremeidiots.net` uses an exact-host strict origin TLS override; the zone-wide Flexible setting is unchanged. Before rollout, merge [the guarded deployment procedure](https://github.com/frasermolyneux/platform-connectivity/pull/74), verify a publicly trusted, hostname-valid origin certificate, and review the production plan. Rollback requires separate authorization and reviewed configuration restoring the empty hostname list on current main, followed by the guarded `remove` workflow described above. The guard fails closed if the existing rule's logging is non-null or other values differ; a configuration revert alone does not deploy the rollback.
+- `redirect.xtremeidiots.net` uses an exact-host strict origin TLS override; the zone-wide Flexible setting is unchanged. Verify a publicly trusted, hostname-valid origin certificate and review the production plan before deployment. Rollback requires separate authorization and a reviewed procedure controlling ordinary deployments as described above; a matching main push can apply a configuration revert without the dedicated guard.
 - Cloudflare zones default to external ownership. Set `management` to `terraform` only when the zone and its controls will be adopted into this state.
 - Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, and `waf_custom_rules_enabled`.
 - Private link zones are listed in `terraform/private_link_zones/prd.json`.
