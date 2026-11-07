@@ -112,3 +112,37 @@ jobs:
             -backend-config=backends/prd.backend.hcl
           terraform -chdir=terraform validate
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars
+
+  verify-private-plans:
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) && contains(github.event.pull_request.labels.*.name, 'verify-private-plans') && !contains(github.event.pull_request.labels.*.name, 'deploy-dev') && (contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action) || (github.event.action == 'labeled' && github.event.label.name == 'verify-private-plans'))
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: Development
+            name: dev
+          - environment: Production
+            name: prd
+    environment: ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.repository }}-${{ matrix.name }}
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
+      TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_cloudflare_adopted_zone_keys: ${{ matrix.name == 'prd' && (vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]') || '[]' }}
+    steps:
+      - uses: frasermolyneux/actions/terraform-plan-readonly@027d7e31bb32b734090aaed01b36d74f1d658b61 # terraform-plan-readonly/v5.0.0
+        with:
+          terraform-folder: "terraform"
+          terraform-var-file: tfvars/${{ matrix.name }}.tfvars
+          terraform-backend-file: backends/${{ matrix.name }}.backend.hcl
+          terraform-additional-args: "-input=false -no-color -detailed-exitcode"
+          plan-artifact-name: verify-private-plan-${{ matrix.name }}
+          enable-pr-comment: "false"
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
