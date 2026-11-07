@@ -57,7 +57,10 @@ the exact TLS addition through its dedicated guarded workflow. Removing this
 temporary restriction and restoring the shared production action requires review.
 As before, non-scheduled production runs require the dev job to succeed. A
 queued run whose commit is no longer current `main` fails rather than applying
-stale configuration.
+stale configuration. An unrelated push that does not match the deployment
+workflow's path filters does not start a replacement run; manually dispatch
+`deploy-prd` on current `main` after checking the failed run and coordinating
+with other production jobs.
 The manually dispatched destroy workflow is separate and is not authorized by
 this procedure. Do not merge or deploy #73 until all authorization conditions
 have been demonstrated.
@@ -131,6 +134,11 @@ Terraform's own state serial check still applies. These checks cannot prevent
 out-of-band changes between refresh and apply or establish certificate health;
 operators must control that window and verify the origin separately. Never put
 the binary plan or its JSON representation in public artifacts or logs.
+
+Neither guarded path supports rolling back the TLS rule: the ordinary guard
+rejects a target change and the dedicated guard permits only the addition.
+Before rollout, agree an independently reviewed and separately authorized
+rollback procedure; do not assume reverting the JSON will deploy the removal.
 
 ## Cloudflare zones: new domains vs adopting existing ones
 
