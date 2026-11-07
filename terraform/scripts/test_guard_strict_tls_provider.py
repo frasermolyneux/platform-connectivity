@@ -149,6 +149,31 @@ resource "terraform_data" "unrelated" {
                         and item["change"]["actions"] == ["create"]
                         for item in parsed["resource_changes"]
                     ))
+                    rule = {
+                        "id": "00000000000000000000000000000004",
+                        "ref": "origin_strict_redirect_xtremeidiots_net",
+                        "description": "Validate the origin certificate for redirect.xtremeidiots.net",
+                        "expression": 'http.host eq "redirect.xtremeidiots.net"',
+                        "action": "set_config", "enabled": True,
+                        "action_parameters": {"ssl": "strict"},
+                    }
+                    ruleset["rules"] = [rule]
+                    (work / "terraform.tfstate").write_text(json.dumps(state))
+                    (work / "main.tf").write_text(empty_config.split('resource "terraform_data"')[0])
+                    server.requests.clear()
+                    plan = subprocess.run([terraform, "plan", "-input=false", "-no-color", "-out=plan.tfplan"],
+                                          cwd=work, env=env, capture_output=True, text=True)
+                    self.assertEqual(plan.returncode, 0, plan.stdout + plan.stderr)
+                    shown = subprocess.run([terraform, "show", "-json", "plan.tfplan"], cwd=work,
+                                           capture_output=True, text=True, check=True)
+                    parsed = json.loads(shown.stdout)
+                    validate(parsed, ZONE, "remove")
+                    with self.assertRaises(Rejected):
+                        validate(parsed, ZONE, "add")
+                    with self.assertRaises(Rejected):
+                        validate_ordinary(parsed, ZONE)
+                    self.assertEqual(len(server.requests), 1)
+                    self.assertEqual(server.requests[0].get("rules"), [])
                 finally:
                     server.shutdown()
                     thread.join()

@@ -1,4 +1,4 @@
-"""Fail closed unless a Terraform plan is the one approved TLS rule addition."""
+"""Fail closed unless a plan is the approved TLS rule addition or removal."""
 
 import json
 from pathlib import Path
@@ -25,7 +25,8 @@ def has_unknown(value):
     return value is not False and value is not None
 
 
-def validate(plan, expected_zone_id):
+def validate(plan, expected_zone_id, operation="add"):
+    require(operation in {"add", "remove"}, "unsupported operation")
     require(plan.get("format_version", "").split(".")[0] == "1", "unsupported plan format")
     require(plan.get("complete") is True and plan.get("applyable") is True
             and plan.get("errored") is False, "plan is incomplete, not applyable, or errored")
@@ -61,8 +62,9 @@ def validate(plan, expected_zone_id):
     require(change.get("actions") == ["update"], "target must be updated in place")
     before, after = change.get("before"), change.get("after")
     require(isinstance(before, dict) and isinstance(after, dict), "target values missing")
-    require(before.get("rules") == [] and isinstance(after.get("rules"), list)
-            and len(after["rules"]) == 1, "expected an empty ruleset and exactly one new rule")
+    empty, populated = (before, after) if operation == "add" else (after, before)
+    require(empty.get("rules") == [] and isinstance(populated.get("rules"), list)
+            and len(populated["rules"]) == 1, "expected exactly one rule and one empty ruleset")
     for key in set(before) | set(after):
         if key not in {"rules", "last_updated", "version"}:
             require(key in before and key in after and before[key] == after[key],
@@ -75,7 +77,7 @@ def validate(plan, expected_zone_id):
             and isinstance(before.get("name"), str)
             and before["name"].startswith("origin-tls-"), "unexpected ruleset identity")
 
-    rule = after["rules"][0]
+    rule = populated["rules"][0]
     require(isinstance(rule, dict), "rule is not an object")
     expected = {
         "ref": "origin_strict_redirect_xtremeidiots_net",
@@ -86,7 +88,11 @@ def validate(plan, expected_zone_id):
     }
     for key, value in expected.items():
         require(rule.get(key) == value and type(rule.get(key)) is type(value), f"unexpected rule {key}")
-    require(rule.get("id") is None, "new rule id must be provider-generated")
+    if operation == "add":
+        require(rule.get("id") is None, "new rule id must be provider-generated")
+    else:
+        require(isinstance(rule.get("id"), str) and bool(rule["id"]),
+                "existing rule id missing")
     params = rule.get("action_parameters")
     require(isinstance(params, dict) and params.get("ssl") == "strict"
             and all(key == "ssl" or value is None for key, value in params.items()),
@@ -102,17 +108,18 @@ def validate(plan, expected_zone_id):
         require((flag is True and after.get(key) is None)
                 or (not has_unknown(flag) and after.get(key) == before.get(key)),
                 "unexpected ruleset metadata change")
-    rule_unknown = unknown.pop("rules", None)
-    require(isinstance(rule_unknown, list) and len(rule_unknown) == 1
-            and isinstance(rule_unknown[0], dict), "rule unknown-value map missing")
-    rule_unknown = dict(rule_unknown[0])
-    require(rule_unknown.pop("id", None) is True, "new rule id is not provider-generated")
-    logging_unknown = rule_unknown.pop("logging", False)
-    require(logging_unknown is True or logging_unknown is False,
-            "unexpected rule logging unknown shape")
     require(rule.get("logging") is None, "rule logging must be omitted")
-    require(not has_unknown(unknown) and not has_unknown(rule_unknown),
-            "unknown critical or additional value")
+    if operation == "add":
+        rule_unknown = unknown.pop("rules", None)
+        require(isinstance(rule_unknown, list) and len(rule_unknown) == 1
+                and isinstance(rule_unknown[0], dict), "rule unknown-value map missing")
+        rule_unknown = dict(rule_unknown[0])
+        require(rule_unknown.pop("id", None) is True, "new rule id is not provider-generated")
+        logging_unknown = rule_unknown.pop("logging", False)
+        require(logging_unknown is True or logging_unknown is False,
+                "unexpected rule logging unknown shape")
+        require(not has_unknown(rule_unknown), "unknown critical or additional rule value")
+    require(not has_unknown(unknown), "unknown critical or additional value")
 
 
 def main():
@@ -120,9 +127,9 @@ def main():
         zone_file = Path(__file__).resolve().parents[1] / "zones" / "xtremeidiots.net.json"
         with zone_file.open(encoding="utf-8") as file:
             expected_zone_id = json.load(file)["zone_id"]
-        if len(sys.argv) != 1:
+        if len(sys.argv) != 2 or sys.argv[1] not in {"add", "remove"}:
             raise Rejected("invalid arguments")
-        validate(json.load(sys.stdin), expected_zone_id)
+        validate(json.load(sys.stdin), expected_zone_id, sys.argv[1])
         print("Strict TLS plan scope accepted.")
     except (Rejected, ValueError, TypeError, KeyError) as error:
         print(f"Strict TLS plan rejected: {error}", file=sys.stderr)

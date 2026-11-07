@@ -5,7 +5,7 @@
 - **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
 - **deploy-prd**: Triggered on push to main, weekly schedule, or manual dispatch. Ordinary production deploys apply a saved plan only when the guarded `.net` TLS ruleset is unchanged; non-scheduled runs still apply dev.
-- **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition. It is fail-closed pending the prerequisites below.
+- **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition or its exact removal. It is fail-closed pending the prerequisites below.
 - **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
 - **destroy-environment**: Manual dispatch with environment choice (dev/prd).
 
@@ -135,10 +135,18 @@ out-of-band changes between refresh and apply or establish certificate health;
 operators must control that window and verify the origin separately. Never put
 the binary plan or its JSON representation in public artifacts or logs.
 
-Neither guarded path supports rolling back the TLS rule: the ordinary guard
-rejects a target change and the dedicated guard permits only the addition.
-Before rollout, agree an independently reviewed and separately authorized
-rollback procedure; do not assume reverting the JSON will deploy the removal.
+For rollback, obtain separate authorization, review and merge a configuration
+change restoring the `.net` `origin_tls_hostnames` list to `[]`, then dispatch
+the dedicated workflow on current `main` with operation `remove`. The ordinary
+deployment guard rejects the target change. The removal guard requires an
+in-place update of the same existing entrypoint containing exactly the known
+strict rule, to an empty rule list, with no other resource or output changes,
+drift, imports, moves, replacement, deletion, or critical unknown values. It
+requires the existing rule's logging to be absent/null; if Cloudflare returns
+explicit logging, stop for separate review rather than silently deleting it.
+The same source binding, saved-plan and concurrency checks apply. The actual
+API behavior and post-rollback HTTP/HTTPS must be verified; a fake-API plan
+is not evidence of a live rollback.
 
 ## Cloudflare zones: new domains vs adopting existing ones
 

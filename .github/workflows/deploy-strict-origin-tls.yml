@@ -1,7 +1,15 @@
-name: Deploy guarded strict origin TLS rule
+name: Deploy or remove guarded strict origin TLS rule
 
 on:
   workflow_dispatch:
+    inputs:
+      operation:
+        description: "Validate and apply the exact rule addition or removal"
+        required: true
+        type: choice
+        options:
+          - add
+          - remove
 
 permissions: {}
 
@@ -27,6 +35,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       ARM_USE_AZUREAD: "true"
       ARM_USE_OIDC: "true"
+      TLS_OPERATION: ${{ inputs.operation }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -47,7 +56,7 @@ jobs:
           trap 'rm -f -- "$plan"' EXIT
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out="$plan"
           digest=$(sha256sum "$plan" | cut -d' ' -f1)
-          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_strict_tls_plan.py
+          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_strict_tls_plan.py "$TLS_OPERATION"
           echo "$digest  $plan" | sha256sum --check --status
           test "$(git hash-object terraform/cloudflare_origin_tls.tf)" = "e8af1e6c9ecfd3804b6fe0f8ec914db535fbf9b4"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"

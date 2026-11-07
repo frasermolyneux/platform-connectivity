@@ -41,6 +41,24 @@ class ProductionWorkflowTest(unittest.TestCase):
         self.assertIn("outcome: ${{ steps.apply.outcome == 'success' && 'success' || 'failure' }}", workflow)
         self.assertEqual(workflow.count('test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"'), 2)
 
+    def test_strict_tls_operation_uses_same_saved_plan(self):
+        workflow = (WORKFLOW.parent / "deploy-strict-origin-tls.yml").read_text(encoding="utf-8")
+        self.assertIn("operation:\n", workflow)
+        self.assertIn("          - add\n          - remove\n", workflow)
+        self.assertIn("TLS_OPERATION: ${{ inputs.operation }}", workflow)
+        self.assertIn("group: ${{ github.repository }}-prd", workflow)
+        sequence = (
+            'terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out="$plan"',
+            'digest=$(sha256sum "$plan"',
+            'terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_strict_tls_plan.py "$TLS_OPERATION"',
+            'echo "$digest  $plan" | sha256sum --check --status',
+            'terraform -chdir=terraform apply -input=false -auto-approve "$plan"',
+        )
+        positions = [workflow.index(item) for item in sequence]
+        self.assertEqual(positions, sorted(positions))
+        self.assertEqual(workflow.count("git hash-object terraform/cloudflare_origin_tls.tf"), 2)
+        self.assertEqual(workflow.count('test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"'), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
