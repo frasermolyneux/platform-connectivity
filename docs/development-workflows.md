@@ -2,7 +2,7 @@
 
 ## GitHub Actions workflows
 - **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
-- **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label.
+- **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
 - **deploy-prd**: Triggered on push to main, weekly schedule (Thu 03:00 UTC), or manual dispatch. Applies dev first, then prd.
 - **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
@@ -26,10 +26,19 @@ fake API and isolated temporary state; it does not contact Cloudflare.
 
 Backend-aware plans require access to the Azure state backend and the environment's Azure and Cloudflare credentials. Use the supported GitHub Actions workflows for authoritative plans and all applies. Never run `terraform apply` from a local machine.
 
-Branch/PR plan jobs use the shared pinned setup, read-only provider initialization,
-validation and an unsaved redacted full plan. They never upload a binary plan:
-even a harmless displayed plan can contain the Cloudflare token or sensitive
-existing state. Apply jobs retain their existing same-job plan/apply path.
+Default branch/PR plan jobs use read-only provider initialization, validation and
+an unsaved plan. The opt-in `verify-private-plans` jobs run on labeling and on
+subsequent opened, synchronized, reopened, or ready-for-review events while the
+label remains. They fail on changes or errors; successful no-change plans are
+uploaded without applying. They are restricted to same-repository PRs authored by
+an owner, member, or collaborator and do not run with the `deploy-dev` label.
+
+The opt-in jobs and shared plan/apply action upload a source- and toolchain-bound
+bundle containing the binary plan, metadata and provider lock via OIDC to the
+pre-existing private `tfplan` container in the initialized backend account. A
+bundle can contain credentials or sensitive state, even when the displayed plan
+has no changes. Restrict blob access and manage retention separately; the action
+does not create the container or configure its access or retention.
 
 ## Cloudflare zones: new domains vs adopting existing ones
 
