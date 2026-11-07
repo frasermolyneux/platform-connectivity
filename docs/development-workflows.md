@@ -84,11 +84,44 @@ rollout is abandoned; until then the temporary guards remain in force.
 For that restoration, open a separate PR based on then-current `main` and
 restore `.github/workflows/deploy-prd.yml` to the pre-rollout version at commit
 `7d5ab52b7da57ea6ef9b656d2928758cd9f1c79b`, reconciling any intervening
-intentional changes. Review its diff and normal checks before merging. This
-restores the original shared action for both environments, including non-main
-manual dispatch and its previous behavior for stale runs; it also removes the
-target-specific production guard and must not be merged before the strict TLS
-operation has completed or the rollout has been explicitly abandoned.
+intentional changes. Include the directly affected workflow contract tests and
+documentation in that PR so the restored workflow passes the normal checks;
+do not include unrelated changes. Run PR checks without a skip instruction on
+the PR head. Coordinate and wait for
+all relevant dev and production jobs to finish; do not merge until the strict
+TLS operation has completed or the rollout has been explicitly abandoned.
+
+To avoid the restored workflow immediately applying an independently generated
+plan on the restoration merge, use a squash merge with `[skip ci]` **only in
+the resulting merge commit message**, not in the PR head. GitHub documents that
+[skip instructions][skip-workflows] suppress `push` and `pull_request` runs
+for that commit; consequently neither dev nor production apply is run on the
+restoration merge, rather than relying on a previously reviewed plan. Confirm
+that the repository permits the squash commit message and that all required PR
+checks passed before merging; skipped checks can remain pending and block
+branch protection. This skips *all* push-triggered workflows for that commit,
+including Code Quality scanning and the main-only Terraform Toolchain binary
+observation, not just deployment. PR checks do not replace these main-specific
+effects. One candidate is a separately reviewed, non-skipped docs-only follow-up
+on current `main`: the current Code Quality and Terraform Toolchain workflows
+run on any main push, whereas `deploy-prd` filters to `terraform/**`,
+`maintenance/**`, and its own workflow file. That checks the follow-up commit,
+not the restoration commit; confirm this is acceptable and verify the actual
+changed paths and workflow definitions before relying on it. Alternatively,
+the toolchain observation supports manual dispatch after coordination. Do not
+treat skipped main checks as passed. This does not stop
+already queued jobs, scheduled, manual, or other event types, and is not a
+protection against historical reruns or direct writes. After merge, verify the
+merge commit and absence of deployment jobs before allowing other operations.
+
+Restoration returns both environments to the original shared action, including
+non-main manual dispatch and its previous behavior for stale runs. Subsequent
+ordinary deployments are no longer covered by the temporary target guard or
+no-op scope, so their normal authorization and review process applies. A
+separately reviewed restoration PR and its merge are not authorized by this
+procedure alone.
+
+[skip-workflows]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs
 Manual `deploy-prd` dispatch from a non-main ref is rejected before the dev
 apply; use `deploy-dev` for development-only work.
 As before, non-scheduled production runs require the dev job to succeed. A
