@@ -23,13 +23,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      pull-requests: read
     environment: Development
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.repository }}-dev
     env:
-      GH_TOKEN: ${{ github.token }}
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
     steps:
       - uses: actions/checkout@v7
@@ -38,37 +36,7 @@ jobs:
           node-version: "22.x"
       - name: Test maintenance Worker and approved hosts
         run: node --test maintenance/worker.test.mjs
-      - name: Identify preparation merge
-        id: preparation
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = "refs/heads/main"
-          preparation=false
-          merge_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/74" --jq 'if .merged == true and .base.ref == "main" then .merge_commit_sha else empty end')
-          [[ "$merge_sha" =~ ^[0-9a-f]{40}$ ]]
-          associated=$(gh api "repos/$GITHUB_REPOSITORY/commits/$merge_sha/pulls" --jq "[.[] | select(.number == 74 and .merged_at != null and .base.ref == \"main\" and .merge_commit_sha == \"$merge_sha\")] | length")
-          [[ "$associated" == 1 ]]
-          comparison=$(gh api "repos/$GITHUB_REPOSITORY/compare/$merge_sha...$GITHUB_SHA" --jq '[.base_commit.sha, .merge_base_commit.sha, .status] | @tsv')
-          [[ "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'identical || "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'ahead ]]
-          if [[ "$GITHUB_SHA" == "$merge_sha" ]]; then
-            preparation=true
-          fi
-          tls_pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/73" --jq 'if .base.ref != "main" then "invalid" elif .merged == true then .merge_commit_sha elif .state == "open" then "open" else "invalid" end')
-          if [[ "$tls_pr" == "open" ]]; then
-            preparation=true
-          else
-            [[ "$tls_pr" =~ ^[0-9a-f]{40}$ ]]
-            associated=$(gh api "repos/$GITHUB_REPOSITORY/commits/$tls_pr/pulls" --jq "[.[] | select(.number == 73 and .merged_at != null and .base.ref == \"main\" and .merge_commit_sha == \"$tls_pr\")] | length")
-            [[ "$associated" == 1 ]]
-            comparison=$(gh api "repos/$GITHUB_REPOSITORY/compare/$tls_pr...$GITHUB_SHA" --jq '[.base_commit.sha, .merge_base_commit.sha, .status] | @tsv')
-            [[ "$comparison" == "$tls_pr"$'\t'"$tls_pr"$'\t'identical || "$comparison" == "$tls_pr"$'\t'"$tls_pr"$'\t'ahead ]]
-            if [[ "$GITHUB_SHA" == "$tls_pr" ]]; then
-              preparation=true
-            fi
-          fi
-          echo "preparation=$preparation" >> "$GITHUB_OUTPUT"
       - uses: frasermolyneux/actions/terraform-plan-and-apply@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778 # terraform-plan-and-apply/v6.0.0
-        if: steps.preparation.outputs.preparation == 'false'
         with:
           terraform-folder: "terraform"
           terraform-var-file: "tfvars/dev.tfvars"
@@ -76,193 +44,27 @@ jobs:
           AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Checkout pinned plan metadata helper
-        if: steps.preparation.outputs.preparation == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: frasermolyneux/actions
-          ref: 977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-          path: .shared-terraform-actions
-          persist-credentials: false
-      - id: dev-toolchain
-        if: steps.preparation.outputs.preparation == 'true'
-        uses: frasermolyneux/actions/terraform-setup@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          terraform-folder: terraform
-          terraform_wrapper: "false"
-      - name: Plan and validate development no-op
-        id: dev-plan
-        if: steps.preparation.outputs.preparation == 'true'
-        env:
-          ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          ARM_USE_AZUREAD: "true"
-          ARM_USE_OIDC: "true"
-        run: |
-          set -euo pipefail
-          umask 077
-          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-          terraform -chdir=terraform init -input=false -lockfile=readonly -backend-config=backends/dev.backend.hcl
-          terraform -chdir=terraform validate
-          plan="$GITHUB_WORKSPACE/terraform/plan.tfplan"
-          test ! -e "$plan"
-          test ! -e "$plan.metadata.json"
-          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/dev.tfvars -out=plan.tfplan
-          digest=$(sha256sum "$plan" | cut -d' ' -f1)
-          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py --noop-only
-          echo "$digest  $plan" | sha256sum --check --status
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-      - name: Bind development saved plan
-        if: steps.preparation.outputs.preparation == 'true'
-        env:
-          TF_CONTEXT: ${{ steps.dev-toolchain.outputs.directory }}
-          TF_PLAN: plan.tfplan
-          TF_ENVIRONMENT: ""
-          TF_VAR_FILE: tfvars/dev.tfvars
-        run: node .shared-terraform-actions/terraform-setup/context.cjs save-plan
-      - name: Store development saved plan
-        if: steps.preparation.outputs.preparation == 'true'
-        uses: frasermolyneux/actions/terraform-plan-storage@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          operation: upload
-          context-directory: ${{ steps.dev-toolchain.outputs.directory }}
-          plan-file-name: plan.tfplan
-          plan-artifact-name: terraform-plan
-          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Verify development saved plan before apply
-        if: steps.preparation.outputs.preparation == 'true'
-        env:
-          PLAN_DIGEST: ${{ steps.dev-plan.outputs.digest }}
-        run: |
-          set -euo pipefail
-          echo "$PLAN_DIGEST  $GITHUB_WORKSPACE/terraform/plan.tfplan" | sha256sum --check --status
-          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-      - name: Apply validated development saved plan
-        id: dev-apply
-        if: steps.preparation.outputs.preparation == 'true'
-        env:
-          ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          ARM_USE_AZUREAD: "true"
-          ARM_USE_OIDC: "true"
-        run: terraform -chdir=terraform apply -input=false -auto-approve "$GITHUB_WORKSPACE/terraform/plan.tfplan"
-      - name: Publish development apply receipt
-        if: always() && (steps.dev-apply.outcome == 'success' || steps.dev-apply.outcome == 'failure' || steps.dev-apply.outcome == 'cancelled')
-        uses: frasermolyneux/actions/terraform-receipt@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          context-directory: ${{ steps.dev-toolchain.outputs.directory }}
-          operation: apply
-          outcome: ${{ steps.dev-apply.outcome == 'success' && 'success' || 'failure' }}
-          terraform-var-file: tfvars/dev.tfvars
-      - name: Remove development saved plan
-        if: always() && steps.preparation.outputs.preparation == 'true'
-        run: rm -f -- terraform/plan.tfplan terraform/plan.tfplan.metadata.json
 
   terraform-plan-and-apply-prd:
     if: ${{ !failure() && !cancelled() && (needs.terraform-plan-and-apply-dev.result == 'success' || github.event_name == 'schedule') }}
     permissions:
       contents: read
       id-token: write
-      pull-requests: read
     environment: Production
     needs: terraform-plan-and-apply-dev
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.repository }}-prd
-      cancel-in-progress: false
     env:
-      GH_TOKEN: ${{ github.token }}
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
       TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       TF_VAR_cloudflare_adopted_zone_keys: ${{ vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]' }}
-      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      ARM_USE_AZUREAD: "true"
-      ARM_USE_OIDC: "true"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: frasermolyneux/actions/terraform-plan-and-apply@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778 # terraform-plan-and-apply/v6.0.0
         with:
-          persist-credentials: false
-      - name: Checkout pinned plan metadata helper
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: frasermolyneux/actions
-          ref: 977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-          path: .shared-terraform-actions
-          persist-credentials: false
-      - id: toolchain
-        uses: frasermolyneux/actions/terraform-setup@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          terraform-folder: terraform
-          terraform_wrapper: "false"
-      - name: Plan and validate ordinary production scope
-        id: plan
-        run: |
-          set -euo pipefail
-          umask 077
-          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-          terraform -chdir=terraform init -input=false -lockfile=readonly -backend-config=backends/prd.backend.hcl
-          terraform -chdir=terraform validate
-          plan="$GITHUB_WORKSPACE/terraform/plan.tfplan"
-          test ! -e "$plan"
-          test ! -e "$plan.metadata.json"
-          terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars -out=plan.tfplan
-          digest=$(sha256sum "$plan" | cut -d' ' -f1)
-          merge_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/74" --jq 'if .merged == true and .base.ref == "main" then .merge_commit_sha else empty end')
-          [[ "$merge_sha" =~ ^[0-9a-f]{40}$ ]]
-          associated=$(gh api "repos/$GITHUB_REPOSITORY/commits/$merge_sha/pulls" --jq "[.[] | select(.number == 74 and .merged_at != null and .base.ref == \"main\" and .merge_commit_sha == \"$merge_sha\")] | length")
-          [[ "$associated" == 1 ]]
-          comparison=$(gh api "repos/$GITHUB_REPOSITORY/compare/$merge_sha...$GITHUB_SHA" --jq '[.base_commit.sha, .merge_base_commit.sha, .status] | @tsv')
-          [[ "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'identical || "$comparison" == "$merge_sha"$'\t'"$merge_sha"$'\t'ahead ]]
-          guard_args=()
-          if [[ "$GITHUB_SHA" == "$merge_sha" ]]; then
-            guard_args+=(--require-noop)
-          fi
-          terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py "${guard_args[@]}"
-          echo "$digest  $plan" | sha256sum --check --status
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-      - name: Bind saved plan to source and toolchain
-        env:
-          TF_CONTEXT: ${{ steps.toolchain.outputs.directory }}
-          TF_PLAN: plan.tfplan
-          TF_ENVIRONMENT: ""
-          TF_VAR_FILE: tfvars/prd.tfvars
-        run: node .shared-terraform-actions/terraform-setup/context.cjs save-plan
-      - name: Store Terraform plan
-        uses: frasermolyneux/actions/terraform-plan-storage@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          operation: upload
-          context-directory: ${{ steps.toolchain.outputs.directory }}
-          plan-file-name: plan.tfplan
-          plan-artifact-name: terraform-plan
-          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Verify the saved plan before apply
-        env:
-          PLAN_DIGEST: ${{ steps.plan.outputs.digest }}
-        run: |
-          set -euo pipefail
-          plan="$GITHUB_WORKSPACE/terraform/plan.tfplan"
-          echo "$PLAN_DIGEST  $plan" | sha256sum --check --status
-          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-          echo "Applying ordinary production saved plan SHA-256: $PLAN_DIGEST"
-      - name: Apply the validated saved plan
-        id: apply
-        run: terraform -chdir=terraform apply -input=false -auto-approve "$GITHUB_WORKSPACE/terraform/plan.tfplan"
-      - name: Publish Terraform apply execution evidence
-        if: always() && (steps.apply.outcome == 'success' || steps.apply.outcome == 'failure' || steps.apply.outcome == 'cancelled')
-        uses: frasermolyneux/actions/terraform-receipt@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778
-        with:
-          context-directory: ${{ steps.toolchain.outputs.directory }}
-          operation: apply
-          outcome: ${{ steps.apply.outcome == 'success' && 'success' || 'failure' }}
-          terraform-var-file: tfvars/prd.tfvars
-      - name: Remove local saved plan
-        if: always()
-        run: rm -f -- terraform/plan.tfplan terraform/plan.tfplan.metadata.json
+          terraform-folder: "terraform"
+          terraform-var-file: "tfvars/prd.tfvars"
+          terraform-backend-file: "backends/prd.backend.hcl"
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
