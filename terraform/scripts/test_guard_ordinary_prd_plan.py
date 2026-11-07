@@ -1,7 +1,7 @@
 import copy
 import unittest
 
-from guard_ordinary_prd_plan import validate
+from guard_ordinary_prd_plan import validate, validate_noop
 from guard_strict_tls_plan import Rejected
 from test_guard_strict_tls_plan import valid_plan
 
@@ -20,6 +20,18 @@ def ordinary_plan():
 
 
 class OrdinaryGuardTest(unittest.TestCase):
+    def test_development_noop_without_production_target(self):
+        plan = ordinary_plan()
+        plan["resource_changes"] = [{
+            "address": "azurerm_resource_group.dns",
+            "change": {"actions": ["no-op"], "before": {"name": "dev"},
+                       "after": {"name": "dev"}, "after_unknown": {}},
+        }]
+        validate_noop(plan)
+        plan["resource_changes"][0]["change"]["actions"] = ["update"]
+        with self.assertRaises(Rejected):
+            validate_noop(plan)
+
     def test_unrelated_update_is_allowed(self):
         validate(ordinary_plan(), "existing-zone")
 

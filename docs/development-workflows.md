@@ -64,6 +64,33 @@ normal receipt for an attempted apply. Subsequent commits use the ordinary
 target-only guard. If `main` advances before that first job runs, its current-main
 check fails; a later commit is not covered by this one-time no-op guard and needs
 its own coordination and review.
+The deployment workflow's preceding development job also validates and
+applies a drift-free no-op saved plan on the merge commits of both #74 and #73,
+preserving the private plan bundle and attempted-apply receipt. Until #73 is
+confirmed merged, it also requires no-op dev plans on intervening main commits
+to avoid a race with stale GitHub PR status. If #73 is closed unmerged or its
+identity or merge ancestry cannot be verified, it fails closed. If the dev
+guard fails, production does not run, so intervening unrelated deployments that
+also require dev changes must wait. Later main commits after #73's merge use the
+existing shared dev plan-and-apply action.
+After #73 merges, let its ordinary production job finish before dispatching the
+dedicated guarded job; otherwise the single-pending concurrency queue can
+displace work. If the guarded rollout fails, do not bypass the guard: inspect
+the failed job and plan scope, coordinate other production jobs, and prepare
+and review a corrective change. Use the separately authorized exact removal
+path below if its prerequisites are met. Restore ordinary deployment behavior
+promptly through a separately reviewed change after the rollout or if the
+rollout is abandoned; until then the temporary guards remain in force.
+For that restoration, open a separate PR based on then-current `main` and
+restore `.github/workflows/deploy-prd.yml` to the pre-rollout version at commit
+`7d5ab52b7da57ea6ef9b656d2928758cd9f1c79b`, reconciling any intervening
+intentional changes. Review its diff and normal checks before merging. This
+restores the original shared action for both environments, including non-main
+manual dispatch and its previous behavior for stale runs; it also removes the
+target-specific production guard and must not be merged before the strict TLS
+operation has completed or the rollout has been explicitly abandoned.
+Manual `deploy-prd` dispatch from a non-main ref is rejected before the dev
+apply; use `deploy-dev` for development-only work.
 As before, non-scheduled production runs require the dev job to succeed. A
 queued run whose commit is no longer current `main` fails rather than applying
 stale configuration. An unrelated push that does not match the deployment

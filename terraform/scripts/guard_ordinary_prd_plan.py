@@ -15,6 +15,41 @@ def known_metadata(value):
     return value is False
 
 
+def validate_noop(plan):
+    require(plan.get("format_version", "").split(".")[0] == "1"
+            and plan.get("complete") is True and plan.get("errored") is False,
+            "unsupported, incomplete, or errored plan")
+    require(not plan.get("deferred_changes") and not plan.get("deferred_actions")
+            and not plan.get("action_invocations"), "deferred change or action")
+    changes = plan.get("resource_changes")
+    require(isinstance(changes, list), "resource changes missing")
+    require(not plan.get("resource_drift"), "preparation merge cannot include drift")
+    require(all(
+        resource.get("change", {}).get("actions") == ["no-op"]
+        and "previous_address" not in resource
+        and "importing" not in resource.get("change", {})
+        and "generated_config" not in resource.get("change", {})
+        and "before" in resource.get("change", {})
+        and "after" in resource.get("change", {})
+        and resource["change"]["before"] == resource["change"]["after"]
+        and isinstance(resource["change"].get("after_unknown"), dict)
+        and known_metadata(resource["change"]["after_unknown"])
+        for resource in changes
+    ), "preparation merge cannot include resource changes or unknowns")
+    outputs = plan.get("output_changes", {})
+    require(isinstance(outputs, dict) and all(
+        change.get("actions") == ["no-op"]
+        and "before" in change and "after" in change
+        and change["before"] == change["after"]
+        and isinstance(change.get("after_unknown"), (dict, list, bool))
+        and known_metadata(change["after_unknown"])
+        for change in outputs.values()
+    ), "preparation merge cannot include output changes or unknowns")
+    checks = plan.get("checks", [])
+    require(isinstance(checks, list) and all(check.get("status") == "pass" for check in checks),
+            "preparation merge has unresolved or failed checks")
+
+
 def validate(plan, expected_zone_id, require_noop=False):
     require(plan.get("format_version", "").split(".")[0] == "1"
             and plan.get("complete") is True and plan.get("errored") is False,
@@ -32,31 +67,7 @@ def validate(plan, expected_zone_id, require_noop=False):
         for entry in drift
     ), "target ruleset drift detected")
     if require_noop:
-        require(not drift, "preparation merge cannot include drift")
-        require(all(
-            resource.get("change", {}).get("actions") == ["no-op"]
-            and "previous_address" not in resource
-            and "importing" not in resource.get("change", {})
-            and "generated_config" not in resource.get("change", {})
-            and "before" in resource.get("change", {})
-            and "after" in resource.get("change", {})
-            and resource["change"]["before"] == resource["change"]["after"]
-            and isinstance(resource["change"].get("after_unknown"), dict)
-            and known_metadata(resource["change"]["after_unknown"])
-            for resource in changes
-        ), "preparation merge cannot include resource changes or unknowns")
-        outputs = plan.get("output_changes", {})
-        require(isinstance(outputs, dict) and all(
-            change.get("actions") == ["no-op"]
-            and "before" in change and "after" in change
-            and change["before"] == change["after"]
-            and isinstance(change.get("after_unknown"), (dict, list, bool))
-            and known_metadata(change["after_unknown"])
-            for change in outputs.values()
-        ), "preparation merge cannot include output changes or unknowns")
-        checks = plan.get("checks", [])
-        require(isinstance(checks, list) and all(check.get("status") == "pass" for check in checks),
-                "preparation merge has unresolved or failed checks")
+        validate_noop(plan)
     targets = [resource for resource in changes if resource.get("address") == ADDRESS]
     require(len(targets) == 1, "expected exactly one target ruleset")
     target = targets[0]
@@ -79,9 +90,14 @@ def main():
         zone_file = Path(__file__).resolve().parents[1] / "zones" / "xtremeidiots.net.json"
         with zone_file.open(encoding="utf-8") as file:
             expected_zone_id = json.load(file)["zone_id"]
-        require(sys.argv[1:] in ([], ["--require-noop"]), "invalid arguments")
-        validate(json.load(sys.stdin), expected_zone_id, require_noop=len(sys.argv) == 2)
-        print("Ordinary production plan does not change the guarded TLS ruleset.")
+        require(sys.argv[1:] in ([], ["--require-noop"], ["--noop-only"]), "invalid arguments")
+        plan = json.load(sys.stdin)
+        if sys.argv[1:] == ["--noop-only"]:
+            validate_noop(plan)
+            print("Preparation merge plan is a no-op.")
+        else:
+            validate(plan, expected_zone_id, require_noop=len(sys.argv) == 2)
+            print("Ordinary production plan does not change the guarded TLS ruleset.")
     except (Rejected, ValueError, TypeError, KeyError) as error:
         print(f"Ordinary production plan rejected: {error}", file=sys.stderr)
         return 1

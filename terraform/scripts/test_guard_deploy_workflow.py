@@ -8,6 +8,43 @@ REVISION = "977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778"
 
 
 class ProductionWorkflowTest(unittest.TestCase):
+    def test_preparation_dev_saved_plan_and_ordinary_route(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8").split("  terraform-plan-and-apply-prd:", 1)[0]
+        self.assertIn("group: ${{ github.repository }}-dev", workflow)
+        self.assertIn("if: steps.preparation.outputs.preparation == 'false'", workflow)
+        self.assertIn("frasermolyneux/actions/terraform-plan-and-apply@" + REVISION, workflow)
+        sequence = (
+            "name: Identify preparation merge",
+            'test "$GITHUB_REF" = "refs/heads/main"',
+            '[[ "$associated" == 1 ]]',
+            '[[ "$comparison" == "$merge_sha"',
+            'if [[ "$GITHUB_SHA" == "$merge_sha" ]]; then',
+            'tls_pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/73"',
+            'if [[ "$tls_pr" == "open" ]]; then\n            preparation=true\n          else',
+            '[[ "$tls_pr" =~ ^[0-9a-f]{40}$ ]]',
+            'associated=$(gh api "repos/$GITHUB_REPOSITORY/commits/$tls_pr/pulls"',
+            'comparison=$(gh api "repos/$GITHUB_REPOSITORY/compare/$tls_pr...$GITHUB_SHA"',
+            '[[ "$comparison" == "$tls_pr"',
+            'if [[ "$GITHUB_SHA" == "$tls_pr" ]]; then',
+            "name: Plan and validate development no-op",
+            'terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/dev.tfvars -out=plan.tfplan',
+            'digest=$(sha256sum "$plan"',
+            'terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_ordinary_prd_plan.py --noop-only',
+            'echo "$digest  $plan" | sha256sum --check --status',
+            "name: Bind development saved plan",
+            "name: Store development saved plan",
+            "name: Verify development saved plan before apply",
+            'echo "$PLAN_DIGEST  $GITHUB_WORKSPACE/terraform/plan.tfplan" | sha256sum --check --status',
+            "name: Apply validated development saved plan",
+            'terraform -chdir=terraform apply -input=false -auto-approve "$GITHUB_WORKSPACE/terraform/plan.tfplan"',
+            "name: Publish development apply receipt",
+        )
+        positions = [workflow.index(item) for item in sequence]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("PLAN_DIGEST: ${{ steps.dev-plan.outputs.digest }}", workflow)
+        self.assertIn("terraform-var-file: tfvars/dev.tfvars", workflow)
+        self.assertNotIn("continue-on-error", workflow)
+
     def test_scope_and_evidence_bind_the_applied_plan(self):
         workflow = WORKFLOW.read_text(encoding="utf-8").split("  terraform-plan-and-apply-prd:", 1)[1]
         self.assertNotIn("continue-on-error", workflow)
