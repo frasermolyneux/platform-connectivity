@@ -61,6 +61,30 @@ Reassess intervening main changes, workflow definitions, paths, and job outcomes
 before relying on that follow-up. Skip instructions do not stop queued jobs,
 schedules, manual dispatches, historical reruns, or direct writes.
 
+### Compensating main checks after restoration
+
+After the restoration merges, review the follow-up against the resulting main
+commit and recheck all intervening changes before retargeting or updating it.
+Keep its complete merge diff to this documentation file and confirm that the
+current `deploy-prd` push paths still exclude it. A separately authorized,
+non-skipped merge to main should trigger Code Quality and Terraform Toolchain;
+it should not trigger `deploy-prd` by that push. This does not prevent scheduled,
+manual, queued, or other deployments, and path-filter behavior must be
+reassessed if the merge contains any other files.
+
+After that merge, inspect the actual main push runs for the new merge SHA:
+confirm Code Quality's secure-scanning job and Terraform Toolchain's verify
+and **Observe terraform binary toolchain** jobs completed successfully. The
+observation job is main-only and is skipped on PR runs; PR checks alone cannot
+confirm it. Check for any `deploy-prd` push run for that SHA and investigate an
+unexpected run rather than assuming it is safe. A missing, skipped, cancelled,
+or failed run is not successful evidence. Record run links and conclusions,
+and distinguish any unrelated scheduled or manually dispatched runs.
+
+These are compensating checks of a different SHA, not checks of the skipped
+restoration merge itself. They cannot retroactively establish its security or
+toolchain results, or prove that no infrastructure deployment occurred.
+
 The ordinary, guarded and destroy jobs share the production concurrency group,
 but other workflows and direct access must be assessed separately; concurrency
 does not stop out-of-band writes. GitHub's default concurrency queue allows only
