@@ -4,7 +4,7 @@
 - **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
 - **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
-- **deploy-prd**: Triggered on push to main, weekly schedule, or manual dispatch. The ordinary production apply is paused; non-scheduled runs still apply dev.
+- **deploy-prd**: Triggered on push to main, weekly schedule, or manual dispatch. Ordinary production deploys apply a saved plan only when the guarded `.net` TLS ruleset is unchanged; non-scheduled runs still apply dev.
 - **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition. It is fail-closed pending the prerequisites below.
 - **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
 - **destroy-environment**: Manual dispatch with environment choice (dev/prd).
@@ -39,13 +39,24 @@ bundle containing the binary plan, metadata and provider lock via OIDC to the
 pre-existing private `tfplan` container in the initialized backend account. A
 bundle can contain credentials or sensitive state, even when the displayed plan
 has no changes. Restrict blob access and manage retention separately; the action
-does not create the container or configure its access or retention.
+does not create the container or configure its access or retention. During the
+guarded strict TLS rollout, the temporary ordinary production job uses a private
+runner-local plan instead of the shared action and does not upload that bundle
+or publish its apply receipt.
 
 ## Guarded strict TLS rollout
 
-The ordinary `deploy-prd` production job is intentionally disabled for every
-trigger, including merges and the schedule. Other production changes are also
-paused; restoring a general production deployment path requires separate review.
+The ordinary `deploy-prd` production job remains available for unrelated changes.
+It validates and applies the same saved plan, rejecting any change, drift, import,
+move, or unknown value in the `xtremeidiots.net` origin TLS ruleset. It also
+rejects an absent target and deferred changes. It runs only on current `main`,
+including for manual dispatch. If the TLS addition is pending, an ordinary plan
+that also contains unrelated changes is rejected in its entirety; first resolve
+the exact TLS addition through its dedicated guarded workflow. Removing this
+temporary restriction and restoring the shared production action requires review.
+As before, non-scheduled production runs require the dev job to succeed. A
+queued run whose commit is no longer current `main` fails rather than applying
+stale configuration.
 The manually dispatched destroy workflow is separate and is not authorized by
 this procedure. Do not merge or deploy #73 until all authorization conditions
 have been demonstrated.
@@ -56,12 +67,16 @@ production apply. The current Production environment has no protection rules
 or branch policy. [Disabling the legacy workflow in GitHub][disable-workflow]
 prevents new triggers and reruns while it stays disabled, but does not cancel
 existing runs and can be reversed by an authorized user; it is an operational
-stop, not an in-repository enforcement mechanism. Before relying on the pause,
-enforce an external, non-bypassable production deployment policy that blocks
-legacy workflow revisions and reruns, and establish that no legacy apply is
-already running or queued. A branch restriction alone does not block reruns of
-old `main` commits. These controls are outside this repository and are not
-implemented here.
+stop, not an in-repository enforcement mechanism. Before rollout, inspect
+queued and active production jobs, and coordinate against starting historical
+workflow revisions or reruns. This is a residual operational risk: a historical
+run can still bypass both guards. A branch restriction alone does not block
+reruns of old `main` commits. The ordinary, guarded and destroy jobs share the
+production concurrency group, but historical or other workflows and direct
+access must be assessed separately; concurrency does not stop out-of-band writes.
+GitHub's default concurrency queue allows only one pending job; a newer
+production-group job, including a PR plan, can cancel a pending deployment.
+Check job outcomes rather than assuming a queued deployment will run.
 
 [disable-workflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
 
@@ -130,8 +145,8 @@ Terraform creates everything from scratch. There is nothing to import.
 1. Create `terraform/zones/<domain>.json` with `dns_provider: cloudflare`,
    `management: terraform`, the intended `plan_profile`, `records`, and flags.
 2. Add the zone key to the Production `CLOUDFLARE_ADOPTED_ZONE_KEYS` variable.
-3. After the ordinary production deployment path is restored, merge and deploy;
-   that path creates the zone, DNSSEC, settings, WAF, and records.
+3. Merge and deploy through the ordinary production path; that path creates the
+   zone, DNSSEC, settings, WAF, and records, provided the TLS guard passes.
 4. Point the registrar's nameservers at the Cloudflare-assigned NS.
 
 ### Existing domain (already in Cloudflare) — adopt via data-source import
@@ -171,8 +186,8 @@ blocks bind each object by its discovered ID.
 5. Run the production plan through **PR Verify** with the `run-prd-plan` label.
    Review it for any unexpected create/replace/delete on imported objects and any
    intended settings hardening before approval.
-6. After the ordinary production deployment path is restored, merge and deploy;
-   that path performs the import and reconciliation.
+6. Merge and deploy through the ordinary production path; that path performs the
+   import and reconciliation, provided the TLS guard passes.
 
 Import blocks are idempotent — once an object is in state they are skipped, so
 they stay in place and coexist with day-2 record additions and removals. Never

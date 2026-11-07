@@ -36,7 +36,9 @@ jobs:
           terraform -chdir="$TF_ROOT" validate
           git diff --exit-code -- "$TF_ROOT/.terraform.lock.hcl" "$TF_ROOT/.terraform-version"
       - name: Test production deployment guards
-        run: python3 -m unittest discover -s terraform/scripts -p 'test_guard_strict_tls_*.py'
+        run: python3 -m unittest discover -s terraform/scripts -p 'test_guard_*_plan.py'
+      - name: Test Cloudflare provider dry-run
+        run: python3 -m unittest discover -s terraform/scripts -p 'test_guard_strict_tls_provider.py'
 
   observe-terraform:
     name: Observe terraform binary toolchain
