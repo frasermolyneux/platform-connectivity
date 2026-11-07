@@ -107,6 +107,10 @@ def validate(plan, expected_zone_id):
             and isinstance(rule_unknown[0], dict), "rule unknown-value map missing")
     rule_unknown = dict(rule_unknown[0])
     require(rule_unknown.pop("id", None) is True, "new rule id is not provider-generated")
+    logging_unknown = rule_unknown.pop("logging", False)
+    require(logging_unknown is True or logging_unknown is False,
+            "unexpected rule logging unknown shape")
+    require(rule.get("logging") is None, "rule logging must be omitted")
     require(not has_unknown(unknown) and not has_unknown(rule_unknown),
             "unknown critical or additional value")
 

@@ -76,10 +76,11 @@ The plan must be a complete, drift-free in-place update of the existing
 `xtremeidiots.net` configuration ruleset from no rules to exactly the specified
 host, action, and strict TLS setting. Imports, moves, replacements, deletions,
 other resource or output changes, deferred changes, and unknown non-metadata
-values are rejected. The previously observed production plan has an unknown
-`logging` value on the new rule; the guard rejects it. Do not weaken the guard
-or assume that value is harmless: resolving and independently reviewing this
-blocker is required before rollout.
+values are rejected, except the provider-computed unknown `logging` on the new
+rule alone. Its planned logging must be absent or null; no explicit logging
+setting, including `false`, is accepted. The workflow binds the ruleset source
+file to the reviewed Git blob that omits logging, before planning and applying.
+Changes to that file require reviewing and updating this binding.
 
 The pinned Cloudflare provider schema accepts an explicit
 `logging = { enabled = false }`, which produces a known value in a synthetic
@@ -88,12 +89,13 @@ local plan. Cloudflare's [API schema][cloudflare-api-schema] defines
 `logging` object; its `enabled` field controls whether a rule match generates a
 log. The schema does not define the value when logging is omitted. Explicit
 false is an additional behavior choice, not proof of the omitted default.
-The local plan's provider dry run returned an authentication warning;
-acceptance for this production configuration rule and subsequent provider
-behavior are unverified. Moreover, the current guard rejects all non-null
-logging settings, including explicit false. Do not configure or permit that
-setting without a separately reviewed scope decision and an authoritative,
-read-only production plan.
+An isolated test with the pinned provider and synthetic state captures its
+in-place update dry-run request to a fake local API and verifies the new rule
+omits logging. This is the same omission used by the status-web rules; it does
+not prove Cloudflare's effective default or its behavior at apply time. Verify
+the exact saved plan, live rule after deployment, and HTTP behavior; an absent
+logging field in the API response does not establish whether logging occurs.
+The workflow does not itself verify the live result after applying.
 
 [cloudflare-api-schema]: https://github.com/cloudflare/api-schemas/blob/main/openapi.json
 

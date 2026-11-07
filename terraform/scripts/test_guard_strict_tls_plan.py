@@ -79,8 +79,15 @@ class GuardTest(unittest.TestCase):
                 with self.assertRaises(Rejected):
                     validate(plan)
 
-    def test_unknown_critical_and_logging_values_are_rejected(self):
-        for unknown in ({"expression": True}, {"logging": True}, {"action_parameters": {"ssl": True}}):
+    def test_only_new_rule_unknown_logging_is_accepted(self):
+        self.change["after_unknown"]["rules"][0]["logging"] = True
+        validate(self.plan)
+        self.change["after"]["rules"][0]["logging"] = {"enabled": False}
+        self.reject()
+
+    def test_unknown_critical_and_nested_logging_values_are_rejected(self):
+        for unknown in ({"expression": True}, {"logging": {"enabled": True}},
+                        {"action_parameters": {"ssl": True}}):
             with self.subTest(unknown=unknown):
                 plan = valid_plan()
                 plan["resource_changes"][0]["change"]["after_unknown"]["rules"][0].update(unknown)
@@ -88,8 +95,10 @@ class GuardTest(unittest.TestCase):
                     validate(plan)
 
     def test_unrelated_rule_and_ruleset_settings_are_rejected(self):
-        self.change["after"]["rules"][0]["logging"] = {"enabled": True}
-        self.reject()
+        for enabled in (True, False):
+            with self.subTest(enabled=enabled):
+                self.change["after"]["rules"][0]["logging"] = {"enabled": enabled}
+                self.reject()
         self.plan = valid_plan()
         self.plan["resource_changes"][0]["change"]["after"]["zone_id"] = "different"
         self.reject()
