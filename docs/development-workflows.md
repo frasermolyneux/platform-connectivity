@@ -53,11 +53,17 @@ have been demonstrated.
 This change cannot disable historical workflow revisions. Existing branches,
 queued jobs, and reruns of older `main` runs may still invoke the old unguarded
 production apply. The current Production environment has no protection rules
-or branch policy. Before relying on the pause, enforce an external,
-non-bypassable production deployment policy that blocks legacy workflow
-revisions and reruns, and establish that no legacy apply is already running or
-queued. A branch restriction alone does not block reruns of old `main` commits.
-These controls are outside this repository and are not implemented here.
+or branch policy. [Disabling the legacy workflow in GitHub][disable-workflow]
+prevents new triggers and reruns while it stays disabled, but does not cancel
+existing runs and can be reversed by an authorized user; it is an operational
+stop, not an in-repository enforcement mechanism. Before relying on the pause,
+enforce an external, non-bypassable production deployment policy that blocks
+legacy workflow revisions and reruns, and establish that no legacy apply is
+already running or queued. A branch restriction alone does not block reruns of
+old `main` commits. These controls are outside this repository and are not
+implemented here.
+
+[disable-workflow]: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows
 
 The guarded workflow can run only on the current `main` commit, after the
 workflow and target change have passed normal PR review and checks. Before
@@ -74,6 +80,16 @@ values are rejected. The previously observed production plan has an unknown
 `logging` value on the new rule; the guard rejects it. Do not weaken the guard
 or assume that value is harmless: resolving and independently reviewing this
 blocker is required before rollout.
+
+The pinned Cloudflare provider schema accepts an explicit
+`logging = { enabled = false }`, which produces a known value in a synthetic
+local plan. This controls rule-match logging, so it is an additional behavior
+choice, not proof that the omitted value is false. The local plan's provider
+dry run returned an authentication warning; acceptance for this production
+configuration rule and subsequent provider behavior are unverified. Moreover,
+the current guard rejects all non-null logging settings, including explicit
+false. Do not configure or permit that setting without a separately reviewed
+scope decision and an authoritative, read-only production plan.
 
 The workflow creates a saved plan in the runner's private temporary directory,
 validates its JSON, checks its SHA-256, and applies that same binary file in the
