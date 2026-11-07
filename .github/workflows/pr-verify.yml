@@ -114,7 +114,8 @@ jobs:
           terraform -chdir=terraform plan -input=false -no-color -var-file=tfvars/prd.tfvars
 
   verify-private-plans:
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) && contains(github.event.pull_request.labels.*.name, 'verify-private-plans') && !contains(github.event.pull_request.labels.*.name, 'deploy-dev') && (contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action) || (github.event.action == 'labeled' && github.event.label.name == 'verify-private-plans'))
+    needs: terraform-plan-dev
+    if: ${{ !cancelled() && (needs.terraform-plan-dev.result == 'success' || (github.event.action == 'labeled' && needs.terraform-plan-dev.result == 'skipped')) && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) && contains(github.event.pull_request.labels.*.name, 'verify-private-plans') && !contains(github.event.pull_request.labels.*.name, 'deploy-dev') && (contains(fromJson('["opened","synchronize","reopened","ready_for_review"]'), github.event.action) || (github.event.action == 'labeled' && github.event.label.name == 'verify-private-plans')) }}
     permissions:
       contents: read
       id-token: write
