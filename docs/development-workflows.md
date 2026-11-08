@@ -100,8 +100,8 @@ blocks bind each object by its discovered ID.
 
 1. Ensure `terraform/zones/<domain>.json` has `management: terraform`,
    `adopt_existing: true`, and the correct `plan_profile`. Retain the existing
-   `zone_id` while the protected adoption key is absent: the zone and its
-   zone stays external and its configured records remain managed here until
+   `zone_id` while the protected adoption key is absent: the zone stays
+   external and its configured records remain managed here until
    activation; a missing ID fails planning instead of dropping those records.
 2. Declare the desired records in `records[]`:
    - An empty or newly created zone with no live records needs nothing here —
@@ -184,9 +184,11 @@ rule.
 The `removed` block in `terraform/dns_records.tf` relinquishes the isolated
 `molyneux.io/@` TXT set without destroying it for ownership by
 `platform-notifications`. If it still appears in this state, review the production
-plan to ensure it is only forgotten, with no live record changes, before the
-receiving repository imports it. Preserve its SPF and do not delete the live
-record set, use local state commands, or disturb unrelated DNS records.
+plan to ensure it is only forgotten, with no live record changes, then deploy
+through the production workflow. Confirm the old binding is absent from this
+state before the receiving repository imports it. Preserve its SPF and do not
+delete the live record set, use local state commands, or disturb unrelated DNS
+records.
 
 - DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
 - An explicit empty `origin_tls_hostnames` list clears retired hostname rules while retaining the protected, stack-owned configuration entrypoint. Omit the property only for zones this stack has never owned. The `xtremeidiots.com` configuration phase is already owned by the status edge stack; its exact-host maps rule must be maintained there, not by creating a competing entrypoint.
