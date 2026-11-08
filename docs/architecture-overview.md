@@ -4,9 +4,9 @@ This repository deploys tenant platform connectivity resources using Terraform.
 
 - A DNS resource group is created per environment/location/instance using the pattern `rg-platform-dns-{environment}-{location}-{instance}`.
 - Private DNS zones are provisioned only for production and cover common Azure private endpoints (storage, SQL, ACR, App Service, Service Bus, API Management, etc.). The zone list is defined in `terraform/private_link_zones/prd.json`.
-- Public DNS zones for platform domains (e.g., molyneux.dev, molyneux.io, xtremeidiots.com, xtremeidiots.dev, geo-location.net, molyneux.me, molyneux-consulting.co.uk, mx-consulting.co.uk) are deployed for production. Each domain is defined as a JSON file under `terraform/zones/` containing the zone name and all its DNS records.
-- Terraform dynamically loads zone JSON files and creates `azurerm_dns_zone`, record resources (A, AAAA, CNAME, MX, TXT, SRV), and `azurerm_private_dns_zone` resources.
-- Environment gating is achieved via tfvars: dev has no `dns_zones_path` set (empty resource group only), while prd points to the zone configurations.
+- Public DNS desired state is defined in `terraform/zones/`; each JSON file contains a zone and the records owned by this stack, not necessarily every record in the zone.
+- Terraform loads those files to manage Azure and Cloudflare zones and records; Azure Private Link zones come from the separate private-zone list.
+- Environment gating is configured in `terraform/tfvars/`: dev creates only the DNS resource group, while prd enables public zones, Private Link zones and maintenance Workers.
 - Remote state from `platform-workloads` is consumed for workload resource group metadata.
 - Tags are applied from tfvars, typically including `Environment`, `Workload`, `DeployedBy`, and `Git` for traceability.
 
@@ -27,7 +27,7 @@ External Cloudflare zones retain a committed `zone_id`; Terraform manages their 
 
 The shared custom firewall ruleset stays within Cloudflare Free limits. It blocks probes for common sensitive files and directories, and applies Managed Challenge to common automated WordPress administration probes. It intentionally does not deploy rate limiting, Bot Fight Mode, Cloudflare managed rulesets, regex expressions, or application-specific controls.
 
-`xtremeidiots.com` is staged for a preservation-first adoption, but its protected
+`xtremeidiots.com` is configured for a preservation-first adoption; its protected
 adoption key must remain unset until the handoff is separately approved. Its
 zone settings and custom firewall snapshot preserve the inventoried Pro
 configuration rather than applying the shared baseline. With
@@ -44,7 +44,11 @@ The Cloudflare provider authenticates with `var.cloudflare_api_token`, supplied 
 
 Ownership is split the same way as Azure zones: platform-connectivity holds the bulk of the (otherwise unmanaged) records, while workloads may attach their own records to the same zone — Azure via RBAC, Cloudflare via a scoped token. Records owned by other stacks (e.g. platform-notifications ACS records on `xtremeidiots.com`) are carved out and never managed here.
 
-The `dns_zones` output keeps the same shape for Azure, external Cloudflare, and Terraform-managed Cloudflare zones. Consumers continue to receive each zone's ID, name, name servers, and `dns_provider` without needing to know its ownership mode.
+The `dns_zones` output uses a common shape across providers. Cloudflare zones
+without an Azure backup report Cloudflare as their provider; external zones
+have no name servers populated by this output. When backup mirroring is enabled,
+the output instead describes the Azure backup zone. See `terraform/outputs.tf`
+for the contract.
 
 ### Hostname origin TLS overrides
 
@@ -55,7 +59,8 @@ adopting the zone or changing its default SSL mode, so existing HTTP/HTTPS
 workloads remain unaffected. The deployment token needs `Config Settings Write`
 only for opted-in zones; the runtime DNS-01 credential does not.
 
-Terraform-managed zones already use the strict baseline and reject this opt-in.
+Terraform-managed zones have a strict baseline (subject to per-zone settings
+overrides) and reject this opt-in.
 Inventory and import discovery therefore never depend on a not-yet-created zone.
 
 Wildcards, undeclared/unproxied hostnames and duplicate entries are rejected.
@@ -74,8 +79,7 @@ the managed origin TLS entrypoint is protected and requires explicit review.
 - An existing zone moving to `management: terraform` (and into the protected `CLOUDFLARE_ADOPTED_ZONE_KEYS` set, with `adopt_existing: true`) is adopted through data-source-driven `import` blocks in `cloudflare_imports.tf`. The `cloudflare_zone`, `cloudflare_dns_records`, and `cloudflare_rulesets` data sources read the live zone at plan time and the import blocks bind each object by its discovered ID, so no identifiers are committed and adoption runs through the normal `deploy-prd` plan/apply. Records are declared in the zone JSON `records[]`: a record that also exists live is imported, one that does not is created, and an empty zone simply has no records to import.
 - A `cloudflare_ruleset` owns the complete custom-rules phase, so an existing custom-firewall ruleset is imported (not recreated) and a plan-time precondition fails if more than one entrypoint ruleset exists; reconcile its rules into `cloudflare_waf.tf` before apply.
 - Import blocks are idempotent no-ops once an object is in state, so they remain in place and coexist with day-2 record additions and removals. New domains created through Terraform are never imported.
-- Cloudflare account, zone, DNSSEC, record, and ruleset identifiers are discovered at plan time by the data sources. Do not commit or guess them.
-- The Cloudflare general managed ruleset ID `efb7b8c949ac4650a09736fc376e9aee` is not deployed by this stack. It is reserved as a possible future plan-specific extension after entitlement and desired behavior are verified.
+- Adoption identifiers are discovered by data sources at plan time. Do not commit or guess them.
 
 ### Shared maintenance edge
 

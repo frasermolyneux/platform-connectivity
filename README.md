@@ -13,7 +13,7 @@
 
 ## Overview
 
-Terraform-managed platform connectivity for the Molyneux.IO tenant. Provisions a DNS resource group per environment, production-only Azure Private Link DNS zones for common private endpoints, and public DNS zones for platform domains using a JSON-driven configuration approach. GitHub Actions workflows handle plan, apply, and deployment gating across dev and prd environments with OIDC authentication to Azure.
+Terraform-managed shared connectivity for the Molyneux.IO tenant: Azure and Cloudflare DNS, production Private Link zones, and the shared Cloudflare maintenance edge. Public DNS desired state is JSON-driven. GitHub Actions handles plans and deployment across dev and prd using Azure OIDC authentication.
 
 ## Contributing
 

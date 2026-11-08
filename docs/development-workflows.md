@@ -1,12 +1,12 @@
 # Development Workflows
 
 ## GitHub Actions workflows
-- **build-and-test**: Runs `terraform plan` for dev on feature/bugfix/hotfix branch pushes.
-- **pr-verify**: Validates PRs with a dev plan; apply with `deploy-dev` label; prd plan with `run-prd-plan` label. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
+- **build-and-test**: Runs a dev plan and tests on feature/bugfix/hotfix branch pushes that change Terraform, maintenance, or this workflow.
+- **pr-verify**: Plans dev for ready PRs; the `deploy-dev` label opts eligible PRs into dev apply instead, and `run-prd-plan` opts into a prd plan. The `verify-private-plans` label opts trusted same-repository PRs into no-change plan and private-upload verification for both environments.
 - **deploy-dev**: Manual dispatch to run `terraform plan` and `apply` against dev.
 - **deploy-prd**: Triggered on matching pushes to main, weekly schedule, or manual dispatch. Non-scheduled runs apply dev first, then prd; scheduled runs apply prd only.
 - **deploy-strict-origin-tls**: Manual, scope-guarded production path for the one `redirect.xtremeidiots.net` strict TLS addition or its exact removal. Coordinate with ordinary deployments before use.
-- **codequality**: Scheduled Monday 3am UTC. Runs DevOps secure scanning and dependency review on PRs.
+- **codequality**: Runs secure scanning on main pushes, ready PRs and on a schedule, plus dependency review on ready PRs.
 - **destroy-environment**: Manual dispatch with environment choice (dev/prd).
 
 ## Local validation
@@ -41,121 +41,33 @@ bundle can contain credentials or sensitive state, even when the displayed plan
 has no changes. Restrict blob access and manage retention separately; the action
 does not create the container or configure its access or retention.
 
-## Guarded strict TLS rollout
+## Guarded strict TLS recovery
 
-The ordinary `deploy-prd` jobs use the shared plan-and-apply action for dev and
-production. They no longer enforce the temporary no-op or TLS target guards,
-or check that the commit is current `main`. Manual dispatch on other refs and
-reruns of stale commits retain their pre-rollout behavior. Coordinate and review
-ordinary deployments accordingly; a matching main push can apply TLS changes
-without using the dedicated workflow below.
+The manual `deploy-strict-origin-tls` workflow retains a narrow path to add or
+remove the exact `redirect.xtremeidiots.net` rule. Its
+[plan guard](../terraform/scripts/guard_strict_tls_plan.py) requires a complete,
+drift-free, in-place change between an empty entrypoint and that single rule,
+with no unrelated changes. Explicit rule logging is rejected; stop for separate
+review if the live rule contains it. The workflow checks the current `main` SHA
+and a binding to the reviewed Terraform source, then applies the same
+scope-validated saved plan. A source change can invalidate that binding.
 
-The restoration itself requires a separately authorized merge after the guarded
-rollout has completed and relevant jobs have finished. The proposed squash
-merge uses `[skip ci]` only in the merge commit message, after all required PR
-checks pass. This skips all push workflows on that commit, including Code
-Quality and the main-only Terraform Toolchain binary observation. A separately
-reviewed non-skipped docs-only follow-up outside `deploy-prd` paths can exercise
-those workflows on a different SHA, not replace checks on the restoration SHA.
-Reassess intervening main changes, workflow definitions, paths, and job outcomes
-before relying on that follow-up. Skip instructions do not stop queued jobs,
-schedules, manual dispatches, historical reruns, or direct writes.
-
-### Compensating main checks after restoration
-
-After the restoration merges, review the follow-up against the resulting main
-commit and recheck all intervening changes before retargeting or updating it.
-Keep its complete merge diff to this documentation file and confirm that the
-current `deploy-prd` push paths still exclude it. A separately authorized,
-non-skipped merge to main should trigger Code Quality and Terraform Toolchain;
-it should not trigger `deploy-prd` by that push. This does not prevent scheduled,
-manual, queued, or other deployments, and path-filter behavior must be
-reassessed if the merge contains any other files.
-
-After that merge, inspect the actual main push runs for the new merge SHA:
-confirm Code Quality's secure-scanning job and Terraform Toolchain's verify
-and **Observe terraform binary toolchain** jobs completed successfully. The
-observation job is main-only and is skipped on PR runs; PR checks alone cannot
-confirm it. Check for any `deploy-prd` push run for that SHA and investigate an
-unexpected run rather than assuming it is safe. A missing, skipped, cancelled,
-or failed run is not successful evidence. Record run links and conclusions,
-and distinguish any unrelated scheduled or manually dispatched runs.
-
-These are compensating checks of a different SHA, not checks of the skipped
-restoration merge itself. They cannot retroactively establish its security or
-toolchain results, or prove that no infrastructure deployment occurred.
-
-The ordinary, guarded and destroy jobs share the production concurrency group,
-but other workflows and direct access must be assessed separately; concurrency
-does not stop out-of-band writes. GitHub's default concurrency queue allows only
-one pending job; a newer production-group job, including a PR plan, can cancel
-a pending deployment. Check job outcomes rather than assuming it will run.
-
-The guarded workflow can run only on the current `main` commit, after the
-workflow and target change have passed normal PR review and checks. Before
-rollout, independently verify the origin certificate and renewal readiness.
-The Production environment does not currently require a human reviewer; this
-workflow's authorization is for the exact machine-validated scope below, not
-for an arbitrary production plan.
-
-The plan must be a complete, drift-free in-place update of the existing
-`xtremeidiots.net` configuration ruleset from no rules to exactly the specified
-host, action, and strict TLS setting. Imports, moves, replacements, deletions,
-other resource or output changes, deferred changes, and unknown non-metadata
-values are rejected, except the provider-computed unknown `logging` on the new
-rule alone. Its planned logging must be absent or null; no explicit logging
-setting, including `false`, is accepted. The workflow binds the ruleset source
-file to the reviewed Git blob that omits logging, before planning and applying.
-Changes to that file require reviewing and updating this binding.
-
-The pinned Cloudflare provider schema accepts an explicit
-`logging = { enabled = false }`, which produces a known value in a synthetic
-local plan. Cloudflare's [API schema][cloudflare-api-schema] defines
-`rulesets_SetConfigRule` in terms of `rulesets_Rule`, which includes an optional
-`logging` object; its `enabled` field controls whether a rule match generates a
-log. The schema does not define the value when logging is omitted. Explicit
-false is an additional behavior choice, not proof of the omitted default.
-An isolated test with the pinned provider and synthetic state captures its
-in-place update dry-run request to a fake local API and verifies the new rule
-omits logging. This is the same omission used by the status-web rules; it does
-not prove Cloudflare's effective default or its behavior at apply time. Verify
-the exact saved plan, live rule after deployment, and HTTP behavior; an absent
-logging field in the API response does not establish whether logging occurs.
-The workflow does not itself verify the live result after applying.
-
-[cloudflare-api-schema]: https://github.com/cloudflare/api-schemas/blob/main/openapi.json
-
-Cloudflare documents that [Full (strict)][strict-mode] follows [Full mode][full-mode]
-with additional origin certificate validation: plain HTTP visitor requests use
-plain HTTP to the origin, while HTTPS requests use HTTPS. It is not the
-`origin_pull` SSL-only mode. Verify the actual HTTP and HTTPS behavior after an
-authorized deployment; this plan guard cannot establish live traffic behavior.
-
-[strict-mode]: https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/
-[full-mode]: https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full/
-
-The workflow creates a saved plan in the runner's private temporary directory,
-validates its JSON, checks its SHA-256, and applies that same binary file in the
-same job. It checks that main has not advanced before planning or applying.
-Terraform's own state serial check still applies. These checks cannot prevent
-out-of-band changes between refresh and apply or establish certificate health;
-operators must control that window and verify the origin separately. Never put
-the binary plan or its JSON representation in public artifacts or logs.
-
-For rollback, obtain separate authorization and a reviewed deployment plan before
+For rollback, obtain separate authorization and a reviewed procedure before
 changing the `.net` `origin_tls_hostnames` list to `[]`. A matching main push
-starts the ordinary deployment, which can apply the change without the dedicated
-guard. Do not assume merging a configuration revert and then dispatching the
-guarded workflow is safe; coordinate a separately reviewed procedure that controls
-ordinary and other production runs first. The dedicated workflow's `remove` guard
-requires an in-place update of the same existing entrypoint containing exactly the known
-strict rule, to an empty rule list, with no other resource or output changes,
-drift, imports, moves, replacement, deletion, or critical unknown values. It
-requires the existing rule's logging to be absent/null; if Cloudflare returns
-explicit logging, stop for separate review rather than silently deleting it.
-The same source binding, saved-plan and concurrency checks apply. The actual
-API behavior and post-rollback HTTP/HTTPS must be verified; a fake-API plan
-is not evidence of a live rollback.
+can apply the change through ordinary `deploy-prd` without the guard, so control
+ordinary, scheduled, manual, queued and out-of-band production runs before
+merging. Do not assume merging a revert and then dispatching the guard is safe.
+Production jobs share a concurrency group, but it does not prevent out-of-band
+writes; a newer pending job can cancel an older pending job. Check actual job
+outcomes.
+
+The guard cannot establish certificate health, Cloudflare's effective logging
+default or live traffic behavior, nor prevent out-of-band changes after refresh.
+For an addition, verify the origin certificate and renewal readiness separately.
+After either operation, verify the live rule and HTTP/HTTPS behavior; a fake-API
+test is not evidence of a live apply. [Full (strict)](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)
+does not force HTTP visitors to use HTTPS. Keep saved plans and their JSON out of
+public artifacts and logs.
 
 ## Cloudflare zones: new domains vs adopting existing ones
 
@@ -170,15 +82,17 @@ Terraform creates everything from scratch. There is nothing to import.
 
 1. Create `terraform/zones/<domain>.json` with `dns_provider: cloudflare`,
    `management: terraform`, the intended `plan_profile`, `records`, and flags.
-2. Add the zone key to the Production `CLOUDFLARE_ADOPTED_ZONE_KEYS` variable.
+2. Activate its key through the `platform-workloads` configuration described in
+   the existing-domain procedure below, rather than editing the protected variable
+   by hand. Review a production plan before deployment.
 3. Merge and deploy through the ordinary production path; that path creates the
-   zone, DNSSEC, settings, WAF, and records.
+   zone, settings, records, and any enabled DNSSEC and WAF resources.
 4. Point the registrar's nameservers at the Cloudflare-assigned NS.
 
 ### Existing domain (already in Cloudflare) — adopt via data-source import
 
-The zone already exists, so it (and its DNSSEC, settings, and any existing
-custom-firewall ruleset) is imported into state rather than recreated. No
+The zone already exists, so it and its configured DNSSEC, settings, and enabled
+custom-firewall ruleset are imported into state rather than recreated. No
 identifiers are committed and no bespoke workflow is involved —
 `cloudflare_imports.tf` reads the live zone via the `cloudflare_zone`,
 `cloudflare_dns_records`, and `cloudflare_rulesets` data sources and the `import`
@@ -186,9 +100,9 @@ blocks bind each object by its discovered ID.
 
 1. Ensure `terraform/zones/<domain>.json` has `management: terraform`,
    `adopt_existing: true`, and the correct `plan_profile`. Retain the existing
-   `zone_id` while the protected adoption key is absent: the zone and its
-   records stay externally managed until activation, and a missing ID fails
-   planning instead of dropping those records.
+   `zone_id` while the protected adoption key is absent: the zone stays
+   external and its configured records remain managed here until
+   activation; a missing ID fails planning instead of dropping those records.
 2. Declare the desired records in `records[]`:
    - An empty or newly created zone with no live records needs nothing here —
      add whatever records you want Terraform to create.
@@ -222,7 +136,7 @@ run `terraform import` or mutate production state from a local shell.
 ### Staged xtremeidiots.com handoff
 
 The zone is declared for adoption but remains external until its protected
-key is approved and enabled. Its settings preserve the live Full SSL mode,
+key is approved and enabled. Its reviewed settings snapshot includes Full SSL mode,
 disabled DNSSEC, security level, HTTPS rewrites, TLS 1.3 mode, hotlink
 protection, image optimization and browser cache TTL. The custom-firewall
 snapshot retains both hotlink exceptions and the AI Crawl Control rule in
@@ -259,27 +173,26 @@ the external data query or state. The provider cannot list legacy Page Rules,
 so the pinned external provider supplies this read-only lookup.
 
 The scoped `Page Rules Write` grant for `talkwithtiles.com` is owned by
-`platform-workloads`. Review a full Production plan showing exactly one import
-and one status update, with no create/delete or unrelated rule changes, before
-merging. The retained disabled rule is protected against destruction; it does
-not transfer ownership of the zone or any other forwarding rule.
+`platform-workloads`. When initially adopting the rule, review a full Production
+plan showing exactly one import and one status update, with no create/delete or
+unrelated rule changes. The retained disabled rule is protected against
+destruction; it does not transfer ownership of the zone or any other forwarding
+rule.
 
 ### ACS apex TXT ownership handoff
 
-The existing `molyneux.io/@` TXT set remains live throughout transfer to
-`platform-notifications`. The first revision isolated it at
-`azurerm_dns_txt_record.notification_apex[0]` using a declarative move, deployed
-with zero Azure record changes or deletions. This separate release removes its
-configuration with a `removed` block and `destroy = false`, removing only the
-corresponding apex JSON entry. Its production plan must forget exactly that
-isolated set and show zero create, update or delete operations. Apply the release
-before the receiving repository imports `/TXT/@` and preserves its existing SPF.
-Never delete the live record set, use local state commands, or remove unrelated
-TXT, SPF, MX, DKIM or DMARC records during the handoff.
+The `removed` block in `terraform/dns_records.tf` relinquishes the isolated
+`molyneux.io/@` TXT set without destroying it for ownership by
+`platform-notifications`. If it still appears in this state, review the production
+plan to ensure it is only forgotten, with no live record changes, then deploy
+through the production workflow. Confirm the old binding is absent from this
+state before the receiving repository imports it. Preserve its SPF and do not
+delete the live record set, use local state commands, or disturb unrelated DNS
+records.
 
 - DNS zones are configuration-driven via JSON files in `terraform/zones/`. To add a new domain, create a JSON file following the existing schema.
 - An explicit empty `origin_tls_hostnames` list clears retired hostname rules while retaining the protected, stack-owned configuration entrypoint. Omit the property only for zones this stack has never owned. The `xtremeidiots.com` configuration phase is already owned by the status edge stack; its exact-host maps rule must be maintained there, not by creating a competing entrypoint.
-- `redirect.xtremeidiots.net` uses an exact-host strict origin TLS override; the zone-wide Flexible setting is unchanged. Verify a publicly trusted, hostname-valid origin certificate and review the production plan before deployment. Rollback requires separate authorization and a reviewed procedure controlling ordinary deployments as described above; a matching main push can apply a configuration revert without the dedicated guard.
+- `redirect.xtremeidiots.net` uses an exact-host strict origin TLS override without changing the zone-wide SSL setting. See [guarded strict TLS recovery](#guarded-strict-tls-recovery) before changing it.
 - Cloudflare zones default to external ownership. Set `management` to `terraform` only when the zone and its controls will be adopted into this state.
 - Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, and `waf_custom_rules_enabled`.
 - Private link zones are listed in `terraform/private_link_zones/prd.json`.
