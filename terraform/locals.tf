@@ -53,7 +53,7 @@ locals {
   managed_cloudflare_zone_settings = merge([
     for zone_key, zone in local.managed_cloudflare_zones : {
       for setting_id, value in merge(
-        try(zone.adopt_existing, false) ? {} : lookup(local.cloudflare_zone_setting_profiles, try(zone.plan_profile, "free"), {}),
+        try(zone.settings_preserve_existing, false) ? {} : lookup(local.cloudflare_zone_setting_profiles, try(zone.plan_profile, "free"), {}),
         try(zone.settings, {})
         ) : "${zone_key}/${setting_id}" => {
         zone_key   = zone_key

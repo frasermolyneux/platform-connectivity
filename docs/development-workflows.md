@@ -152,7 +152,10 @@ provider read errors before import. A configured managed-ruleset version of
 `adopt_existing: true` through the
 import deployment. After imports are present in state, set it to `false` in a
 follow-up change to leave adoption-only snapshot checks and continue ordinary
-day-2 configuration changes.
+day-2 configuration changes. Keep `settings_preserve_existing: true` to retain
+the explicit managed settings subset without inheriting profile defaults;
+change that flag only when intentionally adopting the profile's full setting
+set.
 
 ### Staged xtremeidiots.com handoff
 

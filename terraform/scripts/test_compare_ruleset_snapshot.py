@@ -54,6 +54,14 @@ class RulesetSnapshotTests(unittest.TestCase):
 
         self.assertTrue(compare(self.expected, actual))
 
+    def test_omitted_ruleset_description_matches_empty_live_description(self):
+        expected = json.loads(json.dumps(self.expected))
+        expected["description"] = None
+        actual = json.loads(json.dumps(expected))
+        actual["description"] = ""
+
+        self.assertTrue(compare(expected, actual))
+
     def test_extra_live_rule_is_rejected(self):
         actual = json.loads(json.dumps(self.expected))
         actual["rules"].append(dict(actual["rules"][0], id="another-id"))

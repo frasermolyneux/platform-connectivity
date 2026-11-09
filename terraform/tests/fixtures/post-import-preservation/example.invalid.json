@@ -1,0 +1,13 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": false,
+  "settings_preserve_existing": true,
+  "plan_profile": "pro",
+  "settings": {
+    "ssl": "strict"
+  },
+  "dnssec_enabled": false,
+  "records": []
+}

@@ -22,6 +22,8 @@ def _without_nulls(value):
 
 def _effective_snapshot(snapshot):
     effective = json.loads(json.dumps(snapshot))
+    if effective.get("description") is None:
+        effective["description"] = ""
     for rule in effective["rules"]:
         rule.setdefault("enabled", True)
         rule.setdefault("description", "")

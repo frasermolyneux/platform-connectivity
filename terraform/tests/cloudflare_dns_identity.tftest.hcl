@@ -133,3 +133,21 @@ run "adoption_requires_explicit_settings_preservation" {
 
   expect_failures = [cloudflare_zone.managed["example.invalid"]]
 }
+
+run "preserved_settings_do_not_expand_after_import" {
+  command = plan
+
+  variables {
+    dns_zones_path        = "tests/fixtures/post-import-preservation"
+    cloudflare_account_id = "00000000000000000000000000000000"
+  }
+
+  assert {
+    condition = (
+      length(local.managed_cloudflare_zone_settings) == 1 &&
+      contains(keys(local.managed_cloudflare_zone_settings), "example.invalid/ssl") &&
+      local.managed_cloudflare_zone_settings["example.invalid/ssl"].value == "strict"
+    )
+    error_message = "Disabling adoption must not add profile defaults when the explicit settings preservation contract remains enabled."
+  }
+}
