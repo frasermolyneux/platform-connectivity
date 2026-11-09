@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Data-source-driven adoption of existing Cloudflare zones.
 #
-# When a zone is activated via cloudflare_adopted_zone_keys, these data sources
+# When a zone declares management = terraform and adopt_existing = true, these data sources
 # read the live zone, its DNS records, and any existing custom-firewall ruleset
 # at plan time. The import blocks below bind each existing object to its
 # Terraform resource using IDs discovered from those reads, so adoption runs

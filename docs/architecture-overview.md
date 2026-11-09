@@ -17,7 +17,7 @@ Each zone JSON declares a `dns_provider` of either `azure` (default) or `cloudfl
 - **Azure-managed zones** use the grouped schema (`a_records`, `cname_records`, ...) and are provisioned as `azurerm_dns_zone` + record resources.
 - **Cloudflare zones** use the flat schema (`records[]` with per-record `type`/`name`/`content`/`proxied`) and set `management` to either `external` or `terraform`. Missing `management` defaults to `external` for compatibility with existing definitions.
 
-External Cloudflare zones retain a committed `zone_id`; Terraform manages their configured records and any explicitly enabled hostname origin TLS overrides below, not their zone-wide settings. Existing zones staged for adoption retain that ID until the protected adoption key is enabled, so their records and external-zone TLS behavior remain intact. Terraform-managed zones set `management` to `terraform`; activated zones use their discovered ID. For these zones, Terraform manages:
+External Cloudflare zones retain a committed `zone_id`; Terraform manages their configured records and any explicitly enabled hostname origin TLS overrides below, not their zone-wide settings. Zone JSON ownership is authoritative: zones awaiting adoption remain `management: external` until the handoff is separately approved. Terraform-managed zones set `management` to `terraform`; existing zones also set `adopt_existing: true` to use their discovered ID, while new zones are created. For these zones, Terraform manages:
 
 - The zone and authoritative name servers
 - DNSSEC when `dnssec_enabled` is omitted or `true`
@@ -27,8 +27,8 @@ External Cloudflare zones retain a committed `zone_id`; Terraform manages their 
 
 The shared custom firewall ruleset stays within Cloudflare Free limits. It blocks probes for common sensitive files and directories, and applies Managed Challenge to common automated WordPress administration probes. It intentionally does not deploy rate limiting, Bot Fight Mode, Cloudflare managed rulesets, regex expressions, or application-specific controls.
 
-`xtremeidiots.com` is configured for a preservation-first adoption; its protected
-adoption key must remain unset until the handoff is separately approved. Its
+`xtremeidiots.com` is configured for a preservation-first adoption; its
+`management` must remain `external` until the handoff is separately approved. Its
 zone settings and custom firewall snapshot preserve the inventoried Pro
 configuration rather than applying the shared baseline. With
 `waf_preserve_existing`, adoption requires one existing custom-firewall
@@ -76,7 +76,7 @@ the managed origin TLS entrypoint is protected and requires explicit review.
 ### Adopting Cloudflare resources
 
 - `terraform/zones/*.json` is the managed source of truth for Cloudflare records. It was originally generated from the Cloudflare dashboard's BIND export during migration (capturing proxy state, normalised TTLs, SOA/apex-NS dropped, other stacks' records carved out); edit the JSON directly going forward.
-- An existing zone moving to `management: terraform` (and into the protected `CLOUDFLARE_ADOPTED_ZONE_KEYS` set, with `adopt_existing: true`) is adopted through data-source-driven `import` blocks in `cloudflare_imports.tf`. The `cloudflare_zone`, `cloudflare_dns_records`, and `cloudflare_rulesets` data sources read the live zone at plan time and the import blocks bind each object by its discovered ID, so no identifiers are committed and adoption runs through the normal `deploy-prd` plan/apply. Records are declared in the zone JSON `records[]`: a record that also exists live is imported, one that does not is created, and an empty zone simply has no records to import.
+- An existing zone moving to `management: terraform` with `adopt_existing: true` is adopted through data-source-driven `import` blocks in `cloudflare_imports.tf`. The `cloudflare_zone`, `cloudflare_dns_records`, and `cloudflare_rulesets` data sources read the live zone at plan time and the import blocks bind each object by its discovered ID, so no identifiers are committed and adoption runs through the normal `deploy-prd` plan/apply. Records are declared in the zone JSON `records[]`: a record that also exists live is imported, one that does not is created, and an empty zone simply has no records to import.
 - A `cloudflare_ruleset` owns the complete custom-rules phase, so an existing custom-firewall ruleset is imported (not recreated) and a plan-time precondition fails if more than one entrypoint ruleset exists; reconcile its rules into `cloudflare_waf.tf` before apply.
 - Import blocks are idempotent no-ops once an object is in state, so they remain in place and coexist with day-2 record additions and removals. New domains created through Terraform are never imported.
 - Adoption identifiers are discovered by data sources at plan time. Do not commit or guess them.

@@ -1,7 +1,7 @@
 {
   "name": "xtremeidiots.com",
   "dns_provider": "cloudflare",
-  "management": "terraform",
+  "management": "external",
   "adopt_existing": true,
   "plan_profile": "pro",
   "dnssec_enabled": false,

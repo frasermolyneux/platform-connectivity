@@ -35,7 +35,7 @@ Use repository workflows for state-backed plans and all applies:
 
 - Azure authentication and state access use OIDC/Azure AD; never add client secrets or credentials.
 - Do not commit discovered Cloudflare identifiers, generated state, or plans. Commit the reviewed root provider lock.
-- Cloudflare adoption is protected and fail-closed; follow [development workflows](../docs/development-workflows.md) before changing ownership or import behavior.
+- Cloudflare zone JSON `management` declarations determine ownership; keep unapproved adoptions external and follow [development workflows](../docs/development-workflows.md) before changing ownership or import behavior.
 - Treat provider, backend, environment, output, DNS-zone ownership, and remote-state changes as high blast radius.
 
 See the [architecture overview](../docs/architecture-overview.md) and [development workflows](../docs/development-workflows.md) for detailed repository behavior.

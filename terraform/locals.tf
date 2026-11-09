@@ -17,20 +17,9 @@ locals {
   azure_native_zones = { for k, z in local.all_zones : k => z if try(z.dns_provider, "azure") == "azure" }
   cloudflare_zones   = { for k, z in local.all_zones : k => z if try(z.dns_provider, "azure") == "cloudflare" }
 
-  declared_managed_cloudflare_zones = { for k, z in local.cloudflare_zones : k => z if try(z.management, "external") == "terraform" }
-  managed_cloudflare_zones = {
-    for k, z in local.declared_managed_cloudflare_zones : k => z
-    if contains(var.cloudflare_adopted_zone_keys, k)
-  }
-  pending_cloudflare_adoptions = {
-    for k, z in local.declared_managed_cloudflare_zones : k => z
-    if try(z.adopt_existing, false) && !contains(var.cloudflare_adopted_zone_keys, k)
-  }
-  legacy_cloudflare_zones = {
-    for k, z in local.cloudflare_zones : k => z
-    if try(z.management, "external") == "external" || contains(keys(local.pending_cloudflare_adoptions), k)
-  }
-  active_cloudflare_zones = merge(local.legacy_cloudflare_zones, local.managed_cloudflare_zones)
+  managed_cloudflare_zones = { for k, z in local.cloudflare_zones : k => z if try(z.management, "external") == "terraform" }
+  legacy_cloudflare_zones  = { for k, z in local.cloudflare_zones : k => z if try(z.management, "external") == "external" }
+  active_cloudflare_zones  = merge(local.legacy_cloudflare_zones, local.managed_cloudflare_zones)
 
   cloudflare_zone_setting_profiles = {
     free = {
@@ -76,7 +65,7 @@ locals {
 
   # Name -> zone_id lookup for all Cloudflare zones (used by records, delegation, and outputs).
   cloudflare_zone_ids = merge(
-    { for k, z in local.legacy_cloudflare_zones : z.name => contains(keys(local.pending_cloudflare_adoptions), k) ? try(z.zone_id, "") : z.zone_id },
+    { for k, z in local.legacy_cloudflare_zones : z.name => z.zone_id },
     { for k, z in cloudflare_zone.managed : z.name => z.id }
   )
 

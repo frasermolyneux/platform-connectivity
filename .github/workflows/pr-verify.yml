@@ -90,7 +90,6 @@ jobs:
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
       TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      TF_VAR_cloudflare_adopted_zone_keys: ${{ vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]' }}
       AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
@@ -134,7 +133,6 @@ jobs:
     env:
       TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_KEY }}
       TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      TF_VAR_cloudflare_adopted_zone_keys: ${{ matrix.name == 'prd' && (vars.CLOUDFLARE_ADOPTED_ZONE_KEYS || '[]') || '[]' }}
     steps:
       - uses: frasermolyneux/actions/terraform-plan-readonly@977ddbedf7f5c6e2fae98ff1d6ec6a9c7669d778 # terraform-plan-readonly/v6.0.0
         with:

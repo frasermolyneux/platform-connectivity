@@ -54,43 +54,33 @@ variables {
   }
 }
 
-run "pending_adoption_preserves_existing_dns" {
+run "external_ownership_preserves_existing_dns" {
   command = plan
 
   variables {
-    dns_zones_path = "tests/fixtures/pending-adoption"
+    dns_zones_path = "tests/fixtures/external"
   }
 
   assert {
     condition = (
       length(cloudflare_zone.managed) == 0 &&
+      length(local.cloudflare_zones_to_adopt) == 0 &&
       length(cloudflare_zone_setting.managed) == 0 &&
       length(cloudflare_ruleset.zone_custom_firewall) == 0 &&
       length(cloudflare_ruleset.origin_tls["example.invalid"].rules) == 1 &&
       cloudflare_dns_record.a["example.invalid|A|www|192.0.2.1"].zone_id == "00000000000000000000000000000001" &&
       output.dns_zones["example.invalid"].id == "00000000000000000000000000000001"
     )
-    error_message = "A pending adoption must preserve the existing zone and DNS records without enabling zone-wide management."
+    error_message = "External ownership must preserve existing DNS and TLS without enabling zone-wide management, even with adopt_existing set."
   }
 }
 
-run "pending_adoption_requires_existing_zone_id" {
+run "managed_existing_zone_uses_discovered_zone" {
   command = plan
 
   variables {
-    dns_zones_path = "tests/fixtures/pending-adoption-missing-id"
-  }
-
-  expect_failures = [terraform_data.pending_cloudflare_adoption["example.invalid"]]
-}
-
-run "activated_adoption_uses_discovered_zone" {
-  command = plan
-
-  variables {
-    dns_zones_path               = "tests/fixtures/activated-adoption"
-    cloudflare_account_id        = "00000000000000000000000000000000"
-    cloudflare_adopted_zone_keys = ["example.invalid"]
+    dns_zones_path        = "tests/fixtures/activated-adoption"
+    cloudflare_account_id = "00000000000000000000000000000000"
   }
 
   override_data {
@@ -105,12 +95,32 @@ run "activated_adoption_uses_discovered_zone" {
 
   assert {
     condition = (
-      length(terraform_data.pending_cloudflare_adoption) == 0 &&
+      length(local.cloudflare_zones_to_adopt) == 1 &&
       length(cloudflare_zone.managed) == 1 &&
       cloudflare_dns_record.a["example.invalid|A|www|192.0.2.1"].zone_id == "00000000000000000000000000000002" &&
       output.dns_zones["example.invalid"].id == "00000000000000000000000000000002"
     )
-    error_message = "Activated adoption must use the discovered zone rather than the pending external identifier."
+    error_message = "An existing Terraform-managed zone must use its discovered zone rather than its external identifier."
+  }
+}
+
+run "managed_new_zone_needs_no_adoption" {
+  command = plan
+
+  variables {
+    dns_zones_path        = "tests/fixtures/new-zone"
+    cloudflare_account_id = "00000000000000000000000000000000"
+  }
+
+  assert {
+    condition = (
+      length(cloudflare_zone.managed) == 1 &&
+      length(cloudflare_zone_dnssec.managed) == 1 &&
+      length(cloudflare_zone_setting.managed) == 11 &&
+      length(cloudflare_ruleset.zone_custom_firewall) == 1 &&
+      length(local.cloudflare_zones_to_adopt) == 0
+    )
+    error_message = "A new zone declared Terraform-managed must enable its controls without attempting discovery or import."
   }
 }
 
@@ -118,9 +128,8 @@ run "preservation_rejects_missing_firewall" {
   command = plan
 
   variables {
-    dns_zones_path               = "tests/fixtures/missing-firewall"
-    cloudflare_account_id        = "00000000000000000000000000000000"
-    cloudflare_adopted_zone_keys = ["example.invalid"]
+    dns_zones_path        = "tests/fixtures/missing-firewall"
+    cloudflare_account_id = "00000000000000000000000000000000"
   }
 
   override_data {
