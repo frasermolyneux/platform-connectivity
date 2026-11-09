@@ -9,7 +9,7 @@ mock_provider "external" {
 }
 
 override_resource {
-  target = cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"]
+  target = cloudflare_page_rule.legacy_apex_redirect["example.test"]
   values = { id = "00000000000000000000000000000001" }
 }
 
@@ -21,7 +21,7 @@ override_data {
 }
 
 override_resource {
-  target = terraform_data.origin_tls_owner["xtremeidiots.net"]
+  target = terraform_data.origin_tls_owner["edge.example.test"]
   values = {
     id = "00000000-0000-0000-0000-000000000001"
   }
@@ -29,7 +29,7 @@ override_resource {
 
 variables {
   subscription_id       = "00000000-0000-0000-0000-000000000000"
-  dns_zones_path        = "zones"
+  dns_zones_path        = "tests/fixtures/connectivity-hosts"
   cloudflare_api_token  = "unused_placeholder_token_dev_environment"
   cloudflare_account_id = "00000000000000000000000000000000"
   platform_workloads_state = {
@@ -52,59 +52,33 @@ run "retired_hostname_keeps_empty_owned_configuration_phase" {
   assert {
     condition = (
       length(cloudflare_ruleset.origin_tls) == 1 &&
-      length(cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules) == 0 &&
+      length(cloudflare_ruleset.origin_tls["edge.example.test"].rules) == 0 &&
       length(cloudflare_zone_setting.managed) == 0
     )
     error_message = "Retiring maps must clear its old rule without destroying the protected zone entrypoint or managing external zone settings."
   }
 }
 
-run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
+run "synthetic_origin_tls_is_strict_for_both_proxied_hosts" {
   command = plan
 
   assert {
     condition = (
-      toset([for rule in cloudflare_ruleset.origin_tls["talkwithtiles.com"].rules : rule.expression]) ==
-      toset(["http.host eq \"talkwithtiles.com\"", "http.host eq \"www.talkwithtiles.com\""]) &&
+      toset([for rule in cloudflare_ruleset.origin_tls["example.test"].rules : rule.expression]) ==
+      toset(["http.host eq \"example.test\"", "http.host eq \"www.example.test\""]) &&
       alltrue([
-        for rule in cloudflare_ruleset.origin_tls["talkwithtiles.com"].rules :
+        for rule in cloudflare_ruleset.origin_tls["example.test"].rules :
         rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
       ]) &&
-      toset([for rule in cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules : rule.expression]) ==
-      toset(["http.host eq \"redirect.xtremeidiots.net\""]) &&
+      toset([for rule in cloudflare_ruleset.origin_tls["edge.example.test"].rules : rule.expression]) ==
+      toset(["http.host eq \"redirect.edge.example.test\""]) &&
       alltrue([
-        for rule in cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules :
+        for rule in cloudflare_ruleset.origin_tls["edge.example.test"].rules :
         rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
       ]) &&
-      alltrue([for setting in local.managed_cloudflare_zone_settings : !contains(["talkwithtiles.com", "xtremeidiots.net"], setting.zone_key)])
+      alltrue([for setting in local.managed_cloudflare_zone_settings : !contains(["example.test", "edge.example.test"], setting.zone_key)])
     )
-    error_message = "Talk and the XtremeIdiots redirect must enforce strict origin TLS only for their selected proxied hosts without changing external zone settings."
-  }
-}
-
-run "production_zone_ownership_retains_live_baseline" {
-  command = plan
-
-  assert {
-    condition = (
-      toset(keys(local.managed_cloudflare_zones)) == toset(["tripsidekick.app", "tripsidekick.net"]) &&
-      contains(keys(local.legacy_cloudflare_zones), "xtremeidiots.com") &&
-      length(local.cloudflare_zones_to_adopt) == 0 &&
-      !contains(keys(cloudflare_zone.managed), "xtremeidiots.com") &&
-      !contains(keys(cloudflare_ruleset.zone_custom_firewall), "xtremeidiots.com") &&
-      !local.cloudflare_zones["xtremeidiots.com"].dnssec_enabled &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.ssl == "full" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.security_level == "essentially_off" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.automatic_https_rewrites == "off" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.tls_1_3 == "zrt" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.hotlink_protection == "on" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.polish == "lossy" &&
-      local.cloudflare_zones["xtremeidiots.com"].settings.browser_cache_ttl == 1382400 &&
-      length(local.cloudflare_zones["xtremeidiots.com"].waf_custom_ruleset.rules) == 3 &&
-      cloudflare_dns_record.cname["xtremeidiots.com|CNAME|portal|app-portal-web-prd-uksouth-fe584e15256a.azurewebsites.net"].proxied == false &&
-      cloudflare_dns_record.a["xtremeidiots.com|A|cdn|192.95.23.11"].proxied == true
-    )
-    error_message = "The staged zone must retain its inventoried settings and integrations without activating zone-wide management."
+    error_message = "Synthetic zones must enforce strict origin TLS only for their selected proxied hosts without changing external zone settings."
   }
 }
 
@@ -114,11 +88,11 @@ run "legacy_redirect_is_imported_disabled_without_changing_its_target" {
   assert {
     condition = (
       length(cloudflare_page_rule.legacy_apex_redirect) == 1 &&
-      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].status == "disabled" &&
-      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].target == "https://talkwithtiles.com/*" &&
-      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].actions.forwarding_url.url == "https://www.talkwithtiles.com/" &&
-      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].actions.forwarding_url.status_code == 301 &&
-      cloudflare_page_rule.legacy_apex_redirect["talkwithtiles.com"].priority == 1
+      cloudflare_page_rule.legacy_apex_redirect["example.test"].status == "disabled" &&
+      cloudflare_page_rule.legacy_apex_redirect["example.test"].target == "https://example.test/*" &&
+      cloudflare_page_rule.legacy_apex_redirect["example.test"].actions.forwarding_url.url == "https://www.example.test/" &&
+      cloudflare_page_rule.legacy_apex_redirect["example.test"].actions.forwarding_url.status_code == 301 &&
+      cloudflare_page_rule.legacy_apex_redirect["example.test"].priority == 1
     )
     error_message = "Only the explicitly opted-in legacy redirect may be adopted, retaining its exact configuration except disabled status."
   }
@@ -131,7 +105,7 @@ run "unproxied_hostname_is_rejected" {
     dns_zones_path = "tests/fixtures/unproxied"
   }
 
-  expect_failures = [cloudflare_ruleset.origin_tls["xtremeidiots.net"]]
+  expect_failures = [cloudflare_ruleset.origin_tls["edge.example.test"]]
 }
 
 run "duplicate_hostname_is_rejected" {
@@ -141,7 +115,7 @@ run "duplicate_hostname_is_rejected" {
     dns_zones_path = "tests/fixtures/duplicate"
   }
 
-  expect_failures = [cloudflare_ruleset.origin_tls["xtremeidiots.net"]]
+  expect_failures = [cloudflare_ruleset.origin_tls["edge.example.test"]]
 }
 
 run "new_managed_zone_override_is_rejected_explicitly" {

@@ -5,6 +5,7 @@
   "origin_tls_hostnames": ["maps.new.invalid"],
   "records": [
     {
+      "key": "maps",
       "type": "A",
       "name": "maps",
       "content": "192.0.2.1",

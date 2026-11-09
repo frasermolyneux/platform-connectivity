@@ -1,0 +1,8 @@
+{
+  "name": "new.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "records": [
+    { "type": "A", "name": "www", "content": "192.0.2.1", "proxied": true, "ttl": 1 }
+  ]
+}

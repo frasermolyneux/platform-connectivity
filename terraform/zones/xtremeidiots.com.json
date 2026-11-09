@@ -1,18 +1,72 @@
 {
   "name": "xtremeidiots.com",
   "dns_provider": "cloudflare",
-  "management": "external",
+  "management": "terraform",
   "adopt_existing": true,
   "plan_profile": "pro",
   "dnssec_enabled": false,
+  "settings_preserve_existing": true,
   "settings": {
+    "0rtt": "on",
+    "always_online": "on",
+    "always_use_https": "on",
     "automatic_https_rewrites": "off",
+    "brotli": "on",
+    "browser_cache_ttl": 1382400,
+    "browser_check": "on",
+    "cache_level": "aggressive",
+    "challenge_ttl": 3600,
+    "ciphers": [],
+    "cname_flattening": "flatten_at_root",
+    "development_mode": "off",
+    "early_hints": "off",
+    "ech": "off",
+    "edge_cache_ttl": 7200,
+    "email_obfuscation": "on",
+    "filter_logs_to_cloudflare": "off",
+    "hotlink_protection": "on",
+    "http2": "on",
+    "http3": "on",
+    "ip_geolocation": "on",
+    "ipv6": "on",
+    "log_to_cloudflare": "on",
+    "max_upload": 100,
+    "min_tls_version": "1.2",
+    "minify": { "css": "off", "html": "off", "js": "off" },
+    "mirage": "off",
+    "mobile_redirect": {
+      "status": "off",
+      "mobile_subdomain": null,
+      "strip_uri": false
+    },
+    "opportunistic_encryption": "on",
+    "opportunistic_onion": "on",
+    "orange_to_orange": "off",
+    "polish": "lossy",
+    "pq_keyex": "on",
+    "privacy_pass": "on",
+    "pseudo_ipv4": "off",
+    "replace_insecure_js": "off",
+    "rocket_loader": "off",
+    "security_header": {
+      "strict_transport_security": {
+        "enabled": false,
+        "max_age": 0,
+        "include_subdomains": false,
+        "preload": false,
+        "nosniff": false
+      }
+    },
     "security_level": "essentially_off",
+    "server_side_exclude": "on",
     "ssl": "full",
     "tls_1_3": "zrt",
-    "hotlink_protection": "on",
-    "polish": "lossy",
-    "browser_cache_ttl": 1382400
+    "tls_1_2_only": "off",
+    "tls_client_auth": "off",
+    "visitor_ip": "on",
+    "waf": "off",
+    "webp": "on",
+    "websockets": "on"
   },
   "waf_preserve_existing": true,
   "waf_custom_ruleset": {
@@ -51,10 +105,126 @@
       }
     ]
   },
+  "rulesets": {
+    "http_request_firewall_managed": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "c2e184081120413c86c3ab7e14069605",
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "true"
+        },
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "efb7b8c949ac4650a09736fc376e9aee",
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "(not http.request.uri contains \"/duc\")"
+        },
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "4814384a9e5d4991b9815dcfc25d2f1f",
+            "overrides": {
+              "categories": [
+                { "category": "paranoia-level-2", "enabled": false },
+                { "category": "paranoia-level-3", "enabled": false },
+                { "category": "paranoia-level-4", "enabled": false }
+              ]
+            },
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "(not http.request.uri contains \"/duc\")"
+        }
+      ]
+    },
+    "http_ratelimit": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "managed_challenge",
+          "description": "Requests > 20 in 10 Seconds - Challenge",
+          "enabled": true,
+          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "ratelimit": {
+            "characteristics": ["ip.src", "cf.colo.id"],
+            "mitigation_timeout": 0,
+            "period": 10,
+            "requests_per_period": 50
+          }
+        },
+        {
+          "action": "managed_challenge",
+          "description": "Duplicate of Requests > 150 in 1 Minute - Challenge",
+          "enabled": true,
+          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "ratelimit": {
+            "characteristics": ["ip.src", "cf.colo.id"],
+            "mitigation_timeout": 0,
+            "period": 60,
+            "requests_per_period": 150
+          }
+        }
+      ]
+    },
+    "http_request_dynamic_redirect": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "redirect",
+          "action_parameters": {
+            "from_value": {
+              "preserve_query_string": true,
+              "status_code": 301,
+              "target_url": {
+                "expression": "wildcard_replace(http.request.full_uri, r\"https://xtremeidiots.com/*\", r\"https://www.xtremeidiots.com/${1}\")"
+              }
+            }
+          },
+          "description": "Redirect from Root to WWW",
+          "enabled": true,
+          "expression": "(http.request.full_uri wildcard r\"https://xtremeidiots.com/*\")"
+        }
+      ]
+    }
+  },
+  "page_rules": {
+    "tcadmin": {
+      "target": "*tcadmin.xtremeidiots.com/*",
+      "priority": 2,
+      "status": "active",
+      "actions": {
+        "ssl": "flexible",
+        "automatic_https_rewrites": "on",
+        "disable_apps": true,
+        "disable_performance": true
+      }
+    },
+    "stats": {
+      "target": "https://stats.xtremeidiots.com/*",
+      "priority": 1,
+      "status": "active",
+      "actions": {
+        "ssl": "full",
+        "automatic_https_rewrites": "on"
+      }
+    }
+  },
   "zone_id": "b596004d516e2ffe840c76a58b81060c",
   "backup_to_azure": false,
   "records": [
     {
+      "key": "maps",
       "type": "A",
       "name": "maps",
       "ttl": 1,
@@ -62,6 +232,7 @@
       "proxied": true
     },
     {
+      "key": "apex",
       "type": "A",
       "name": "@",
       "ttl": 1,
@@ -69,6 +240,7 @@
       "proxied": true
     },
     {
+      "key": "cdn",
       "type": "A",
       "name": "cdn",
       "ttl": 1,
@@ -76,6 +248,7 @@
       "proxied": true
     },
     {
+      "key": "test",
       "type": "A",
       "name": "test",
       "ttl": 1,
@@ -83,6 +256,7 @@
       "proxied": false
     },
     {
+      "key": "ts",
       "type": "A",
       "name": "ts",
       "ttl": 1,
@@ -90,6 +264,7 @@
       "proxied": false
     },
     {
+      "key": "www",
       "type": "A",
       "name": "www",
       "ttl": 1,
@@ -97,6 +272,7 @@
       "proxied": true
     },
     {
+      "key": "autodiscover",
       "type": "CNAME",
       "name": "autodiscover",
       "ttl": 3600,
@@ -104,6 +280,7 @@
       "proxied": false
     },
     {
+      "key": "enterpriseenrollment",
       "type": "CNAME",
       "name": "enterpriseenrollment",
       "ttl": 3600,
@@ -111,6 +288,7 @@
       "proxied": false
     },
     {
+      "key": "enterpriseregistration",
       "type": "CNAME",
       "name": "enterpriseregistration",
       "ttl": 3600,
@@ -118,6 +296,7 @@
       "proxied": false
     },
     {
+      "key": "mte1-domainkey",
       "type": "CNAME",
       "name": "mte1._domainkey",
       "ttl": 3600,
@@ -125,6 +304,7 @@
       "proxied": false
     },
     {
+      "key": "mte2-domainkey",
       "type": "CNAME",
       "name": "mte2._domainkey",
       "ttl": 3600,
@@ -132,6 +312,7 @@
       "proxied": false
     },
     {
+      "key": "portal",
       "type": "CNAME",
       "name": "portal",
       "ttl": 1,
@@ -139,6 +320,7 @@
       "proxied": false
     },
     {
+      "key": "selector1-domainkey",
       "type": "CNAME",
       "name": "selector1._domainkey",
       "ttl": 3600,
@@ -146,6 +328,7 @@
       "proxied": false
     },
     {
+      "key": "selector2-domainkey",
       "type": "CNAME",
       "name": "selector2._domainkey",
       "ttl": 3600,
@@ -153,6 +336,7 @@
       "proxied": false
     },
     {
+      "key": "status",
       "type": "CNAME",
       "name": "status",
       "ttl": 1,
@@ -160,6 +344,7 @@
       "proxied": true
     },
     {
+      "key": "apex",
       "type": "MX",
       "name": "@",
       "ttl": 3600,
@@ -167,6 +352,7 @@
       "content": "xtremeidiots-com.mail.protection.outlook.com"
     },
     {
+      "key": "sipfederationtls-tcp",
       "type": "SRV",
       "name": "_sipfederationtls._tcp",
       "ttl": 3600,
@@ -178,6 +364,7 @@
       }
     },
     {
+      "key": "ts3-udp-ts",
       "type": "SRV",
       "name": "_ts3._udp.ts",
       "ttl": 1,
@@ -189,48 +376,56 @@
       }
     },
     {
+      "key": "dmarc",
       "type": "TXT",
       "name": "_dmarc",
       "ttl": 3600,
       "content": "v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io"
     },
     {
+      "key": "dnsauth-portal",
       "type": "TXT",
       "name": "_dnsauth.portal",
       "ttl": 1,
       "content": "s9lyvdr9z5s2bjfl7gl0s0pglm3qdqcg"
     },
     {
+      "key": "apex-google-site-verification",
       "type": "TXT",
       "name": "@",
       "ttl": 1,
       "content": "google-site-verification=VSeQG9SAzJJb9xKKL-T43TwuUfLIkli-UcU6UDN7AR0"
     },
     {
+      "key": "apex-ms-domain-verification",
       "type": "TXT",
       "name": "@",
       "ttl": 3600,
       "content": "ms-domain-verification=1dbcb9a5-f9b7-4725-b222-d5b44445f2bd"
     },
     {
+      "key": "apex-ms",
       "type": "TXT",
       "name": "@",
       "ttl": 1,
       "content": "MS=ms76092282"
     },
     {
+      "key": "asuid-portal",
       "type": "TXT",
       "name": "asuid.portal",
       "ttl": 1,
       "content": "BDBD8BC935C8905D5B7678B11047530953788118A6EC6223639484FD72437651"
     },
     {
+      "key": "google-domainkey",
       "type": "TXT",
       "name": "google._domainkey",
       "ttl": 1,
       "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArubo6nvYzXyiZDHXu1pUpsp/QHWSXgXUpCAYaVIJM9VKVgTC83Kf9WOpoUnoTvmz0qcHNhrJihrZeXlhCVYsK+rbJZsqmWydR2V4sVgFgna6GTi+X6kuR46T8PILRX/k5/hnTAi3w+jGDrZ7xNGiqQuiCkaifLdvRppRkXiz2l8XjddGEzfb46hQFtKLGPsYl2NuaBay8BBLO0iJ2RXoKdnGieBv345dwLx7jaTg3jE8TKz5zmUUS51i4VKL4usw3nay1F5NGuVmgfVpsNFpV2QTMC48cyB2VvsqySYtps+vYBjRR7mIlWCr3jBEEbioUkJkxEF1kEm1HG9alE2gTQIDAQAB"
     },
     {
+      "key": "mandrill-domainkey",
       "type": "TXT",
       "name": "mandrill._domainkey",
       "ttl": 1,

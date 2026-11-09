@@ -109,11 +109,12 @@ blocks bind each object by its discovered ID.
      by the ID the `cloudflare_dns_records` data source discovers); any not yet
      live is created. Live records you omit stay unmanaged.
 3. If the zone already has a custom-firewall ruleset, reconcile its rules into
-   a reviewed `waf_custom_ruleset` snapshot before proceeding — the ruleset resource owns the whole
-   `http_request_firewall_custom` phase, so an incomplete rule list would replace
-   the live rules on apply. New-ish domains usually have no such ruleset and it
-   is created fresh (a plan-time precondition fails loudly if more than one
-   entrypoint ruleset exists).
+   a reviewed `waf_custom_ruleset` snapshot and set
+   `waf_preserve_existing: true` before proceeding — the ruleset resource owns
+   the whole `http_request_firewall_custom` phase, so an incomplete rule list
+   would replace the live rules on apply. Adopted zones fail closed if that
+   entrypoint is missing, ambiguous, unreadable, or differs from the snapshot.
+   New zones may create the shared default ruleset.
 4. Once approved, set `management: terraform` in the zone JSON. This declaration
    alone selects zone-wide management; `adopt_existing: true` selects discovery
    and import rather than creation. Ensure the Production `CLOUDFLARE_ACCOUNT_ID`
@@ -126,33 +127,57 @@ blocks bind each object by its discovered ID.
    import and reconciliation.
 
 Import blocks are idempotent — once an object is in state they are skipped, so
-they stay in place and coexist with day-2 record additions and removals. Never
-run `terraform import` or mutate production state from a local shell.
+they stay in place and coexist with day-2 record additions and removals. A
+configured Page Rule or phase ruleset is created when no match exists, imported
+when exactly one match exists, and rejected on ambiguity or API errors. A
+same-target Page Rule that differs from its reviewed configuration fails rather
+than being silently duplicated.
+
+Every Terraform-managed Cloudflare DNS record needs a stable, non-empty `key`
+unique within its zone and type. Keys form Terraform resource addresses and must
+not encode mutable content. For a record already in state under the legacy
+content-derived address, obtain the exact old address from that environment's
+read-only `terraform state list`, add a static `moved` block, and verify a plan
+shows a state-only move with no DNS create, update, or destroy. Never run
+`terraform state mv`, `terraform import`, or mutate production state from a
+local shell. Unsupported DNS record types fail closed; add resource and live
+record matching support before declaring them.
+
+For adopted zones, set `settings_preserve_existing: true` and include an
+explicit snapshot in `settings`; plan-profile defaults are not inherited.
+Review the snapshot against the live editable settings before adoption.
 
 ### Staged xtremeidiots.com handoff
 
-The zone retains `management: external` until its handoff is separately approved
-and that declaration changes to `terraform`. Its reviewed settings snapshot includes Full SSL mode,
-disabled DNSSEC, security level, HTTPS rewrites, TLS 1.3 mode, hotlink
-protection, image optimization and browser cache TTL. The custom-firewall
-snapshot retains both hotlink exceptions and the AI Crawl Control rule in
-their existing order, including their actions and response. Its
-`waf_preserve_existing` guard reads the whole entrypoint and fails if it is
-missing or differs from the snapshot; discovered default rule references are
-not committed. The rule name must remain `default`: changing it forces a
-replacement with the pinned provider.
+The zone is declared for preservation-first adoption. Its settings snapshot
+includes every zone setting the Cloudflare API marked editable, preserving the
+live Pro values and disabled DNSSEC. The custom-firewall snapshot retains both
+hotlink exceptions and the AI Crawl Control rule in their existing order,
+including their actions and response. Its `waf_preserve_existing` guard reads
+the whole entrypoint and fails if it is missing or differs from the snapshot;
+discovered default rule references are not committed. The rule name must remain
+`default`: changing it forces a replacement with the pinned provider.
 
+The `rulesets` map also snapshots the active managed-WAF, rate-limit and
+dynamic-redirect entrypoints. Only the zone's active entrypoints are modeled;
+managed-ruleset catalog entries are not deployed protections. `page_rules`
+captures the two active legacy Page Rules with their targets, priorities,
+actions and status. Import discovery adopts one exact match, creates a missing
+rule, and fails closed on ambiguity, a same-target mismatch, or API errors.
+These declarations are for adoption
+without changing live behavior; they do not retire or harden any rule.
 AI Crawl Control can change the same custom-firewall phase Terraform would own.
 Before activation, coordinate a single owner and freeze or reconcile dashboard
 edits; do not rely on Terraform and AI Crawl Control independently editing the
 phase. Re-inventory before the production plan and stop on any mismatch. Review
-the plan for no zone setting, DNS, DNSSEC, ruleset replacement, rule, or other
-behavior changes, and for no duplicate imports of already-managed DNS records.
-The existing managed WAF, apex rate limits, apex redirect, legacy Page Rules,
-status-edge configuration phase and workload-owned DNS remain untouched.
-The guarded snapshot is not a mechanism for deploying new firewall rules:
-later protection changes require a separate reviewed ownership and rollout
-design, with client and traffic validation and rollback.
+the plan for import-only changes and no zone setting, DNS, DNSSEC, ruleset
+replacement, rule, or other behavior changes, and for no duplicate imports of
+already-managed DNS records. The status-edge-owned `http_config_settings`
+phase, active maintenance routes, and platform-notifications-owned ACS/SPF
+records remain untouched. The guarded snapshots are not a mechanism for
+deploying new firewall rules or retiring Page Rules: those changes require a
+separate reviewed ownership and rollout design, with client and traffic
+validation and rollback.
 
 ## Conventions
 
@@ -190,7 +215,7 @@ records.
 - An explicit empty `origin_tls_hostnames` list clears retired hostname rules while retaining the protected, stack-owned configuration entrypoint. Omit the property only for zones this stack has never owned. The `xtremeidiots.com` configuration phase is already owned by the status edge stack; its exact-host maps rule must be maintained there, not by creating a competing entrypoint.
 - `redirect.xtremeidiots.net` uses an exact-host strict origin TLS override without changing the zone-wide SSL setting. See [guarded strict TLS recovery](#guarded-strict-tls-recovery) before changing it.
 - Cloudflare zones default to external ownership. Set `management` to `terraform` only when the zone and its controls will be adopted into this state.
-- Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, and `waf_custom_rules_enabled`.
+- Terraform-managed Cloudflare zones support `free` and `pro` setting profiles, optional `settings` overrides, `dnssec_enabled`, `waf_custom_rules_enabled`, phase-keyed `rulesets`, and named `page_rules`.
 - Private link zones are listed in `terraform/private_link_zones/prd.json`.
 - Production-only resources are gated by tfvars: dev has no `dns_zones_path` set, prd points to the zone configurations.
 - Tags are applied from tfvars; keep `Git` pointing at the repo URL for traceability.

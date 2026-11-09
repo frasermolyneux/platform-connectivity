@@ -1,0 +1,45 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "settings_preserve_existing": true,
+  "settings": { "ssl": "strict" },
+  "waf_custom_rules_enabled": false,
+  "adopt_existing": false,
+  "plan_profile": "pro",
+  "dnssec_enabled": false,
+  "waf_custom_rules_enabled": false,
+  "rulesets": {
+    "http_ratelimit": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "managed_challenge",
+          "description": "Requests > 20 in 10 Seconds - Challenge",
+          "enabled": true,
+          "expression": "(http.host wildcard \"example.invalid\")",
+          "ratelimit": {
+            "characteristics": ["ip.src", "cf.colo.id"],
+            "mitigation_timeout": 0,
+            "period": 10,
+            "requests_per_period": 50
+          }
+        }
+      ]
+    }
+  },
+  "page_rules": {
+    "stats": {
+      "target": "https://stats.example.invalid/*",
+      "priority": 1,
+      "status": "active",
+      "actions": {
+        "ssl": "full",
+        "automatic_https_rewrites": "on"
+      }
+    }
+  },
+  "records": []
+}

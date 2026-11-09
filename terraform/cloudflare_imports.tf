@@ -30,10 +30,7 @@ data "cloudflare_dns_records" "adopt" {
 }
 
 data "cloudflare_rulesets" "adopt" {
-  for_each = {
-    for k, z in local.cloudflare_zones_to_adopt : k => z
-    if try(z.waf_custom_rules_enabled, true)
-  }
+  for_each = local.cloudflare_zones_to_adopt
 
   zone_id = data.cloudflare_zone.adopt[each.key].zone_id
 }
@@ -51,7 +48,11 @@ locals {
   cf_live_records_by_content = length(local.cloudflare_zones_to_adopt) > 0 ? merge([
     for k, zone in local.cloudflare_zones_to_adopt : {
       for r in data.cloudflare_dns_records.adopt[k].result :
-      "${zone.name}|${r.type}|${r.name == zone.name ? "@" : trimsuffix(r.name, ".${zone.name}")}|${r.content}" => {
+      (
+        r.type == "MX" ?
+        "${zone.name}|${r.type}|${r.name == zone.name ? "@" : trimsuffix(r.name, ".${zone.name}")}|${r.priority}|${r.content}" :
+        "${zone.name}|${r.type}|${r.name == zone.name ? "@" : trimsuffix(r.name, ".${zone.name}")}|${r.content}"
+        ) => {
         zone_id   = data.cloudflare_zone.adopt[k].zone_id
         record_id = r.id
       } if contains(["A", "AAAA", "CNAME", "MX", "TXT"], r.type)
@@ -61,7 +62,7 @@ locals {
   cf_live_srv_records = length(local.cloudflare_zones_to_adopt) > 0 ? merge([
     for k, zone in local.cloudflare_zones_to_adopt : {
       for r in data.cloudflare_dns_records.adopt[k].result :
-      "${zone.name}|SRV|${r.name == zone.name ? "@" : trimsuffix(r.name, ".${zone.name}")}|${try(r.data.target, "")}:${try(r.data.port, "")}" => {
+      "${zone.name}|SRV|${r.name == zone.name ? "@" : trimsuffix(r.name, ".${zone.name}")}|${try(r.data.priority, "")}|${try(r.data.weight, "")}|${try(r.data.port, "")}|${try(r.data.target, "")}" => {
         zone_id   = data.cloudflare_zone.adopt[k].zone_id
         record_id = r.id
       } if r.type == "SRV"
@@ -71,18 +72,36 @@ locals {
   # Per-type import maps: config key => "<zone_id>/<record_id>", only where the
   # config record also exists live. Records present in config but not live are
   # created by the normal plan rather than imported.
-  cf_import_a     = { for key in keys(local.cf_a_records) : key => "${local.cf_live_records_by_content[key].zone_id}/${local.cf_live_records_by_content[key].record_id}" if contains(keys(local.cf_live_records_by_content), key) }
-  cf_import_aaaa  = { for key in keys(local.cf_aaaa_records) : key => "${local.cf_live_records_by_content[key].zone_id}/${local.cf_live_records_by_content[key].record_id}" if contains(keys(local.cf_live_records_by_content), key) }
-  cf_import_cname = { for key in keys(local.cf_cname_records) : key => "${local.cf_live_records_by_content[key].zone_id}/${local.cf_live_records_by_content[key].record_id}" if contains(keys(local.cf_live_records_by_content), key) }
-  cf_import_mx    = { for key in keys(local.cf_mx_records) : key => "${local.cf_live_records_by_content[key].zone_id}/${local.cf_live_records_by_content[key].record_id}" if contains(keys(local.cf_live_records_by_content), key) }
-  cf_import_txt   = { for key in keys(local.cf_txt_records) : key => "${local.cf_live_records_by_content[key].zone_id}/${local.cf_live_records_by_content[key].record_id}" if contains(keys(local.cf_live_records_by_content), key) }
-  cf_import_srv   = { for key in keys(local.cf_srv_records) : key => "${local.cf_live_srv_records[key].zone_id}/${local.cf_live_srv_records[key].record_id}" if contains(keys(local.cf_live_srv_records), key) }
+  cf_import_a = {
+    for key, record in local.cf_a_records : key => "${local.cf_live_records_by_content[record.live_key].zone_id}/${local.cf_live_records_by_content[record.live_key].record_id}"
+    if contains(keys(local.cf_live_records_by_content), record.live_key)
+  }
+  cf_import_aaaa = {
+    for key, record in local.cf_aaaa_records : key => "${local.cf_live_records_by_content[record.live_key].zone_id}/${local.cf_live_records_by_content[record.live_key].record_id}"
+    if contains(keys(local.cf_live_records_by_content), record.live_key)
+  }
+  cf_import_cname = {
+    for key, record in local.cf_cname_records : key => "${local.cf_live_records_by_content[record.live_key].zone_id}/${local.cf_live_records_by_content[record.live_key].record_id}"
+    if contains(keys(local.cf_live_records_by_content), record.live_key)
+  }
+  cf_import_mx = {
+    for key, record in local.cf_mx_records : key => "${local.cf_live_records_by_content[record.live_key].zone_id}/${local.cf_live_records_by_content[record.live_key].record_id}"
+    if contains(keys(local.cf_live_records_by_content), record.live_key)
+  }
+  cf_import_txt = {
+    for key, record in local.cf_txt_records : key => "${local.cf_live_records_by_content[record.live_key].zone_id}/${local.cf_live_records_by_content[record.live_key].record_id}"
+    if contains(keys(local.cf_live_records_by_content), record.live_key)
+  }
+  cf_import_srv = {
+    for key, record in local.cf_srv_records : key => "${local.cf_live_srv_records[record.live_key].zone_id}/${local.cf_live_srv_records[record.live_key].record_id}"
+    if contains(keys(local.cf_live_srv_records), record.live_key)
+  }
 
   # Existing zone custom-firewall ruleset (at most one per zone/phase) to adopt
   # rather than recreate. Absent when the zone has no such ruleset yet.
   cf_waf_ruleset_ids = {
     for k, z in local.cloudflare_zones_to_adopt :
-    k => [for r in data.cloudflare_rulesets.adopt[k].result : r.id if r.phase == "http_request_firewall_custom" && r.kind == "zone"]
+    k => [for r in data.cloudflare_rulesets.adopt[k].rulesets : r.id if r.phase == "http_request_firewall_custom" && r.kind == "zone"]
     if try(z.waf_custom_rules_enabled, true)
   }
 
@@ -90,6 +109,27 @@ locals {
     for k, ids in local.cf_waf_ruleset_ids :
     k => "zones/${data.cloudflare_zone.adopt[k].zone_id}/${ids[0]}"
     if length(ids) == 1
+  }
+
+  cf_zone_ruleset_ids = {
+    for key, ruleset in local.cloudflare_zone_rulesets :
+    key => [
+      for existing in data.cloudflare_rulesets.adopt[ruleset.zone_key].rulesets :
+      existing.id if existing.phase == ruleset.phase && existing.kind == "zone"
+    ]
+    if contains(keys(local.cloudflare_zones_to_adopt), ruleset.zone_key)
+  }
+
+  cf_zone_ruleset_imports = {
+    for key, ids in local.cf_zone_ruleset_ids :
+    key => "zones/${data.cloudflare_zone.adopt[local.cloudflare_zone_rulesets[key].zone_key].zone_id}/${ids[0]}"
+    if length(ids) == 1
+  }
+
+  cf_zone_ruleset_discovery = {
+    for key, ruleset in local.cloudflare_zone_rulesets :
+    key => ruleset
+    if contains(keys(local.cf_zone_ruleset_ids), key) && length(local.cf_zone_ruleset_ids[key]) == 1
   }
 }
 
@@ -100,7 +140,7 @@ import {
 }
 
 import {
-  for_each = { for k, z in local.cloudflare_zones_to_adopt : k => z if try(z.dnssec_enabled, true) }
+  for_each = local.cloudflare_zones_to_adopt
   to       = cloudflare_zone_dnssec.managed[each.key]
   id       = data.cloudflare_zone.adopt[each.key].zone_id
 }

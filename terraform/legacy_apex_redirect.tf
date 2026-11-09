@@ -10,11 +10,12 @@ data "external" "legacy_apex_redirect" {
 
   program = ["python3", "${path.module}/scripts/find_page_rule.py"]
   query = {
-    zone_id     = local.cloudflare_zone_ids[each.value.name]
-    target      = "https://${each.value.name}/*"
-    url         = "https://www.${each.value.name}/"
-    status_code = "301"
-    priority    = "1"
+    zone_id       = local.cloudflare_zone_ids[each.value.name]
+    target        = "https://${each.value.name}/*"
+    actions       = jsonencode({ forwarding_url = { url = "https://www.${each.value.name}/", status_code = 301 } })
+    priority      = "1"
+    status        = "active,disabled"
+    require_match = "true"
   }
 }
 

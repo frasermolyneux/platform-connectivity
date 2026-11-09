@@ -84,3 +84,9 @@ variable "maintenance_enabled" {
   type        = bool
   default     = false
 }
+
+variable "maintenance_hosts_override" {
+  description = "Optional JSON host list for isolated tests. Leave unset in environment deployments."
+  type        = string
+  default     = ""
+}

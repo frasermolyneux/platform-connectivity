@@ -53,7 +53,7 @@ locals {
   managed_cloudflare_zone_settings = merge([
     for zone_key, zone in local.managed_cloudflare_zones : {
       for setting_id, value in merge(
-        lookup(local.cloudflare_zone_setting_profiles, try(zone.plan_profile, "free"), {}),
+        try(zone.adopt_existing, false) ? {} : lookup(local.cloudflare_zone_setting_profiles, try(zone.plan_profile, "free"), {}),
         try(zone.settings, {})
         ) : "${zone_key}/${setting_id}" => {
         zone_key   = zone_key
@@ -62,6 +62,14 @@ locals {
       }
     }
   ]...)
+
+  cloudflare_unsupported_dns_records = flatten([
+    for zone in values(local.cloudflare_zones) : [
+      for record in try(zone.records, []) :
+      "${zone.name}/${try(record.name, "<missing>")} (${try(record.type, "<missing>")})"
+      if !contains(["A", "AAAA", "CNAME", "MX", "SRV", "TXT"], try(record.type, ""))
+    ]
+  ])
 
   # Name -> zone_id lookup for all Cloudflare zones (used by records, delegation, and outputs).
   cloudflare_zone_ids = merge(
@@ -215,70 +223,100 @@ locals {
   # ---------------------------------------------------------------------------
   cf_a_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|A|${r.name}|${r.content}" => {
-        zone_id = local.cloudflare_zone_ids[z.name]
-        name    = r.name
-        ttl     = try(r.ttl, 1)
-        content = r.content
-        proxied = try(r.proxied, false)
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|A|${r.key}" :
+        "${z.name}|A|${r.name}|${r.content}"
+        ) => {
+        zone_id  = local.cloudflare_zone_ids[z.name]
+        name     = r.name
+        ttl      = try(r.ttl, 1)
+        content  = r.content
+        proxied  = try(r.proxied, false)
+        live_key = "${z.name}|A|${r.name}|${r.content}"
       } if r.type == "A"
     }
   ]...) : {}
 
   cf_aaaa_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|AAAA|${r.name}|${r.content}" => {
-        zone_id = local.cloudflare_zone_ids[z.name]
-        name    = r.name
-        ttl     = try(r.ttl, 1)
-        content = r.content
-        proxied = try(r.proxied, false)
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|AAAA|${r.key}" :
+        "${z.name}|AAAA|${r.name}|${r.content}"
+        ) => {
+        zone_id  = local.cloudflare_zone_ids[z.name]
+        name     = r.name
+        ttl      = try(r.ttl, 1)
+        content  = r.content
+        proxied  = try(r.proxied, false)
+        live_key = "${z.name}|AAAA|${r.name}|${r.content}"
       } if r.type == "AAAA"
     }
   ]...) : {}
 
   cf_cname_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|CNAME|${r.name}|${r.content}" => {
-        zone_id = local.cloudflare_zone_ids[z.name]
-        name    = r.name
-        ttl     = try(r.ttl, 1)
-        content = r.content
-        proxied = try(r.proxied, false)
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|CNAME|${r.key}" :
+        "${z.name}|CNAME|${r.name}|${r.content}"
+        ) => {
+        zone_id  = local.cloudflare_zone_ids[z.name]
+        name     = r.name
+        ttl      = try(r.ttl, 1)
+        content  = r.content
+        proxied  = try(r.proxied, false)
+        live_key = "${z.name}|CNAME|${r.name}|${r.content}"
       } if r.type == "CNAME"
     }
   ]...) : {}
 
   cf_mx_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|MX|${r.name}|${r.content}" => {
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|MX|${r.key}" :
+        "${z.name}|MX|${r.name}|${r.content}"
+        ) => {
         zone_id  = local.cloudflare_zone_ids[z.name]
         name     = r.name
         ttl      = try(r.ttl, 1)
         content  = r.content
         priority = r.priority
+        live_key = "${z.name}|MX|${r.name}|${r.priority}|${r.content}"
       } if r.type == "MX"
     }
   ]...) : {}
 
   cf_txt_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|TXT|${r.name}|${r.content}" => {
-        zone_id = local.cloudflare_zone_ids[z.name]
-        name    = r.name
-        ttl     = try(r.ttl, 1)
-        content = r.content
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|TXT|${r.key}" :
+        "${z.name}|TXT|${r.name}|${r.content}"
+        ) => {
+        zone_id  = local.cloudflare_zone_ids[z.name]
+        name     = r.name
+        ttl      = try(r.ttl, 1)
+        content  = r.content
+        live_key = "${z.name}|TXT|${r.name}|${r.content}"
       } if r.type == "TXT"
     }
   ]...) : {}
 
   cf_srv_records = length(local.active_cloudflare_zones) > 0 ? merge([
     for zk, z in local.active_cloudflare_zones : {
-      for r in z.records : "${z.name}|SRV|${r.name}|${r.data.target}:${r.data.port}" => {
-        zone_id = local.cloudflare_zone_ids[z.name]
-        name    = r.name
-        ttl     = try(r.ttl, 1)
-        data    = r.data
+      for r in z.records : (
+        try(trimspace(r.key), "") != "" ?
+        "${z.name}|SRV|${r.key}" :
+        "${z.name}|SRV|${r.name}|${r.data.target}:${r.data.port}"
+        ) => {
+        zone_id  = local.cloudflare_zone_ids[z.name]
+        name     = r.name
+        ttl      = try(r.ttl, 1)
+        data     = r.data
+        live_key = "${z.name}|SRV|${r.name}|${r.data.priority}|${r.data.weight}|${r.data.port}|${r.data.target}"
       } if r.type == "SRV"
     }
   ]...) : {}

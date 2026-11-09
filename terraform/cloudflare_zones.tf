@@ -29,17 +29,31 @@ resource "cloudflare_zone" "managed" {
       condition     = contains(keys(local.cloudflare_zone_setting_profiles), try(each.value.plan_profile, "free"))
       error_message = "Cloudflare zone ${each.value.name} uses unsupported plan_profile '${try(each.value.plan_profile, "free")}'. Supported profiles: ${join(", ", keys(local.cloudflare_zone_setting_profiles))}."
     }
+
+    precondition {
+      condition = !try(each.value.adopt_existing, false) || (
+        try(each.value.settings_preserve_existing, false) &&
+        can(each.value.settings) &&
+        length(try(each.value.settings, {})) > 0
+      )
+      error_message = "Adopting ${each.value.name} requires an explicit non-empty settings snapshot and settings_preserve_existing = true; profile defaults are not inherited for existing zones."
+    }
+
+    precondition {
+      condition = alltrue([
+        for record in try(each.value.records, []) :
+        try(trimspace(record.key), "") != ""
+      ])
+      error_message = "Terraform-managed Cloudflare DNS records in ${each.value.name} require an explicit stable key."
+    }
   }
 }
 
 resource "cloudflare_zone_dnssec" "managed" {
-  for_each = {
-    for key, zone in local.managed_cloudflare_zones : key => zone
-    if try(zone.dnssec_enabled, true)
-  }
+  for_each = local.managed_cloudflare_zones
 
   zone_id = cloudflare_zone.managed[each.key].id
-  status  = "active"
+  status  = try(each.value.dnssec_enabled, true) ? "active" : "disabled"
 }
 
 resource "cloudflare_zone_setting" "managed" {

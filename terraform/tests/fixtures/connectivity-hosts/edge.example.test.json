@@ -1,0 +1,10 @@
+{
+  "name": "edge.example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000003",
+  "backup_to_azure": false,
+  "origin_tls_hostnames": ["redirect.edge.example.test"],
+  "records": [
+    { "type": "A", "name": "redirect", "content": "198.51.100.10", "proxied": true, "ttl": 1 }
+  ]
+}

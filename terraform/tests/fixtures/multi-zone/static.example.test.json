@@ -1,0 +1,10 @@
+{
+  "name": "static.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "pro",
+  "waf_custom_rules_enabled": false,
+  "records": [
+    { "key": "docs-alias", "type": "CNAME", "name": "docs", "content": "docs.example.test", "proxied": false, "ttl": 1 }
+  ]
+}

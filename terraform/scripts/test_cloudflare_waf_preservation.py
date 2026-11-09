@@ -51,14 +51,49 @@ class CloudflareWafPreservationTests(unittest.TestCase):
         if json.loads(version.stdout)["terraform_version"] != expected:
             raise RuntimeError(f"The Cloudflare WAF test requires Terraform {expected}.")
 
-        zone = json.loads((ROOT / "zones" / "xtremeidiots.com.json").read_text())
+        zone = {
+            "name": "example.invalid",
+            "management": "terraform",
+            "adopt_existing": True,
+            "waf_preserve_existing": True,
+            "waf_custom_ruleset": {
+                "name": "synthetic-test-firewall",
+                "description": "Synthetic preservation fixture",
+                "rules": [
+                    {
+                        "ref": "test_skip_hot_on_embed_path",
+                        "description": "Skip hotlink protection for a synthetic path",
+                        "expression": '(http.request.uri.path contains "/synthetic-image/")',
+                        "action": "skip",
+                        "enabled": True,
+                        "action_parameters": {"products": ["hot"]},
+                        "logging": {"enabled": True},
+                    },
+                    {
+                        "ref": "test_block_private_path",
+                        "description": "Block a synthetic private test path",
+                        "expression": '(http.request.uri.path eq "/private-test")',
+                        "action": "block",
+                        "enabled": True,
+                        "action_parameters": {
+                            "response": {
+                                "content": '{"message":"synthetic test response"}',
+                                "content_type": "application/json",
+                                "status_code": 403,
+                            }
+                        },
+                    },
+                ],
+            },
+        }
         cls.zone = zone
         rules = copy.deepcopy(zone["waf_custom_ruleset"]["rules"])
         for index, rule in enumerate(rules):
             rule["id"] = f"{index + 10:032x}"
             rule.setdefault("ref", rule["id"])
         cls.ruleset = {
-            "id": RULESET_ID, "name": "default", "description": "", "kind": "zone",
+            "id": RULESET_ID, "name": "synthetic-test-firewall",
+            "description": "Synthetic preservation fixture", "kind": "zone",
             "phase": "http_request_firewall_custom", "version": "1",
             "last_updated": "2026-01-01T00:00:00Z", "rules": rules,
         }
@@ -135,8 +170,10 @@ data "cloudflare_ruleset" "existing_custom_firewall" {{
             "order": lambda r: r["rules"].reverse(),
             "extra action": lambda r: r["rules"][0]["action_parameters"].update(phases=["http_ratelimit"]),
             "reference": lambda r: r["rules"][0].update(ref="changed"),
+            "logging": lambda r: r["rules"][0]["logging"].update(enabled=False),
+            "enabled": lambda r: r["rules"][0].update(enabled=False),
             "missing rule": lambda r: r["rules"].pop(),
-            "response": lambda r: r["rules"][2]["action_parameters"]["response"].update(status_code=429),
+            "response": lambda r: r["rules"][1]["action_parameters"]["response"].update(status_code=429),
         }
         for label, mutate in mutations.items():
             with self.subTest(label=label):
@@ -146,11 +183,16 @@ data "cloudflare_ruleset" "existing_custom_firewall" {{
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("Resource precondition failed", result.stderr)
 
-        zone = copy.deepcopy(self.zone)
-        zone["waf_custom_ruleset"]["rules"][0]["action_parameters"]["phases"] = ["http_ratelimit"]
-        result = self.plan(self.ruleset, zone)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Resource precondition failed", result.stderr)
+        mutations = (
+            lambda zone: zone["waf_custom_ruleset"]["rules"][0]["action_parameters"].update(phases=["http_ratelimit"]),
+            lambda zone: zone.pop("waf_preserve_existing"),
+        )
+        for mutate in mutations:
+            zone = copy.deepcopy(self.zone)
+            mutate(zone)
+            result = self.plan(self.ruleset, zone)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Resource precondition failed", result.stderr)
 
     def test_plain_rules_without_action_parameters(self):
         for action in ("block", "managed_challenge"):
@@ -158,8 +200,8 @@ data "cloudflare_ruleset" "existing_custom_firewall" {{
                 with self.subTest(action=action, desired=desired):
                     zone = copy.deepcopy(self.zone)
                     ruleset = copy.deepcopy(self.ruleset)
-                    zone_rule = zone["waf_custom_ruleset"]["rules"][2]
-                    live_rule = ruleset["rules"][2]
+                    zone_rule = zone["waf_custom_ruleset"]["rules"][1]
+                    live_rule = ruleset["rules"][1]
                     zone_rule["action"] = live_rule["action"] = action
                     zone_rule.pop("action_parameters")
                     live_rule.pop("action_parameters")

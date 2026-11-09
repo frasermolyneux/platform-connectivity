@@ -40,6 +40,9 @@ override_resource {
 override_resource {
   target = cloudflare_zone_setting.managed["example.invalid/tls_1_3"]
 }
+override_resource {
+  target = cloudflare_zone_dnssec.managed["example.invalid"]
+}
 
 variables {
   subscription_id      = "00000000-0000-0000-0000-000000000000"
@@ -75,7 +78,7 @@ run "external_ownership_preserves_existing_dns" {
   }
 }
 
-run "managed_existing_zone_uses_discovered_zone" {
+run "management_declaration_adopts_existing_zone_without_allowlist" {
   command = plan
 
   variables {
@@ -97,7 +100,8 @@ run "managed_existing_zone_uses_discovered_zone" {
     condition = (
       length(local.cloudflare_zones_to_adopt) == 1 &&
       length(cloudflare_zone.managed) == 1 &&
-      cloudflare_dns_record.a["example.invalid|A|www|192.0.2.1"].zone_id == "00000000000000000000000000000002" &&
+      cloudflare_dns_record.a["example.invalid|A|www"].zone_id == "00000000000000000000000000000002" &&
+      length(local.managed_cloudflare_zone_settings) == 1 &&
       output.dns_zones["example.invalid"].id == "00000000000000000000000000000002"
     )
     error_message = "An existing Terraform-managed zone must use its discovered zone rather than its external identifier."
