@@ -6,6 +6,7 @@
   "plan_profile": "pro",
   "dnssec_enabled": false,
   "settings_preserve_existing": true,
+  "backup_to_azure": false,
   "settings": {
     "0rtt": "on",
     "always_online": "on",
@@ -32,7 +33,11 @@
     "log_to_cloudflare": "on",
     "max_upload": 100,
     "min_tls_version": "1.2",
-    "minify": { "css": "off", "html": "off", "js": "off" },
+    "minify": {
+      "css": "off",
+      "html": "off",
+      "js": "off"
+    },
     "mirage": "off",
     "mobile_redirect": {
       "status": "off",
@@ -60,189 +65,27 @@
     "security_level": "essentially_off",
     "server_side_exclude": "on",
     "ssl": "full",
-    "tls_1_3": "zrt",
     "tls_1_2_only": "off",
+    "tls_1_3": "zrt",
     "tls_client_auth": "off",
     "visitor_ip": "on",
     "waf": "off",
     "webp": "on",
     "websockets": "on"
   },
-  "waf_preserve_existing": true,
-  "waf_custom_ruleset": {
-    "name": "default",
-    "description": "",
-    "rules": [
-      {
-        "description": "Allow embedded profile photos",
-        "expression": "(http.request.uri.path contains \"/profile/\")",
-        "action": "skip",
-        "enabled": true,
-        "action_parameters": { "products": ["hot"] },
-        "logging": { "enabled": true }
-      },
-      {
-        "description": "Bypass hotlink for local host or portal",
-        "expression": "(http.referer contains \"xtremeidiots.com\")",
-        "action": "skip",
-        "enabled": true,
-        "action_parameters": { "products": ["hot"] },
-        "logging": { "enabled": true }
-      },
-      {
-        "ref": "[CF AI Audit]",
-        "description": "AI Crawl Control - Block AI bots by User Agent",
-        "expression": "(http.request.uri.path ne \"/robots.txt\" and ((http.user_agent contains \"Amazonbot\") or (http.user_agent contains \"Anchor Browser\") or (http.user_agent contains \"Applebot\") or (http.user_agent contains \"archive.org_bot\") or (http.user_agent contains \"Arquivo-web-crawler\") or (http.user_agent contains \"Baiduspider\") or (http.user_agent contains \"bingbot\") or (http.user_agent contains \"Bytespider\") or (http.user_agent contains \"CCBot\") or (http.user_agent contains \"ClaudeBot\") or (http.user_agent contains \"FacebookBot\") or (http.user_agent contains \"Google-CloudVertexBot\") or (http.user_agent contains \"Manus-User\") or (http.user_agent contains \"meta-externalagent\") or (http.user_agent contains \"meta-externalfetcher\") or (http.user_agent contains \"Novellum\") or (http.user_agent contains \"PerplexityBot\") or (http.user_agent contains \"PetalBot\") or (http.user_agent contains \"ProRataInc\") or (http.user_agent contains \"Terracotta\") or (http.user_agent contains \"TikTokSpider\") or (http.user_agent contains \"Timpibot\")))",
-        "action": "block",
-        "enabled": true,
-        "action_parameters": {
-          "response": {
-            "content": "{\"message\":\"Please contact the site owner for access.\"}",
-            "content_type": "application/json",
-            "status_code": 403
-          }
-        }
-      }
-    ]
-  },
-  "rulesets": {
-    "http_request_firewall_managed": {
-      "name": "default",
-      "description": "",
-      "rules": [
-        {
-          "action": "execute",
-          "action_parameters": {
-            "id": "c2e184081120413c86c3ab7e14069605",
-            "version": "latest"
-          },
-          "enabled": true,
-          "expression": "true"
-        },
-        {
-          "action": "execute",
-          "action_parameters": {
-            "id": "efb7b8c949ac4650a09736fc376e9aee",
-            "version": "latest"
-          },
-          "enabled": true,
-          "expression": "(not http.request.uri contains \"/duc\")"
-        },
-        {
-          "action": "execute",
-          "action_parameters": {
-            "id": "4814384a9e5d4991b9815dcfc25d2f1f",
-            "overrides": {
-              "categories": [
-                { "category": "paranoia-level-2", "enabled": false },
-                { "category": "paranoia-level-3", "enabled": false },
-                { "category": "paranoia-level-4", "enabled": false }
-              ]
-            },
-            "version": "latest"
-          },
-          "enabled": true,
-          "expression": "(not http.request.uri contains \"/duc\")"
-        }
-      ]
-    },
-    "http_ratelimit": {
-      "name": "default",
-      "description": "",
-      "rules": [
-        {
-          "action": "managed_challenge",
-          "description": "Requests > 20 in 10 Seconds - Challenge",
-          "enabled": true,
-          "expression": "(http.host wildcard \"xtremeidiots.com\")",
-          "ratelimit": {
-            "characteristics": ["ip.src", "cf.colo.id"],
-            "mitigation_timeout": 0,
-            "period": 10,
-            "requests_per_period": 50
-          }
-        },
-        {
-          "action": "managed_challenge",
-          "description": "Duplicate of Requests > 150 in 1 Minute - Challenge",
-          "enabled": true,
-          "expression": "(http.host wildcard \"xtremeidiots.com\")",
-          "ratelimit": {
-            "characteristics": ["ip.src", "cf.colo.id"],
-            "mitigation_timeout": 0,
-            "period": 60,
-            "requests_per_period": 150
-          }
-        }
-      ]
-    },
-    "http_request_dynamic_redirect": {
-      "name": "default",
-      "description": "",
-      "rules": [
-        {
-          "action": "redirect",
-          "action_parameters": {
-            "from_value": {
-              "preserve_query_string": true,
-              "status_code": 301,
-              "target_url": {
-                "expression": "wildcard_replace(http.request.full_uri, r\"https://xtremeidiots.com/*\", r\"https://www.xtremeidiots.com/${1}\")"
-              }
-            }
-          },
-          "description": "Redirect from Root to WWW",
-          "enabled": true,
-          "expression": "(http.request.full_uri wildcard r\"https://xtremeidiots.com/*\")"
-        }
-      ]
-    }
-  },
-  "page_rules": {
-    "tcadmin": {
-      "target": "*tcadmin.xtremeidiots.com/*",
-      "priority": 2,
-      "status": "active",
-      "actions": {
-        "ssl": "flexible",
-        "automatic_https_rewrites": "on",
-        "disable_apps": true,
-        "disable_performance": true
-      }
-    },
-    "stats": {
-      "target": "https://stats.xtremeidiots.com/*",
-      "priority": 1,
-      "status": "active",
-      "actions": {
-        "ssl": "full",
-        "automatic_https_rewrites": "on"
-      }
-    }
-  },
-  "zone_id": "b596004d516e2ffe840c76a58b81060c",
-  "backup_to_azure": false,
   "records": [
     {
-      "key": "maps",
+      "key": "cdn",
       "type": "A",
-      "name": "maps",
+      "name": "cdn",
       "ttl": 1,
       "content": "192.95.23.11",
       "proxied": true
     },
     {
-      "key": "apex",
+      "key": "maps",
       "type": "A",
-      "name": "@",
-      "ttl": 1,
-      "content": "144.217.22.232",
-      "proxied": true
-    },
-    {
-      "key": "cdn",
-      "type": "A",
-      "name": "cdn",
+      "name": "maps",
       "ttl": 1,
       "content": "192.95.23.11",
       "proxied": true
@@ -269,6 +112,14 @@
       "name": "www",
       "ttl": 1,
       "content": "192.95.23.11",
+      "proxied": true
+    },
+    {
+      "key": "apex",
+      "type": "A",
+      "name": "@",
+      "ttl": 1,
+      "content": "144.217.22.232",
       "proxied": true
     },
     {
@@ -320,19 +171,19 @@
       "proxied": false
     },
     {
-      "key": "selector1-domainkey",
+      "key": "selector1-_domainkey-1",
       "type": "CNAME",
       "name": "selector1._domainkey",
       "ttl": 3600,
-      "content": "selector1-xtremeidiots-com._domainkey.MolyneuxIO.p-v1.dkim.mail.microsoft",
+      "content": "selector1-xtremeidiots-com._domainkey.molyneuxio.p-v1.dkim.mail.microsoft",
       "proxied": false
     },
     {
-      "key": "selector2-domainkey",
+      "key": "selector2-_domainkey-1",
       "type": "CNAME",
       "name": "selector2._domainkey",
       "ttl": 3600,
-      "content": "selector2-xtremeidiots-com._domainkey.MolyneuxIO.p-v1.dkim.mail.microsoft",
+      "content": "selector2-xtremeidiots-com._domainkey.molyneuxio.p-v1.dkim.mail.microsoft",
       "proxied": false
     },
     {
@@ -348,8 +199,8 @@
       "type": "MX",
       "name": "@",
       "ttl": 3600,
-      "priority": 0,
-      "content": "xtremeidiots-com.mail.protection.outlook.com"
+      "content": "xtremeidiots-com.mail.protection.outlook.com",
+      "priority": 0
     },
     {
       "key": "sipfederationtls-tcp",
@@ -357,10 +208,10 @@
       "name": "_sipfederationtls._tcp",
       "ttl": 3600,
       "data": {
-        "priority": 100,
-        "weight": 1,
         "port": 5061,
-        "target": "sipfed.online.lync.com"
+        "priority": 100,
+        "target": "sipfed.online.lync.com",
+        "weight": 1
       }
     },
     {
@@ -369,10 +220,10 @@
       "name": "_ts3._udp.ts",
       "ttl": 1,
       "data": {
-        "priority": 1,
-        "weight": 1,
         "port": 9182,
-        "target": "ts.xtremeidiots.com"
+        "priority": 1,
+        "target": "ts.xtremeidiots.com",
+        "weight": 1
       }
     },
     {
@@ -388,27 +239,6 @@
       "name": "_dnsauth.portal",
       "ttl": 1,
       "content": "s9lyvdr9z5s2bjfl7gl0s0pglm3qdqcg"
-    },
-    {
-      "key": "apex-google-site-verification",
-      "type": "TXT",
-      "name": "@",
-      "ttl": 1,
-      "content": "google-site-verification=VSeQG9SAzJJb9xKKL-T43TwuUfLIkli-UcU6UDN7AR0"
-    },
-    {
-      "key": "apex-ms-domain-verification",
-      "type": "TXT",
-      "name": "@",
-      "ttl": 3600,
-      "content": "ms-domain-verification=1dbcb9a5-f9b7-4725-b222-d5b44445f2bd"
-    },
-    {
-      "key": "apex-ms",
-      "type": "TXT",
-      "name": "@",
-      "ttl": 1,
-      "content": "MS=ms76092282"
     },
     {
       "key": "asuid-portal",
@@ -430,6 +260,203 @@
       "name": "mandrill._domainkey",
       "ttl": 1,
       "content": "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrLHiExVd55zd/IQ/J/mRwSRMAocV/hMB3jXwaHH36d9NaVynQFYV8NaWi69c1veUtRzGt7yAioXqLj7Z4TeEUoOLgrKsn8YnckGs9i3B3tVFB+Ch/4mPhXWiNfNdynHWBcPcbJ8kjEQ2U8y78dHZj1YeRXXVvWob2OaKynO8/lQIDAQAB;"
+    },
+    {
+      "key": "apex-ms",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "MS=ms76092282"
+    },
+    {
+      "key": "apex-google-site-verification",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=VSeQG9SAzJJb9xKKL-T43TwuUfLIkli-UcU6UDN7AR0"
     }
-  ]
+  ],
+  "waf_custom_rules_enabled": true,
+  "rulesets": {
+    "http_request_firewall_managed": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "c2e184081120413c86c3ab7e14069605",
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "true",
+          "description": ""
+        },
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "efb7b8c949ac4650a09736fc376e9aee",
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "(not http.request.uri contains \"/duc\")",
+          "description": ""
+        },
+        {
+          "action": "execute",
+          "action_parameters": {
+            "id": "4814384a9e5d4991b9815dcfc25d2f1f",
+            "overrides": {
+              "categories": [
+                {
+                  "category": "paranoia-level-2",
+                  "enabled": false
+                },
+                {
+                  "category": "paranoia-level-3",
+                  "enabled": false
+                },
+                {
+                  "category": "paranoia-level-4",
+                  "enabled": false
+                }
+              ]
+            },
+            "version": "latest"
+          },
+          "enabled": true,
+          "expression": "(not http.request.uri contains \"/duc\")",
+          "description": ""
+        }
+      ]
+    },
+    "http_ratelimit": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "managed_challenge",
+          "description": "Requests > 20 in 10 Seconds - Challenge",
+          "enabled": true,
+          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "ratelimit": {
+            "characteristics": [
+              "ip.src",
+              "cf.colo.id"
+            ],
+            "mitigation_timeout": 0,
+            "period": 10,
+            "requests_per_period": 50
+          }
+        },
+        {
+          "action": "managed_challenge",
+          "description": "Duplicate of Requests > 150 in 1 Minute - Challenge",
+          "enabled": true,
+          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "ratelimit": {
+            "characteristics": [
+              "ip.src",
+              "cf.colo.id"
+            ],
+            "mitigation_timeout": 0,
+            "period": 60,
+            "requests_per_period": 150
+          }
+        }
+      ]
+    },
+    "http_request_dynamic_redirect": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "redirect",
+          "action_parameters": {
+            "from_value": {
+              "preserve_query_string": true,
+              "status_code": 301,
+              "target_url": {
+                "expression": "wildcard_replace(http.request.full_uri, r\"https://xtremeidiots.com/*\", r\"https://www.xtremeidiots.com/${1}\")"
+              }
+            }
+          },
+          "description": "Redirect from Root to WWW",
+          "enabled": true,
+          "expression": "(http.request.full_uri wildcard r\"https://xtremeidiots.com/*\")"
+        }
+      ]
+    }
+  },
+  "waf_preserve_existing": true,
+  "waf_custom_ruleset": {
+    "name": "default",
+    "description": "",
+    "rules": [
+      {
+        "action": "skip",
+        "action_parameters": {
+          "products": [
+            "hot"
+          ]
+        },
+        "description": "Allow embedded profile photos",
+        "enabled": true,
+        "expression": "(http.request.uri.path contains \"/profile/\")",
+        "logging": {
+          "enabled": true
+        }
+      },
+      {
+        "action": "skip",
+        "action_parameters": {
+          "products": [
+            "hot"
+          ]
+        },
+        "description": "Bypass hotlink for local host or portal",
+        "enabled": true,
+        "expression": "(http.referer contains \"xtremeidiots.com\")",
+        "logging": {
+          "enabled": true
+        }
+      },
+      {
+        "action": "block",
+        "action_parameters": {
+          "response": {
+            "content": "{\"message\":\"Please contact the site owner for access.\"}",
+            "content_type": "application/json",
+            "status_code": 403
+          }
+        },
+        "description": "AI Crawl Control - Block AI bots by User Agent",
+        "enabled": true,
+        "expression": "(http.request.uri.path ne \"/robots.txt\" and ((http.user_agent contains \"Amazonbot\") or (http.user_agent contains \"Anchor Browser\") or (http.user_agent contains \"Applebot\") or (http.user_agent contains \"archive.org_bot\") or (http.user_agent contains \"Arquivo-web-crawler\") or (http.user_agent contains \"Baiduspider\") or (http.user_agent contains \"bingbot\") or (http.user_agent contains \"Bytespider\") or (http.user_agent contains \"CCBot\") or (http.user_agent contains \"ClaudeBot\") or (http.user_agent contains \"FacebookBot\") or (http.user_agent contains \"Google-CloudVertexBot\") or (http.user_agent contains \"Manus-User\") or (http.user_agent contains \"meta-externalagent\") or (http.user_agent contains \"meta-externalfetcher\") or (http.user_agent contains \"Novellum\") or (http.user_agent contains \"PerplexityBot\") or (http.user_agent contains \"PetalBot\") or (http.user_agent contains \"ProRataInc\") or (http.user_agent contains \"Terracotta\") or (http.user_agent contains \"TikTokSpider\") or (http.user_agent contains \"Timpibot\")))",
+        "ref": "[CF AI Audit]"
+      }
+    ]
+  },
+  "page_rules": {
+    "tcadmin": {
+      "target": "*tcadmin.xtremeidiots.com/*",
+      "priority": 2,
+      "status": "active",
+      "actions": {
+        "ssl": "flexible",
+        "automatic_https_rewrites": "on",
+        "disable_apps": true,
+        "disable_performance": true
+      }
+    },
+    "stats": {
+      "target": "https://stats.xtremeidiots.com/*",
+      "priority": 1,
+      "status": "active",
+      "actions": {
+        "ssl": "full",
+        "automatic_https_rewrites": "on"
+      }
+    }
+  }
 }

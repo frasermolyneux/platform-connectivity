@@ -43,11 +43,11 @@ resource "cloudflare_page_rule" "legacy_apex_redirect" {
     prevent_destroy = true
 
     precondition {
-      condition = try(each.value.management, "external") == "external" && alltrue([
+      condition = (try(each.value.management, "external") == "external" || try(each.value.origin_tls_preserve_existing, false)) && alltrue([
         for hostname in [each.value.name, "www.${each.value.name}"] :
         contains(try(each.value.origin_tls_hostnames, []), hostname)
       ])
-      error_message = "Legacy redirect retirement requires an external zone with both canonical hostnames covered by strict origin TLS."
+      error_message = "Legacy redirect retirement requires an external zone or an explicitly preserved existing origin TLS owner, with both canonical hostnames covered by strict origin TLS."
     }
   }
 }

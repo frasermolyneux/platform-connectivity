@@ -1,0 +1,17 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "adopt_existing": true,
+  "settings_preserve_existing": true,
+  "settings": { "ssl": "full" },
+  "dnssec_enabled": false,
+  "waf_custom_rules_enabled": false,
+  "origin_tls_preserve_existing": true,
+  "origin_tls_hostnames": ["example.invalid", "www.example.invalid"],
+  "legacy_apex_redirect_disabled": true,
+  "records": [
+    { "key": "apex", "type": "A", "name": "@", "content": "192.0.2.10", "proxied": true },
+    { "key": "www", "type": "A", "name": "www", "content": "192.0.2.11", "proxied": true }
+  ]
+}

@@ -1,4 +1,9 @@
 import copy
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
 import unittest
 
 from guard_strict_tls_plan import ADDRESS, Rejected, validate as validate_with_zone
@@ -148,6 +153,81 @@ class GuardTest(unittest.TestCase):
         self.plan = valid_plan()
         self.plan["resource_changes"][0]["change"]["after"]["version"] = "unexpected"
         self.reject()
+
+
+class GuardCliTest(unittest.TestCase):
+    root = Path(__file__).resolve().parents[2]
+
+    def cli(self, plan, operation="add"):
+        return subprocess.run(
+            [sys.executable, str(self.root / "terraform" / "scripts" / "guard_strict_tls_plan.py"),
+             operation],
+            input=json.dumps(plan), capture_output=True, text=True,
+        )
+
+    def plan(self, operation="add"):
+        plan = valid_plan()
+        plan["planned_values"] = {"root_module": {"resources": [
+            {
+                "address": 'cloudflare_zone.managed["xtremeidiots.net"]',
+                "mode": "managed", "type": "cloudflare_zone",
+                "values": {"name": "xtremeidiots.net", "id": "existing-zone"},
+            },
+            {
+                "address": 'data.cloudflare_zone.adopt["xtremeidiots.net"]',
+                "mode": "data", "type": "cloudflare_zone",
+                "values": {"name": "xtremeidiots.net", "zone_id": "existing-zone"},
+            },
+        ]}}
+        if operation == "remove":
+            change = plan["resource_changes"][0]["change"]
+            empty, populated = change["before"], change["after"]
+            populated["rules"][0]["id"] = "synthetic-existing-rule"
+            change["before"] = {**populated, "last_updated": "earlier", "version": "2"}
+            change["after"] = {**empty, "last_updated": None, "version": None}
+            change["after_unknown"] = {"last_updated": True, "version": True}
+        return plan
+
+    def test_cli_accepts_add_and_remove_without_a_committed_zone_identifier(self):
+        for operation in ("add", "remove"):
+            with self.subTest(operation=operation):
+                result = self.cli(self.plan(operation), operation)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("scope accepted", result.stdout)
+
+    def test_cli_rejects_missing_ambiguous_mismatched_and_unknown_discovery(self):
+        for case in ("missing", "ambiguous", "wrong_id", "wrong_name", "unknown"):
+            with self.subTest(case=case):
+                plan = self.plan()
+                resources = plan["planned_values"]["root_module"]["resources"]
+                if case == "missing":
+                    resources.pop()
+                elif case == "ambiguous":
+                    resources.append(copy.deepcopy(resources[-1]))
+                elif case == "wrong_name":
+                    resources[-1]["values"]["name"] = "unrelated.invalid"
+                else:
+                    resources[-1]["values"]["zone_id"] = None if case == "unknown" else "other-zone"
+                self.assertNotEqual(self.cli(plan).returncode, 0)
+
+    def test_cli_rejects_target_bound_to_a_different_zone(self):
+        plan = self.plan()
+        change = plan["resource_changes"][0]["change"]
+        for key in ("before", "after"):
+            change[key]["zone_id"] = "other-zone"
+        self.assertNotEqual(self.cli(plan).returncode, 0)
+
+    def test_workflow_binds_both_checks_to_the_current_origin_tls_source(self):
+        workflow = (self.root / ".github" / "workflows" / "deploy-strict-origin-tls.yml").read_text()
+        bindings = re.findall(
+            r'git hash-object terraform/cloudflare_origin_tls.tf\)" = "([0-9a-f]{40})"',
+            workflow,
+        )
+        current = subprocess.check_output(
+            ["git", "hash-object", "terraform/cloudflare_origin_tls.tf"],
+            cwd=self.root, text=True,
+        ).strip()
+        self.assertEqual(bindings, [current, current])
 
 
 if __name__ == "__main__":

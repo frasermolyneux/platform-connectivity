@@ -48,7 +48,7 @@ jobs:
           set -euo pipefail
           umask 077
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
-          test "$(git hash-object terraform/cloudflare_origin_tls.tf)" = "e8af1e6c9ecfd3804b6fe0f8ec914db535fbf9b4"
+          test "$(git hash-object terraform/cloudflare_origin_tls.tf)" = "7bb271025773f72a37e3167d1de299af054c51bd"
           terraform -chdir=terraform init -input=false -lockfile=readonly -backend-config=backends/prd.backend.hcl
           terraform -chdir=terraform validate
           plan="$RUNNER_TEMP/strict-tls.tfplan"
@@ -57,7 +57,7 @@ jobs:
           digest=$(sha256sum "$plan" | cut -d' ' -f1)
           terraform -chdir=terraform show -json "$plan" | python3 terraform/scripts/guard_strict_tls_plan.py "$TLS_OPERATION"
           echo "$digest  $plan" | sha256sum --check --status
-          test "$(git hash-object terraform/cloudflare_origin_tls.tf)" = "e8af1e6c9ecfd3804b6fe0f8ec914db535fbf9b4"
+          test "$(git hash-object terraform/cloudflare_origin_tls.tf)" = "7bb271025773f72a37e3167d1de299af054c51bd"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" = "$GITHUB_SHA"
           echo "Applying scope-validated saved plan SHA-256: $digest"
           terraform -chdir=terraform apply -input=false -auto-approve "$plan"

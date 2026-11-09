@@ -128,3 +128,65 @@ run "new_managed_zone_override_is_rejected_explicitly" {
 
   expect_failures = [terraform_data.origin_tls_owner["new.invalid"]]
 }
+
+run "adopted_zone_preserves_existing_origin_owner_and_disabled_redirect" {
+  command = plan
+
+  variables {
+    dns_zones_path = "tests/fixtures/preserved-origin"
+  }
+
+  override_resource {
+    target          = terraform_data.origin_tls_owner["example.invalid"]
+    values          = { id = "00000000-0000-0000-0000-000000000002" }
+    override_during = plan
+  }
+  override_data {
+    target = data.cloudflare_zone.adopt["example.invalid"]
+    values = { zone_id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_dnssec.managed["example.invalid"]
+  }
+  override_resource {
+    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
+  }
+  override_resource {
+    target = cloudflare_ruleset.origin_tls["example.invalid"]
+  }
+  override_resource {
+    target = cloudflare_page_rule.legacy_apex_redirect["example.invalid"]
+  }
+  override_data {
+    target = data.external.cloudflare_zone_settings_snapshot["example.invalid"]
+    values = { result = { matches = "true", differences = "[]" } }
+  }
+  override_data {
+    target = data.cloudflare_rulesets.origin_tls["example.invalid"]
+    values = {
+      rulesets = {
+        id           = "00000000000000000000000000000003"
+        name         = "origin-tls-00000000-0000-0000-0000-000000000002"
+        phase        = "http_config_settings"
+        kind         = "zone"
+        description  = ""
+        last_updated = "2020-01-01T00:00:00Z"
+        version      = "1"
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      cloudflare_ruleset.origin_tls["example.invalid"].name == "origin-tls-00000000-0000-0000-0000-000000000002" &&
+      length(cloudflare_ruleset.origin_tls["example.invalid"].rules) == 2 &&
+      cloudflare_zone_setting.managed["example.invalid/ssl"].value == "full" &&
+      cloudflare_page_rule.legacy_apex_redirect["example.invalid"].status == "disabled"
+    )
+    error_message = "Adoption must retain the existing owner identity and disabled redirect without hardening the zone-wide SSL setting."
+  }
+}

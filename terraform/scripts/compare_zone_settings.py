@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare configured editable Cloudflare zone settings with a reviewed snapshot."""
+"""Compare explicitly configured Cloudflare zone settings with a reviewed snapshot."""
 
 import json
 import os
@@ -32,7 +32,7 @@ def compare_snapshot(expected, response):
     if not isinstance(settings, list):
         raise ValueError("Cloudflare settings API response did not contain a settings list.")
 
-    editable = {}
+    live = {}
     for setting in settings:
         if (
             not isinstance(setting, dict)
@@ -41,19 +41,18 @@ def compare_snapshot(expected, response):
             or "value" not in setting
         ):
             raise ValueError("Cloudflare settings API returned an invalid setting entry.")
-        if setting.get("editable") is True:
-            setting_id = setting["id"]
-            if setting_id in editable:
-                raise ValueError("Cloudflare settings API returned duplicate setting identifiers.")
-            editable[setting_id] = setting.get("value")
+        setting_id = setting["id"]
+        if setting_id in live:
+            raise ValueError("Cloudflare settings API returned duplicate setting identifiers.")
+        live[setting_id] = setting.get("value")
 
     differences = sorted(
         setting_id
         for setting_id, expected_value in expected.items()
         if (
-            setting_id not in editable
+            setting_id not in live
             or json.dumps(_without_nulls(expected_value), sort_keys=True, separators=(",", ":"))
-            != json.dumps(_without_nulls(editable[setting_id]), sort_keys=True, separators=(",", ":"))
+            != json.dumps(_without_nulls(live[setting_id]), sort_keys=True, separators=(",", ":"))
         )
     )
     return differences

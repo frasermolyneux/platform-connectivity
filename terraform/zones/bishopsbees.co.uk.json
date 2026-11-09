@@ -1,10 +1,77 @@
 {
   "name": "bishopsbees.co.uk",
   "dns_provider": "cloudflare",
-  "zone_id": "6814667c53187fb42753077d29e02599",
   "backup_to_azure": false,
+  "management": "terraform",
+  "adopt_existing": true,
+  "settings_preserve_existing": true,
+  "plan_profile": "free",
+  "dnssec_enabled": false,
+  "settings": {
+    "0rtt": "off",
+    "always_online": "off",
+    "always_use_https": "on",
+    "automatic_https_rewrites": "on",
+    "brotli": "on",
+    "browser_cache_ttl": 14400,
+    "browser_check": "on",
+    "cache_level": "aggressive",
+    "challenge_ttl": 1800,
+    "ciphers": [],
+    "cname_flattening": "flatten_at_root",
+    "development_mode": "off",
+    "early_hints": "off",
+    "ech": "on",
+    "edge_cache_ttl": 7200,
+    "email_obfuscation": "on",
+    "filter_logs_to_cloudflare": "off",
+    "hotlink_protection": "off",
+    "http3": "on",
+    "ip_geolocation": "on",
+    "ipv6": "on",
+    "log_to_cloudflare": "on",
+    "max_upload": 100,
+    "min_tls_version": "1.0",
+    "minify": {
+      "css": "off",
+      "html": "off",
+      "js": "off"
+    },
+    "mobile_redirect": {
+      "status": "off",
+      "mobile_subdomain": null,
+      "strip_uri": false
+    },
+    "opportunistic_encryption": "on",
+    "opportunistic_onion": "on",
+    "orange_to_orange": "off",
+    "pq_keyex": "on",
+    "privacy_pass": "on",
+    "pseudo_ipv4": "off",
+    "replace_insecure_js": "on",
+    "rocket_loader": "off",
+    "security_header": {
+      "strict_transport_security": {
+        "enabled": false,
+        "max_age": 0,
+        "include_subdomains": false,
+        "preload": false,
+        "nosniff": false
+      }
+    },
+    "security_level": "essentially_off",
+    "server_side_exclude": "on",
+    "ssl": "full",
+    "tls_1_2_only": "off",
+    "tls_1_3": "on",
+    "tls_client_auth": "off",
+    "visitor_ip": "on",
+    "waf": "off",
+    "websockets": "on"
+  },
   "records": [
     {
+      "key": "apex-1",
       "type": "A",
       "name": "@",
       "ttl": 1,
@@ -12,6 +79,7 @@
       "proxied": true
     },
     {
+      "key": "staging-1",
       "type": "A",
       "name": "staging",
       "ttl": 1,
@@ -19,6 +87,7 @@
       "proxied": true
     },
     {
+      "key": "www-1",
       "type": "A",
       "name": "www",
       "ttl": 1,
@@ -26,75 +95,104 @@
       "proxied": true
     },
     {
+      "key": "apex-1",
       "type": "MX",
       "name": "@",
       "ttl": 1,
-      "priority": 5,
-      "content": "alt1.aspmx.l.google.com"
+      "content": "alt1.aspmx.l.google.com",
+      "priority": 5
     },
     {
+      "key": "apex-2",
       "type": "MX",
       "name": "@",
       "ttl": 1,
-      "priority": 5,
-      "content": "alt2.aspmx.l.google.com"
+      "content": "alt2.aspmx.l.google.com",
+      "priority": 5
     },
     {
+      "key": "apex-3",
       "type": "MX",
       "name": "@",
       "ttl": 1,
-      "priority": 10,
-      "content": "alt3.aspmx.l.google.com"
+      "content": "alt3.aspmx.l.google.com",
+      "priority": 10
     },
     {
+      "key": "apex-4",
       "type": "MX",
       "name": "@",
       "ttl": 1,
-      "priority": 10,
-      "content": "alt4.aspmx.l.google.com"
+      "content": "alt4.aspmx.l.google.com",
+      "priority": 10
     },
     {
+      "key": "apex-5",
       "type": "MX",
       "name": "@",
       "ttl": 1,
-      "priority": 1,
-      "content": "aspmx.l.google.com"
+      "content": "aspmx.l.google.com",
+      "priority": 1
     },
     {
-      "type": "TXT",
-      "name": "@",
-      "ttl": 1,
-      "content": "facebook-domain-verification=y3e092wjsg3jb467rfnd8809zhnggt"
-    },
-    {
-      "type": "TXT",
-      "name": "@",
-      "ttl": 1,
-      "content": "google-site-verification=b-b9AQZwMqSQxpEsGiYU3Ojgl7GVeGBfp0_HbShhpWo"
-    },
-    {
-      "type": "TXT",
-      "name": "@",
-      "ttl": 1,
-      "content": "google-site-verification=PzPosMaVrZSdkqH6_GDA6jnOZAr6Bl4G-ttK19-GhKw"
-    },
-    {
-      "type": "TXT",
-      "name": "@",
-      "ttl": 3600,
-      "content": "v=spf1 include:_spf.google.com ~all"
-    },
-    {
+      "key": "asuid-1",
       "type": "TXT",
       "name": "asuid",
       "ttl": 1,
       "content": "094C19A879ADBD321825791B5F1433ECB226343E000DED0F02CF2391AB10C282"
     },
     {
+      "key": "apex-1",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "facebook-domain-verification=y3e092wjsg3jb467rfnd8809zhnggt"
+    },
+    {
+      "key": "apex-2",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=PzPosMaVrZSdkqH6_GDA6jnOZAr6Bl4G-ttK19-GhKw"
+    },
+    {
+      "key": "apex-3",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 1,
+      "content": "google-site-verification=b-b9AQZwMqSQxpEsGiYU3Ojgl7GVeGBfp0_HbShhpWo"
+    },
+    {
+      "key": "apex-4",
+      "type": "TXT",
+      "name": "@",
+      "ttl": 3600,
+      "content": "v=spf1 include:_spf.google.com ~all"
+    },
+    {
+      "key": "google-_domainkey-1",
       "type": "TXT",
       "name": "google._domainkey",
       "ttl": 1,
       "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg9xNROLn/nic+vyH2CdxXxUPGWj23gzCxmyP5Jx5MRhMsyRN0rV2Eu11o6iIbo/nfWp9oqEOhQLDeF6fnhS0NvGKFoTJLlDr9iUeUKffBXl9RO7j0BAiwBiNeQY2FkePzK+Dv3f1MhRXS8XYCil/B3Vt5b5geIPua7Yd6GX/IRFb848q7OCkLD+MBoE/PH1iLx+1PsiEbvfaMwUat853Dt7mWuUtPyFv0O1o2Nj46FAC9FoWMyed8cfVvHVKlIF8Y/dqXkC3OEuJNABQKfjJ4v9W4kPHtXCVBOz66FSSWgCeQbhJUJjXYYgF1z/1pU+LtWRC8Qid8zJLC7nsVG+llQIDAQAB"
     }
-  ]
+  ],
+  "waf_custom_rules_enabled": false,
+  "rulesets": {
+    "http_request_cache_settings": {
+      "name": "default",
+      "description": "",
+      "rules": [
+        {
+          "action": "set_cache_settings",
+          "action_parameters": {
+            "cache": false
+          },
+          "description": "Exclude /product from cached",
+          "enabled": true,
+          "expression": "(http.request.uri.path contains \"product\")"
+        }
+      ]
+    }
+  }
 }
