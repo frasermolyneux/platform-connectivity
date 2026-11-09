@@ -11,6 +11,7 @@
       "name": "Synthetic rate limit",
       "description": "Test-only ruleset",
       "rules": [{
+        "ref": "synthetic-rate-limit",
         "action": "managed_challenge",
         "description": "Synthetic challenge",
         "enabled": true,

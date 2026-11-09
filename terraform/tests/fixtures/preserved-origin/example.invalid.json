@@ -1,8 +1,8 @@
 {
   "name": "example.invalid",
   "dns_provider": "cloudflare",
-  "management": "terraform",
-  "adopt_existing": true,
+  "management": "external",
+  "zone_id": "00000000000000000000000000000002",
   "settings_preserve_existing": true,
   "settings": { "ssl": "full" },
   "dnssec_enabled": false,

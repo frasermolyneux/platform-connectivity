@@ -31,7 +31,8 @@ resource "terraform_data" "origin_tls_owner" {
 }
 
 locals {
-  cloudflare_origin_tls_imports = merge([
+  # Rebind only the entrypoint identified by this stack's retained owner identity.
+  cloudflare_origin_tls_recovery_bindings = merge([
     for key, zone in local.cloudflare_origin_tls_zones : {
       for ruleset in data.cloudflare_rulesets.origin_tls[key].rulesets :
       key => "zones/${local.cloudflare_zone_ids[zone.name]}/${ruleset.id}"
@@ -43,7 +44,7 @@ locals {
 }
 
 import {
-  for_each = local.cloudflare_origin_tls_imports
+  for_each = local.cloudflare_origin_tls_recovery_bindings
   to       = cloudflare_ruleset.origin_tls[each.key]
   id       = each.value
 }
@@ -98,7 +99,7 @@ resource "cloudflare_ruleset" "origin_tls" {
           ruleset.name == "origin-tls-${terraform_data.origin_tls_owner[each.key].id}"
         )
       ])
-      error_message = "An existing configuration entrypoint is not owned by this stack. Stop for reviewed preservation/adoption; never replace its rules."
+      error_message = "An existing configuration entrypoint is not owned by this stack. Stop for reviewed ownership reconciliation; never replace its rules."
     }
   }
 }

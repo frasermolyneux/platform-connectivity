@@ -42,15 +42,6 @@ def expected_zone_identity(plan, zone):
     zone_id = values.get("id")
     require(values.get("name") == ZONE and isinstance(zone_id, str) and bool(zone_id),
             "unexpected managed zone identity")
-    if zone.get("adopt_existing") is True:
-        discovered = [resource for resource in resources
-                      if resource.get("address") == f'data.cloudflare_zone.adopt["{ZONE}"]'
-                      and resource.get("mode") == "data"
-                      and resource.get("type") == "cloudflare_zone"]
-        require(len(discovered) == 1, "adopted zone discovery missing or ambiguous")
-        live = discovered[0].get("values", {})
-        require(live.get("name") == ZONE and live.get("zone_id") == zone_id,
-                "adopted and managed zone identities differ")
     return zone_id
 
 

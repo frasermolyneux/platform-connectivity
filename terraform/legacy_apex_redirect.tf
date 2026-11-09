@@ -5,26 +5,6 @@ locals {
   }
 }
 
-data "external" "legacy_apex_redirect" {
-  for_each = local.legacy_apex_redirect_zones
-
-  program = ["python3", "${path.module}/scripts/find_page_rule.py"]
-  query = {
-    zone_id       = local.cloudflare_zone_ids[each.value.name]
-    target        = "https://${each.value.name}/*"
-    actions       = jsonencode({ forwarding_url = { url = "https://www.${each.value.name}/", status_code = 301 } })
-    priority      = "1"
-    status        = "active,disabled"
-    require_match = "true"
-  }
-}
-
-import {
-  for_each = local.legacy_apex_redirect_zones
-  to       = cloudflare_page_rule.legacy_apex_redirect[each.key]
-  id       = "${local.cloudflare_zone_ids[each.value.name]}/${data.external.legacy_apex_redirect[each.key].result.id}"
-}
-
 resource "cloudflare_page_rule" "legacy_apex_redirect" {
   for_each = local.legacy_apex_redirect_zones
 

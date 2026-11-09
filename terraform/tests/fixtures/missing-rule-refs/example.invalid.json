@@ -1,0 +1,35 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "settings_preserve_existing": true,
+  "settings": { "ssl": "strict" },
+  "waf_custom_rules_enabled": true,
+  "waf_custom_ruleset": {
+    "name": "synthetic-custom-firewall",
+    "description": "Synthetic firewall for validation",
+    "rules": [
+      {
+        "action": "block",
+        "description": "Block a synthetic path",
+        "enabled": true,
+        "expression": "(http.request.uri.path eq \"/blocked\")"
+      }
+    ]
+  },
+  "rulesets": {
+    "http_ratelimit": {
+      "name": "synthetic-rate-limit",
+      "description": "",
+      "rules": [
+        {
+          "action": "managed_challenge",
+          "description": "Challenge synthetic requests",
+          "enabled": true,
+          "expression": "(http.host eq \"example.invalid\")"
+        }
+      ]
+    }
+  },
+  "records": []
+}

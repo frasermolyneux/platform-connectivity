@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "dns" {
   lifecycle {
     precondition {
       condition     = length(local.cloudflare_unsupported_dns_records) == 0
-      error_message = "Unsupported Cloudflare DNS record types are configured: ${join(", ", local.cloudflare_unsupported_dns_records)}. Add explicit Terraform resource and import support before using these records."
+      error_message = "Unsupported Cloudflare DNS record types are configured: ${join(", ", local.cloudflare_unsupported_dns_records)}. Add explicit Terraform resource support before using these records."
     }
 
     precondition {

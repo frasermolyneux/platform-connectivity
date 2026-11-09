@@ -2,12 +2,6 @@ mock_provider "azurerm" {}
 
 mock_provider "cloudflare" {}
 
-mock_provider "external" {
-  mock_data "external" {
-    defaults = { result = { id = "00000000000000000000000000000001" } }
-  }
-}
-
 override_resource {
   target = cloudflare_page_rule.legacy_apex_redirect["example.test"]
   values = { id = "00000000000000000000000000000001" }
@@ -82,7 +76,7 @@ run "synthetic_origin_tls_is_strict_for_both_proxied_hosts" {
   }
 }
 
-run "legacy_redirect_is_imported_disabled_without_changing_its_target" {
+run "legacy_redirect_stays_disabled_with_its_existing_target" {
   command = plan
 
   assert {
@@ -94,7 +88,7 @@ run "legacy_redirect_is_imported_disabled_without_changing_its_target" {
       cloudflare_page_rule.legacy_apex_redirect["example.test"].actions.forwarding_url.status_code == 301 &&
       cloudflare_page_rule.legacy_apex_redirect["example.test"].priority == 1
     )
-    error_message = "Only the explicitly opted-in legacy redirect may be adopted, retaining its exact configuration except disabled status."
+    error_message = "The explicitly configured legacy redirect remains disabled with its existing target and priority."
   }
 }
 
@@ -129,7 +123,7 @@ run "new_managed_zone_override_is_rejected_explicitly" {
   expect_failures = [terraform_data.origin_tls_owner["new.invalid"]]
 }
 
-run "adopted_zone_preserves_existing_origin_owner_and_disabled_redirect" {
+run "origin_tls_recovery_rebinds_only_its_existing_owner" {
   command = plan
 
   variables {
@@ -141,29 +135,11 @@ run "adopted_zone_preserves_existing_origin_owner_and_disabled_redirect" {
     values          = { id = "00000000-0000-0000-0000-000000000002" }
     override_during = plan
   }
-  override_data {
-    target = data.cloudflare_zone.adopt["example.invalid"]
-    values = { zone_id = "00000000000000000000000000000002" }
-  }
-  override_resource {
-    target = cloudflare_zone.managed["example.invalid"]
-    values = { id = "00000000000000000000000000000002" }
-  }
-  override_resource {
-    target = cloudflare_zone_dnssec.managed["example.invalid"]
-  }
-  override_resource {
-    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
-  }
   override_resource {
     target = cloudflare_ruleset.origin_tls["example.invalid"]
   }
   override_resource {
     target = cloudflare_page_rule.legacy_apex_redirect["example.invalid"]
-  }
-  override_data {
-    target = data.external.cloudflare_zone_settings_snapshot["example.invalid"]
-    values = { result = { matches = "true", differences = "[]" } }
   }
   override_data {
     target = data.cloudflare_rulesets.origin_tls["example.invalid"]
@@ -184,9 +160,8 @@ run "adopted_zone_preserves_existing_origin_owner_and_disabled_redirect" {
     condition = (
       cloudflare_ruleset.origin_tls["example.invalid"].name == "origin-tls-00000000-0000-0000-0000-000000000002" &&
       length(cloudflare_ruleset.origin_tls["example.invalid"].rules) == 2 &&
-      cloudflare_zone_setting.managed["example.invalid/ssl"].value == "full" &&
       cloudflare_page_rule.legacy_apex_redirect["example.invalid"].status == "disabled"
     )
-    error_message = "Adoption must retain the existing owner identity and disabled redirect without hardening the zone-wide SSL setting."
+    error_message = "Origin TLS recovery must retain this stack's owner identity without changing the disabled redirect."
   }
 }

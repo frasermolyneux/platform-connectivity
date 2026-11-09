@@ -4,7 +4,6 @@
   "management": "terraform",
   "plan_profile": "free",
   "backup_to_azure": false,
-  "adopt_existing": true,
   "settings_preserve_existing": true,
   "dnssec_enabled": true,
   "settings": {
@@ -72,7 +71,6 @@
   },
   "records": [],
   "waf_custom_rules_enabled": true,
-  "waf_preserve_existing": true,
   "waf_custom_ruleset": {
     "name": "Terraform-managed custom firewall rules",
     "description": "Shared Free-plan-compatible protection for common automated probes",

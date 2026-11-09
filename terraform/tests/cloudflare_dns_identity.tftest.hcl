@@ -1,11 +1,5 @@
 mock_provider "azurerm" {}
 mock_provider "cloudflare" {}
-mock_provider "external" {
-  mock_data "external" {
-    defaults = { result = { matches = "true", differences = "[]" } }
-  }
-}
-
 override_data {
   target = data.terraform_remote_state.platform_workloads
   values = { outputs = {} }
@@ -24,7 +18,7 @@ variables {
   }
 }
 
-run "explicit_keys_are_content_independent_and_srv_identity_includes_all_fields" {
+run "explicit_keys_are_content_independent_and_srv_fields_are_preserved" {
   command = plan
 
   variables {
@@ -40,10 +34,10 @@ run "explicit_keys_are_content_independent_and_srv_identity_includes_all_fields"
       ]) &&
       local.cf_srv_records["example.test|SRV|service-primary"].data.priority == 10 &&
       local.cf_srv_records["example.test|SRV|service-secondary"].data.priority == 20 &&
-      local.cf_srv_records["example.test|SRV|service-primary"].live_key == "example.test|SRV|_service._udp|10|5|9000|server.example.test" &&
-      local.cf_srv_records["example.test|SRV|service-secondary"].live_key == "example.test|SRV|_service._udp|20|5|9000|server.example.test"
+      local.cf_srv_records["example.test|SRV|service-primary"].data.target == "server.example.test" &&
+      local.cf_srv_records["example.test|SRV|service-secondary"].data.weight == 5
     )
-    error_message = "Explicit record keys must determine addresses, and SRV live matching must include priority and weight."
+    error_message = "Explicit record keys must determine addresses, and Cloudflare SRV records must preserve priority and weight."
   }
 }
 
@@ -74,7 +68,6 @@ run "multiple_managed_and_external_zones_keep_distinct_controls" {
   assert {
     condition = (
       length(cloudflare_zone.managed) == 2 &&
-      length(local.cloudflare_zones_to_adopt) == 0 &&
       length(cloudflare_dns_record.a) == 2 &&
       length(cloudflare_dns_record.cname) == 1 &&
       length(cloudflare_ruleset.zone_configured) == 1 &&
@@ -82,7 +75,7 @@ run "multiple_managed_and_external_zones_keep_distinct_controls" {
       length(cloudflare_ruleset.zone_custom_firewall) == 1 &&
       !contains(keys(local.managed_cloudflare_zones), "external.example.invalid")
     )
-    error_message = "Multiple synthetic zones with different controls and external ownership must coexist without adoption."
+    error_message = "Multiple synthetic zones with different controls must preserve the external ownership boundary."
   }
 }
 
@@ -110,35 +103,11 @@ run "managed_records_require_explicit_keys" {
   ]
 }
 
-run "adoption_requires_explicit_settings_preservation" {
+run "preserved_settings_do_not_expand_profile_defaults" {
   command = plan
 
   variables {
-    dns_zones_path        = "tests/fixtures/missing-settings"
-    cloudflare_account_id = "00000000000000000000000000000000"
-  }
-
-  override_data {
-    target = data.cloudflare_zone.adopt["example.invalid"]
-    values = { zone_id = "00000000000000000000000000000002" }
-  }
-  override_resource {
-    target = cloudflare_zone.managed["example.invalid"]
-    values = { id = "00000000000000000000000000000002" }
-  }
-  override_resource {
-    target = cloudflare_zone_dnssec.managed["example.invalid"]
-    values = { id = "00000000000000000000000000000002" }
-  }
-
-  expect_failures = [cloudflare_zone.managed["example.invalid"]]
-}
-
-run "preserved_settings_do_not_expand_after_import" {
-  command = plan
-
-  variables {
-    dns_zones_path        = "tests/fixtures/post-import-preservation"
+    dns_zones_path        = "tests/fixtures/preserved-settings"
     cloudflare_account_id = "00000000000000000000000000000000"
   }
 
@@ -148,6 +117,6 @@ run "preserved_settings_do_not_expand_after_import" {
       contains(keys(local.managed_cloudflare_zone_settings), "example.invalid/ssl") &&
       local.managed_cloudflare_zone_settings["example.invalid/ssl"].value == "strict"
     )
-    error_message = "Disabling adoption must not add profile defaults when the explicit settings preservation contract remains enabled."
+    error_message = "settings_preserve_existing must limit management to explicitly configured settings instead of inheriting profile defaults."
   }
 }

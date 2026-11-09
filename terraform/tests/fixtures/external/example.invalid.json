@@ -2,7 +2,6 @@
   "name": "example.invalid",
   "dns_provider": "cloudflare",
   "management": "external",
-  "adopt_existing": true,
   "zone_id": "00000000000000000000000000000001",
   "origin_tls_hostnames": ["www.example.invalid"],
   "records": [
