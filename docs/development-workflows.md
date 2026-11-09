@@ -72,8 +72,7 @@ public artifacts and logs.
 ## Cloudflare zones: new domains vs adopting existing ones
 
 Cloudflare zones default to external ownership (record-only). Setting a zone's
-`management` to `terraform` and adding its key to the protected
-`CLOUDFLARE_ADOPTED_ZONE_KEYS` variable brings the zone, DNSSEC, settings, WAF
+`management` to `terraform` in its JSON definition brings the zone, DNSSEC, settings, WAF
 ruleset, and records under Terraform management. There are two paths.
 
 ### New domain (does not yet exist in Cloudflare) — no import
@@ -82,9 +81,9 @@ Terraform creates everything from scratch. There is nothing to import.
 
 1. Create `terraform/zones/<domain>.json` with `dns_provider: cloudflare`,
    `management: terraform`, the intended `plan_profile`, `records`, and flags.
-2. Activate its key through the `platform-workloads` configuration described in
-   the existing-domain procedure below, rather than editing the protected variable
-   by hand. Review a production plan before deployment.
+2. Ensure the Production `CLOUDFLARE_ACCOUNT_ID` variable and `CLOUDFLARE_API_KEY`
+   secret provisioned by `platform-workloads` provide the intended account and
+   permissions. Review a production plan before deployment.
 3. Merge and deploy through the ordinary production path; that path creates the
    zone, settings, records, and any enabled DNSSEC and WAF resources.
 4. Point the registrar's nameservers at the Cloudflare-assigned NS.
@@ -98,11 +97,10 @@ identifiers are committed and no bespoke workflow is involved —
 `cloudflare_dns_records`, and `cloudflare_rulesets` data sources and the `import`
 blocks bind each object by its discovered ID.
 
-1. Ensure `terraform/zones/<domain>.json` has `management: terraform`,
-   `adopt_existing: true`, and the correct `plan_profile`. Retain the existing
-   `zone_id` while the protected adoption key is absent: the zone stays
-   external and its configured records remain managed here until
-   activation; a missing ID fails planning instead of dropping those records.
+1. Prepare `terraform/zones/<domain>.json` with `adopt_existing: true` and the
+   correct `plan_profile`. Keep `management: external` and the existing `zone_id`
+   until the handoff is approved: configured records remain managed without
+   adopting the zone or its zone-wide controls.
 2. Declare the desired records in `records[]`:
    - An empty or newly created zone with no live records needs nothing here —
      add whatever records you want Terraform to create.
@@ -116,13 +114,11 @@ blocks bind each object by its discovered ID.
    the live rules on apply. New-ish domains usually have no such ruleset and it
    is created fresh (a plan-time precondition fails loudly if more than one
    entrypoint ruleset exists).
-4. Activate the zone by adding its key to the `cloudflare_adopted_zone_keys` list
-   in this workload's definition in `platform-workloads`
-   (`terraform/workloads/platform/platform-connectivity.json`, Production
-   environment) and applying `platform-workloads`. That provisions the protected
-   `CLOUDFLARE_ADOPTED_ZONE_KEYS` and `CLOUDFLARE_ACCOUNT_ID` Production variables
-   (and the `CLOUDFLARE_API_KEY` secret) — they are source-controlled, not set by
-   hand. Until a zone key is listed there, adoption stays fail-closed.
+4. Once approved, set `management: terraform` in the zone JSON. This declaration
+   alone selects zone-wide management; `adopt_existing: true` selects discovery
+   and import rather than creation. Ensure the Production `CLOUDFLARE_ACCOUNT_ID`
+   variable and `CLOUDFLARE_API_KEY` secret provisioned by `platform-workloads`
+   provide the intended account and permissions.
 5. Run the production plan through **PR Verify** with the `run-prd-plan` label.
    Review it for any unexpected create/replace/delete on imported objects and any
    intended settings hardening before approval.
@@ -135,8 +131,8 @@ run `terraform import` or mutate production state from a local shell.
 
 ### Staged xtremeidiots.com handoff
 
-The zone is declared for adoption but remains external until its protected
-key is approved and enabled. Its reviewed settings snapshot includes Full SSL mode,
+The zone retains `management: external` until its handoff is separately approved
+and that declaration changes to `terraform`. Its reviewed settings snapshot includes Full SSL mode,
 disabled DNSSEC, security level, HTTPS rewrites, TLS 1.3 mode, hotlink
 protection, image optimization and browser cache TTL. The custom-firewall
 snapshot retains both hotlink exceptions and the AI Crawl Control rule in

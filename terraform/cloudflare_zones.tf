@@ -8,26 +8,6 @@ check "cloudflare_zone_management_values" {
   }
 }
 
-check "cloudflare_adopted_zone_keys" {
-  assert {
-    condition     = length(setsubtract(var.cloudflare_adopted_zone_keys, toset(keys(local.declared_managed_cloudflare_zones)))) == 0
-    error_message = "cloudflare_adopted_zone_keys may only contain zone keys declared with management set to terraform."
-  }
-}
-
-resource "terraform_data" "pending_cloudflare_adoption" {
-  for_each = local.pending_cloudflare_adoptions
-
-  input = each.value.name
-
-  lifecycle {
-    precondition {
-      condition     = try(trimspace(each.value.zone_id) != "", false)
-      error_message = "Existing Cloudflare zone ${each.value.name} must retain its external zone_id while adoption is pending, so its records remain managed."
-    }
-  }
-}
-
 resource "cloudflare_zone" "managed" {
   for_each = local.managed_cloudflare_zones
 

@@ -28,9 +28,10 @@ override_resource {
 }
 
 variables {
-  subscription_id      = "00000000-0000-0000-0000-000000000000"
-  dns_zones_path       = "zones"
-  cloudflare_api_token = "unused_placeholder_token_dev_environment"
+  subscription_id       = "00000000-0000-0000-0000-000000000000"
+  dns_zones_path        = "zones"
+  cloudflare_api_token  = "unused_placeholder_token_dev_environment"
+  cloudflare_account_id = "00000000000000000000000000000000"
   platform_workloads_state = {
     resource_group_name  = "unused"
     storage_account_name = "unused"
@@ -75,18 +76,20 @@ run "talk_origin_tls_is_strict_for_both_proxied_hosts" {
         for rule in cloudflare_ruleset.origin_tls["xtremeidiots.net"].rules :
         rule.enabled && rule.action == "set_config" && rule.action_parameters.ssl == "strict"
       ]) &&
-      length(cloudflare_zone_setting.managed) == 0
+      alltrue([for setting in local.managed_cloudflare_zone_settings : !contains(["talkwithtiles.com", "xtremeidiots.net"], setting.zone_key)])
     )
     error_message = "Talk and the XtremeIdiots redirect must enforce strict origin TLS only for their selected proxied hosts without changing external zone settings."
   }
 }
 
-run "xtremeidiots_pending_adoption_retains_live_baseline" {
+run "production_zone_ownership_retains_live_baseline" {
   command = plan
 
   assert {
     condition = (
-      contains(keys(local.pending_cloudflare_adoptions), "xtremeidiots.com") &&
+      toset(keys(local.managed_cloudflare_zones)) == toset(["tripsidekick.app", "tripsidekick.net"]) &&
+      contains(keys(local.legacy_cloudflare_zones), "xtremeidiots.com") &&
+      length(local.cloudflare_zones_to_adopt) == 0 &&
       !contains(keys(cloudflare_zone.managed), "xtremeidiots.com") &&
       !contains(keys(cloudflare_ruleset.zone_custom_firewall), "xtremeidiots.com") &&
       !local.cloudflare_zones["xtremeidiots.com"].dnssec_enabled &&
@@ -145,9 +148,8 @@ run "new_managed_zone_override_is_rejected_explicitly" {
   command = plan
 
   variables {
-    dns_zones_path               = "tests/fixtures/managed"
-    cloudflare_account_id        = "00000000000000000000000000000000"
-    cloudflare_adopted_zone_keys = ["new.invalid"]
+    dns_zones_path        = "tests/fixtures/managed"
+    cloudflare_account_id = "00000000000000000000000000000000"
   }
 
   expect_failures = [terraform_data.origin_tls_owner["new.invalid"]]

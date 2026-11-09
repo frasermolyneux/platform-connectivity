@@ -47,7 +47,7 @@ Use the PR workflows for state-backed plans. A production plan is opt-in through
 - State and remote state use Azure AD/OIDC. Do not add credentials, client secrets, or state identifiers discovered at runtime.
 - Do not run local `terraform import`, move/remove state, or change state addresses without an explicit migration task.
 - Commit each root's `.terraform-version` and `.terraform.lock.hcl`. Select the exact root CLI pin before invoking Terraform; normal initialization uses `-lockfile=readonly`. Regenerate provider selections only in a reviewed dependency-update PR; never commit state, plans, or `.terraform/`.
-- Cloudflare adoption is fail-closed through protected repository configuration owned by `platform-workloads`; review `docs/development-workflows.md` before changing adoption or import behavior.
+- Cloudflare zone JSON `management` declarations determine ownership; keep unapproved adoptions external and review `docs/development-workflows.md` before changing ownership or import behavior.
 - DNS, provider, backend, output, or environment changes have tenant-wide blast radius and require an appropriate state-backed plan.
 
 Authoritative context: [README](README.md), [architecture](docs/architecture-overview.md), and [development workflows](docs/development-workflows.md).
