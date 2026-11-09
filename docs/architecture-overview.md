@@ -28,8 +28,10 @@ External Cloudflare zones retain a committed `zone_id`; Terraform manages their 
 
 The shared default custom firewall ruleset stays within Cloudflare Free limits. It blocks probes for common sensitive files and directories, and applies Managed Challenge to common automated WordPress administration probes. Zone-specific rulesets are declared by Cloudflare phase in `rulesets`; they can preserve managed-WAF execution, rate limiting, or redirects without changing the shared default rules.
 
-`xtremeidiots.com` is configured for a preservation-first adoption. Its zone
-settings snapshot records every setting the zone API marked editable, and its
+All 18 inventoried Cloudflare zones are configured for preservation-first
+management; see the [estate ownership matrix](cloudflare-estate-ownership.md).
+Their settings snapshots record every setting the zone API marked editable
+and retain previously owned read-only settings. The `xtremeidiots.com`
 custom-firewall snapshot preserves the existing rules in order, including AI
 Crawl Control. With `waf_preserve_existing`, adoption requires one existing
 custom-firewall entrypoint matching the reviewed snapshot and uses rule
@@ -84,9 +86,11 @@ adopting the zone or changing its default SSL mode, so existing HTTP/HTTPS
 workloads remain unaffected. The deployment token needs `Config Settings Write`
 only for opted-in zones; the runtime DNS-01 credential does not.
 
-Terraform-managed zones have a strict baseline (subject to per-zone settings
-overrides) and reject this opt-in.
-Inventory and import discovery therefore never depend on a not-yet-created zone.
+On adoption, `origin_tls_preserve_existing: true` retains an already-owned
+entrypoint at its existing address and identity. It does not import another
+stack's entrypoint or change the zone-wide SSL snapshot. Without this explicit
+preservation flag, Terraform-managed zones reject the opt-in. The existing
+owner-identity check still rejects a competing entrypoint.
 
 Wildcards, undeclared/unproxied hostnames and duplicate entries are rejected.
 Ownership uses a unique `terraform_data` identity retained in this state, not a

@@ -62,6 +62,11 @@ class ZoneSettingsSnapshotTests(unittest.TestCase):
 
         self.assertEqual(compare_snapshot(expected, live), ["ssl"])
 
+    def test_explicit_preexisting_read_only_setting_must_still_match(self):
+        live = response([{"id": "http2", "editable": False, "value": "on"}])
+        self.assertEqual(compare_snapshot({"http2": "on"}, live), [])
+        self.assertEqual(compare_snapshot({"http2": "off"}, live), ["http2"])
+
     def test_missing_setting_and_invalid_api_response_fail_closed(self):
         self.assertEqual(compare_snapshot({"ssl": "strict"}, response([])), ["ssl"])
         with self.assertRaisesRegex(ValueError, "unsuccessful"):

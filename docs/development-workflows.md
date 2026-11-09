@@ -24,6 +24,8 @@ terraform -chdir=terraform test
 Select the exact Terraform version from `terraform/.terraform-version` first.
 The custom-firewall preservation test uses the installed provider against a local
 fake API and isolated temporary state; it does not contact Cloudflare.
+The DNS ownership-release test uses the pinned CLI and a synthetic local
+`terraform_data` state to prove move-then-forget semantics without applying.
 
 Backend-aware plans require access to the Azure state backend and the environment's Azure and Cloudflare credentials. Use the supported GitHub Actions workflows for authoritative plans and all applies. Never run `terraform apply` from a local machine.
 
@@ -158,6 +160,17 @@ change that flag only when intentionally adopting the profile's full setting
 set.
 
 ### Staged xtremeidiots.com handoff
+
+The estate-wide continuation, ownership exceptions and deployment ordering are
+recorded in the [estate ownership matrix](cloudflare-estate-ownership.md).
+Retain the historical DNS `moved` declarations, including moves whose source
+is absent in an environment. The duplicate ACS verification binding is moved
+to a retired singleton and released with `removed { lifecycle { destroy =
+false } }`. Only connectivity forgets it; notifications remains the owner.
+Do not delete the live record, import it back here, or remove notifications'
+binding. Terraform 1.17 does not accept an indexed `removed` target, so the
+intermediate singleton is intentional. The plan must show **not destroyed**,
+not a DNS deletion. This declaration remains safe after the release completes.
 
 The zone is declared for preservation-first adoption. Its settings snapshot
 includes every zone setting the Cloudflare API marked editable, preserving the
