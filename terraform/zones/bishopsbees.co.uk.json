@@ -3,7 +3,6 @@
   "dns_provider": "cloudflare",
   "backup_to_azure": false,
   "management": "terraform",
-  "adopt_existing": true,
   "settings_preserve_existing": true,
   "plan_profile": "free",
   "dnssec_enabled": false,
@@ -184,6 +183,7 @@
       "description": "",
       "rules": [
         {
+          "ref": "f4b1c1026507470c9a8f9c676791da72",
           "action": "set_cache_settings",
           "action_parameters": {
             "cache": false

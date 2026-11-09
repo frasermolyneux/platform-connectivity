@@ -8,7 +8,6 @@
     "www.talkwithtiles.com"
   ],
   "management": "terraform",
-  "adopt_existing": true,
   "settings_preserve_existing": true,
   "plan_profile": "free",
   "dnssec_enabled": false,

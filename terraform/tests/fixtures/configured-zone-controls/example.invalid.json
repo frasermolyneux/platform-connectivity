@@ -2,13 +2,24 @@
   "name": "example.invalid",
   "dns_provider": "cloudflare",
   "management": "terraform",
-  "adopt_existing": true,
   "settings_preserve_existing": true,
   "settings": { "ssl": "strict" },
-  "waf_custom_rules_enabled": false,
   "plan_profile": "pro",
   "dnssec_enabled": false,
-  "waf_custom_rules_enabled": false,
+  "waf_custom_rules_enabled": true,
+  "waf_custom_ruleset": {
+    "name": "synthetic-custom-firewall",
+    "description": "Synthetic firewall for configuration tests",
+    "rules": [
+      {
+        "ref": "synthetic-firewall-rule",
+        "action": "block",
+        "description": "Block a synthetic path",
+        "enabled": true,
+        "expression": "(http.request.uri.path eq \"/blocked\")"
+      }
+    ]
+  },
   "rulesets": {
     "http_ratelimit": {
       "name": "default",

@@ -1,7 +1,6 @@
 # Cloudflare DNS records for Cloudflare-managed zones (dns_provider == "cloudflare").
-# One resource per record type keeps each for_each map homogeneous. Records owned by
-# other stacks (e.g. platform-notifications ACS records) are carved out during
-# conversion (scripts/Convert-CloudflareZones.ps1) and never appear here.
+# One resource per record type keeps each for_each map homogeneous. Records owned
+# by other stacks or controllers are not declared in the corresponding zone JSON.
 
 resource "cloudflare_dns_record" "a" {
   for_each = local.cf_a_records

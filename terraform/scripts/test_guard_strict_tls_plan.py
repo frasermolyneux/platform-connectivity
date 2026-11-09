@@ -173,11 +173,6 @@ class GuardCliTest(unittest.TestCase):
                 "mode": "managed", "type": "cloudflare_zone",
                 "values": {"name": "xtremeidiots.net", "id": "existing-zone"},
             },
-            {
-                "address": 'data.cloudflare_zone.adopt["xtremeidiots.net"]',
-                "mode": "data", "type": "cloudflare_zone",
-                "values": {"name": "xtremeidiots.net", "zone_id": "existing-zone"},
-            },
         ]}}
         if operation == "remove":
             change = plan["resource_changes"][0]["change"]
@@ -195,7 +190,7 @@ class GuardCliTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("scope accepted", result.stdout)
 
-    def test_cli_rejects_missing_ambiguous_mismatched_and_unknown_discovery(self):
+    def test_cli_rejects_missing_ambiguous_mismatched_and_unknown_managed_zone(self):
         for case in ("missing", "ambiguous", "wrong_id", "wrong_name", "unknown"):
             with self.subTest(case=case):
                 plan = self.plan()
@@ -205,9 +200,9 @@ class GuardCliTest(unittest.TestCase):
                 elif case == "ambiguous":
                     resources.append(copy.deepcopy(resources[-1]))
                 elif case == "wrong_name":
-                    resources[-1]["values"]["name"] = "unrelated.invalid"
+                    resources[0]["values"]["name"] = "unrelated.invalid"
                 else:
-                    resources[-1]["values"]["zone_id"] = None if case == "unknown" else "other-zone"
+                    resources[0]["values"]["id"] = None if case == "unknown" else "other-zone"
                 self.assertNotEqual(self.cli(plan).returncode, 0)
 
     def test_cli_rejects_target_bound_to_a_different_zone(self):

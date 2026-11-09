@@ -228,12 +228,11 @@ locals {
         "${z.name}|A|${r.key}" :
         "${z.name}|A|${r.name}|${r.content}"
         ) => {
-        zone_id  = local.cloudflare_zone_ids[z.name]
-        name     = r.name
-        ttl      = try(r.ttl, 1)
-        content  = r.content
-        proxied  = try(r.proxied, false)
-        live_key = "${z.name}|A|${r.name}|${r.content}"
+        zone_id = local.cloudflare_zone_ids[z.name]
+        name    = r.name
+        ttl     = try(r.ttl, 1)
+        content = r.content
+        proxied = try(r.proxied, false)
       } if r.type == "A"
     }
   ]...) : {}
@@ -245,12 +244,11 @@ locals {
         "${z.name}|AAAA|${r.key}" :
         "${z.name}|AAAA|${r.name}|${r.content}"
         ) => {
-        zone_id  = local.cloudflare_zone_ids[z.name]
-        name     = r.name
-        ttl      = try(r.ttl, 1)
-        content  = r.content
-        proxied  = try(r.proxied, false)
-        live_key = "${z.name}|AAAA|${r.name}|${r.content}"
+        zone_id = local.cloudflare_zone_ids[z.name]
+        name    = r.name
+        ttl     = try(r.ttl, 1)
+        content = r.content
+        proxied = try(r.proxied, false)
       } if r.type == "AAAA"
     }
   ]...) : {}
@@ -262,12 +260,11 @@ locals {
         "${z.name}|CNAME|${r.key}" :
         "${z.name}|CNAME|${r.name}|${r.content}"
         ) => {
-        zone_id  = local.cloudflare_zone_ids[z.name]
-        name     = r.name
-        ttl      = try(r.ttl, 1)
-        content  = r.content
-        proxied  = try(r.proxied, false)
-        live_key = "${z.name}|CNAME|${r.name}|${r.content}"
+        zone_id = local.cloudflare_zone_ids[z.name]
+        name    = r.name
+        ttl     = try(r.ttl, 1)
+        content = r.content
+        proxied = try(r.proxied, false)
       } if r.type == "CNAME"
     }
   ]...) : {}
@@ -284,7 +281,6 @@ locals {
         ttl      = try(r.ttl, 1)
         content  = r.content
         priority = r.priority
-        live_key = "${z.name}|MX|${r.name}|${r.priority}|${r.content}"
       } if r.type == "MX"
     }
   ]...) : {}
@@ -296,11 +292,10 @@ locals {
         "${z.name}|TXT|${r.key}" :
         "${z.name}|TXT|${r.name}|${r.content}"
         ) => {
-        zone_id  = local.cloudflare_zone_ids[z.name]
-        name     = r.name
-        ttl      = try(r.ttl, 1)
-        content  = r.content
-        live_key = "${z.name}|TXT|${r.name}|${r.content}"
+        zone_id = local.cloudflare_zone_ids[z.name]
+        name    = r.name
+        ttl     = try(r.ttl, 1)
+        content = r.content
       } if r.type == "TXT"
     }
   ]...) : {}
@@ -312,11 +307,10 @@ locals {
         "${z.name}|SRV|${r.key}" :
         "${z.name}|SRV|${r.name}|${r.data.target}:${r.data.port}"
         ) => {
-        zone_id  = local.cloudflare_zone_ids[z.name]
-        name     = r.name
-        ttl      = try(r.ttl, 1)
-        data     = r.data
-        live_key = "${z.name}|SRV|${r.name}|${r.data.priority}|${r.data.weight}|${r.data.port}|${r.data.target}"
+        zone_id = local.cloudflare_zone_ids[z.name]
+        name    = r.name
+        ttl     = try(r.ttl, 1)
+        data    = r.data
       } if r.type == "SRV"
     }
   ]...) : {}

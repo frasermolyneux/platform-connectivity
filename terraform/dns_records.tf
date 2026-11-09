@@ -66,14 +66,6 @@ resource "azurerm_dns_txt_record" "records" {
   }
 }
 
-removed {
-  from = azurerm_dns_txt_record.notification_apex
-
-  lifecycle {
-    destroy = false
-  }
-}
-
 resource "azurerm_dns_srv_record" "records" {
   for_each = local.srv_records
 

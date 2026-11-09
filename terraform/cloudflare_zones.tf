@@ -31,15 +31,6 @@ resource "cloudflare_zone" "managed" {
     }
 
     precondition {
-      condition = !try(each.value.adopt_existing, false) || (
-        try(each.value.settings_preserve_existing, false) &&
-        can(each.value.settings) &&
-        length(try(each.value.settings, {})) > 0
-      )
-      error_message = "Adopting ${each.value.name} requires an explicit non-empty settings snapshot and settings_preserve_existing = true; profile defaults are not inherited for existing zones."
-    }
-
-    precondition {
       condition = alltrue([
         for record in try(each.value.records, []) :
         try(trimspace(record.key), "") != ""
@@ -62,14 +53,4 @@ resource "cloudflare_zone_setting" "managed" {
   zone_id    = cloudflare_zone.managed[each.value.zone_key].id
   setting_id = each.value.setting_id
   value      = each.value.value
-
-  lifecycle {
-    precondition {
-      condition = !contains(keys(local.cloudflare_zones_to_adopt), each.value.zone_key) || try(
-        data.external.cloudflare_zone_settings_snapshot[each.value.zone_key].result.matches == "true",
-        false
-      )
-      error_message = "Adopted zone ${each.value.zone_key} has settings that differ from its reviewed snapshot at ${try(data.external.cloudflare_zone_settings_snapshot[each.value.zone_key].result.differences, "unknown")}. Re-inventory and reconcile before adoption."
-    }
-  }
 }

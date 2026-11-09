@@ -20,25 +20,21 @@ inventory.
 
 Cloudflare zones default to `management: external`, which limits this stack to
 the explicitly configured records and hostname origin TLS overrides. Setting
-`management: terraform` declares zone-wide ownership. Existing zones set
-`adopt_existing: true` so data-source-driven imports discover their IDs;
-identifiers are not stored in configuration. See
-`terraform/cloudflare_imports.tf` for discovery and import behavior.
+`management: terraform` declares zone-wide ownership. The zone JSON remains the
+source for managed records, settings, DNSSEC, rulesets and Page Rules.
 
 For existing zones, use an explicit `settings` snapshot with
 `settings_preserve_existing: true`. This prevents plan-profile defaults from
 silently expanding the settings owned by this stack. DNS record keys are stable
-per type and independent of mutable content; import matching checks complete
-record data, including SRV priority and weight. Unsupported record types,
-ambiguous matches, API errors and snapshot drift fail closed. Custom firewall
-rulesets own an entire phase, so an existing phase requires an explicit
-preservation snapshot before Terraform manages it.
+per type and independent of mutable content. Ruleset rules use explicit stable
+`ref` values. Custom firewall rulesets own an entire phase, so keep their
+configured rules complete and coordinated with the owning service.
 
 Keep one owner per Cloudflare resource. Workload-owned DNS, status-owned
 `http_config_settings` entrypoints, Worker-generated DNS records and
 runtime-managed Worker routes remain with their current stacks/controllers.
-Do not declare or import them here. The exact ownership and desired state live
-in Terraform configuration.
+Do not declare them here. The exact ownership and desired state live in
+Terraform configuration.
 
 Supply Cloudflare credentials through the deployment environment, never zone
 JSON or committed files. The `dns_zones` output shape is a cross-repository
@@ -51,8 +47,8 @@ contract; review `terraform/outputs.tf` before changing it.
 declared, proxied hostnames are accepted; wildcard, duplicate or unproxied
 names fail validation. `origin_tls_preserve_existing` retains this stack's
 existing owner identity when a zone becomes Terraform-managed. It does not
-adopt another stack's entrypoint. The owner identity and ruleset have
-destruction protection. Use the narrow recovery path described in
+claim ownership of another stack's entrypoint. The owner identity and ruleset
+have destruction protection. Use the narrow recovery path described in
 [`development-workflows.md`](development-workflows.md) for the explicitly
 guarded strict-TLS change.
 

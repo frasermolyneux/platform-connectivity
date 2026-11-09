@@ -2,7 +2,6 @@
   "name": "xtremeidiots.com",
   "dns_provider": "cloudflare",
   "management": "terraform",
-  "adopt_existing": true,
   "plan_profile": "pro",
   "dnssec_enabled": false,
   "settings_preserve_existing": true,
@@ -283,6 +282,7 @@
       "description": "",
       "rules": [
         {
+          "ref": "b005a97031524fd79f0bfde2a84bd4f9",
           "action": "execute",
           "action_parameters": {
             "id": "c2e184081120413c86c3ab7e14069605",
@@ -293,6 +293,7 @@
           "description": ""
         },
         {
+          "ref": "75b776017255417faa0fe1412f8ee775",
           "action": "execute",
           "action_parameters": {
             "id": "efb7b8c949ac4650a09736fc376e9aee",
@@ -303,6 +304,7 @@
           "description": ""
         },
         {
+          "ref": "40a17fc3f8864c61ba458a82af6754c2",
           "action": "execute",
           "action_parameters": {
             "id": "4814384a9e5d4991b9815dcfc25d2f1f",
@@ -335,6 +337,7 @@
       "description": "",
       "rules": [
         {
+          "ref": "2b7a4ce4b9d34fe5b47ef61c86a4f96c",
           "action": "managed_challenge",
           "description": "Requests > 20 in 10 Seconds - Challenge",
           "enabled": true,
@@ -350,6 +353,7 @@
           }
         },
         {
+          "ref": "b67ea4f491e04cb090711e9fa1d92500",
           "action": "managed_challenge",
           "description": "Duplicate of Requests > 150 in 1 Minute - Challenge",
           "enabled": true,
@@ -371,6 +375,7 @@
       "description": "",
       "rules": [
         {
+          "ref": "92bcb663d2b74d0eb095501857f5daee",
           "action": "redirect",
           "action_parameters": {
             "from_value": {
@@ -388,12 +393,12 @@
       ]
     }
   },
-  "waf_preserve_existing": true,
   "waf_custom_ruleset": {
     "name": "default",
     "description": "",
     "rules": [
       {
+        "ref": "d946a838fcee47eeac7a579189988ccf",
         "action": "skip",
         "action_parameters": {
           "products": [
@@ -408,6 +413,7 @@
         }
       },
       {
+        "ref": "85947f3526764c4c9aed25ea7e5b6f9a",
         "action": "skip",
         "action_parameters": {
           "products": [
