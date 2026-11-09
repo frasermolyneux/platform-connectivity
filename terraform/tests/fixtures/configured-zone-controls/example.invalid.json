@@ -6,7 +6,6 @@
   "settings_preserve_existing": true,
   "settings": { "ssl": "strict" },
   "waf_custom_rules_enabled": false,
-  "adopt_existing": false,
   "plan_profile": "pro",
   "dnssec_enabled": false,
   "waf_custom_rules_enabled": false,
@@ -16,6 +15,7 @@
       "description": "",
       "rules": [
         {
+          "ref": "synthetic-rate-limit",
           "action": "managed_challenge",
           "description": "Requests > 20 in 10 Seconds - Challenge",
           "enabled": true,

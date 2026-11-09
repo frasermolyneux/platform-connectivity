@@ -104,5 +104,12 @@ resource "cloudflare_ruleset" "zone_configured" {
       ) || length(try(local.cf_zone_ruleset_ids[each.key], [])) <= 1
       error_message = "Adopted zone ${each.value.zone_key} has ambiguous ${each.value.phase} entrypoints; resolve to at most one before managing this ruleset."
     }
+    precondition {
+      condition = !contains(keys(local.cloudflare_zones_to_adopt), each.value.zone_key) || length(try(
+        local.cf_zone_ruleset_ids[each.key],
+        []
+      )) == 0 || try(data.external.cloudflare_ruleset_snapshot[each.key].result.matches == "true", false)
+      error_message = "Adopted zone ${each.value.zone_key} ${each.value.phase} ruleset differs from its reviewed snapshot at ${try(data.external.cloudflare_ruleset_snapshot[each.key].result.differences, "unknown")}. Re-inventory and reconcile before adoption."
+    }
   }
 }

@@ -1,6 +1,10 @@
 mock_provider "azurerm" {}
 mock_provider "cloudflare" {}
-mock_provider "external" {}
+mock_provider "external" {
+  mock_data "external" {
+    defaults = { result = { matches = "true" } }
+  }
+}
 
 override_data {
   target = data.terraform_remote_state.platform_workloads
@@ -90,10 +94,22 @@ run "management_declaration_adopts_existing_zone_without_allowlist" {
     target = data.cloudflare_zone.adopt["example.invalid"]
     values = { zone_id = "00000000000000000000000000000002" }
   }
+  override_data {
+    target = data.external.cloudflare_zone_settings_snapshot["example.invalid"]
+    values = { result = { matches = "true", differences = "[]" } }
+  }
 
   override_resource {
     target = cloudflare_zone.managed["example.invalid"]
     values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_dnssec.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
+    values = { id = "00000000000000000000000000000002/ssl" }
   }
 
   assert {
@@ -106,6 +122,38 @@ run "management_declaration_adopts_existing_zone_without_allowlist" {
     )
     error_message = "An existing Terraform-managed zone must use its discovered zone rather than its external identifier."
   }
+}
+
+run "adoption_rejects_settings_drift" {
+  command = plan
+
+  variables {
+    dns_zones_path        = "tests/fixtures/activated-adoption"
+    cloudflare_account_id = "00000000000000000000000000000000"
+  }
+
+  override_data {
+    target = data.cloudflare_zone.adopt["example.invalid"]
+    values = { zone_id = "00000000000000000000000000000002" }
+  }
+  override_data {
+    target = data.external.cloudflare_zone_settings_snapshot["example.invalid"]
+    values = { result = { matches = "false", differences = "[\"ssl\"]" } }
+  }
+  override_resource {
+    target = cloudflare_zone.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_dnssec.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
+    values = { id = "00000000000000000000000000000002/ssl" }
+  }
+
+  expect_failures = [cloudflare_zone_setting.managed["example.invalid/ssl"]]
 }
 
 run "managed_new_zone_needs_no_adoption" {
@@ -143,6 +191,10 @@ run "preservation_rejects_missing_firewall" {
   override_resource {
     target = cloudflare_zone.managed["example.invalid"]
     values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
+    values = { id = "00000000000000000000000000000002/ssl" }
   }
 
   expect_failures = [cloudflare_ruleset.zone_custom_firewall["example.invalid"]]

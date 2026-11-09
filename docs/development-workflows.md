@@ -145,7 +145,14 @@ record matching support before declaring them.
 
 For adopted zones, set `settings_preserve_existing: true` and include an
 explicit snapshot in `settings`; plan-profile defaults are not inherited.
-Review the snapshot against the live editable settings before adoption.
+The adoption plan reads each configured live setting and each existing configured
+ruleset, rejecting missing or mismatched values, extra or reordered rules, and
+provider read errors before import. A configured managed-ruleset version of
+`latest` is matched to Cloudflare's provider-resolved active version. Keep
+`adopt_existing: true` through the
+import deployment. After imports are present in state, set it to `false` in a
+follow-up change to leave adoption-only snapshot checks and continue ordinary
+day-2 configuration changes.
 
 ### Staged xtremeidiots.com handoff
 

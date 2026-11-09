@@ -1,6 +1,10 @@
 mock_provider "azurerm" {}
 mock_provider "cloudflare" {}
-mock_provider "external" {}
+mock_provider "external" {
+  mock_data "external" {
+    defaults = { result = { matches = "true" } }
+  }
+}
 
 override_data {
   target = data.terraform_remote_state.platform_workloads
@@ -33,32 +37,22 @@ run "zone_controls_are_configuration_driven" {
     values = { zone_id = "00000000000000000000000000000002" }
   }
   override_data {
-    target = data.cloudflare_dns_records.adopt["example.invalid"]
-    values = { result = tolist([]) }
-  }
-  override_data {
-    target = data.cloudflare_rulesets.adopt["example.invalid"]
-    values = {
-      rulesets = toset([for ruleset in [{
-        id           = ""
-        name         = ""
-        description  = ""
-        kind         = ""
-        phase        = ""
-        version      = ""
-        last_updated = ""
-      }] : ruleset if false])
-    }
-  }
-  override_data {
     target = data.external.cloudflare_page_rule["example.invalid/stats"]
     values = { result = { id = "" } }
   }
+
   override_resource {
     target = cloudflare_zone.managed["example.invalid"]
     values = { id = "00000000000000000000000000000002" }
   }
-
+  override_resource {
+    target = cloudflare_zone_dnssec.managed["example.invalid"]
+    values = { id = "00000000000000000000000000000002" }
+  }
+  override_resource {
+    target = cloudflare_zone_setting.managed["example.invalid/ssl"]
+    values = { id = "00000000000000000000000000000002/ssl" }
+  }
   assert {
     condition = (
       cloudflare_ruleset.zone_configured["example.invalid/http_ratelimit"].phase == "http_ratelimit" &&

@@ -1,5 +1,10 @@
 mock_provider "azurerm" {}
 mock_provider "cloudflare" {}
+mock_provider "external" {
+  mock_data "external" {
+    defaults = { result = { matches = "true", differences = "[]" } }
+  }
+}
 
 override_data {
   target = data.terraform_remote_state.platform_workloads

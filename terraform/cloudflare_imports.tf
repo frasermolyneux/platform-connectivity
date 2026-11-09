@@ -35,6 +35,20 @@ data "cloudflare_rulesets" "adopt" {
   zone_id = data.cloudflare_zone.adopt[each.key].zone_id
 }
 
+data "external" "cloudflare_zone_settings_snapshot" {
+  for_each = local.cloudflare_zones_to_adopt
+
+  program = ["python3", "${path.module}/scripts/compare_zone_settings.py"]
+  query = {
+    zone_id = data.cloudflare_zone.adopt[each.key].zone_id
+    expected = jsonencode({
+      for key, setting in local.managed_cloudflare_zone_settings :
+      setting.setting_id => setting.value
+      if setting.zone_key == each.key
+    })
+  }
+}
+
 locals {
   # Adopt-existing zones read the live zone and import its objects. New domains
   # (adopt_existing absent/false) are created fresh with no data-source read, so
@@ -130,6 +144,32 @@ locals {
     for key, ruleset in local.cloudflare_zone_rulesets :
     key => ruleset
     if contains(keys(local.cf_zone_ruleset_ids), key) && length(local.cf_zone_ruleset_ids[key]) == 1
+  }
+}
+
+data "external" "cloudflare_ruleset_snapshot" {
+  for_each = local.cf_zone_ruleset_discovery
+
+  program = ["python3", "${path.module}/scripts/compare_ruleset_snapshot.py"]
+  query = {
+    expected = jsonencode({
+      name        = each.value.name
+      description = try(each.value.description, null)
+      kind        = "zone"
+      phase       = each.value.phase
+      rules = [
+        for index, rule in each.value.rules : merge(rule, {
+          ref = try(rule.ref, data.cloudflare_ruleset.existing_zone_ruleset[each.key].rules[index].ref, null)
+        })
+      ]
+    })
+    actual = jsonencode({
+      name        = data.cloudflare_ruleset.existing_zone_ruleset[each.key].name
+      description = data.cloudflare_ruleset.existing_zone_ruleset[each.key].description
+      kind        = data.cloudflare_ruleset.existing_zone_ruleset[each.key].kind
+      phase       = data.cloudflare_ruleset.existing_zone_ruleset[each.key].phase
+      rules       = data.cloudflare_ruleset.existing_zone_ruleset[each.key].rules
+    })
   }
 }
 
