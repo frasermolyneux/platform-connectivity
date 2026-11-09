@@ -6,6 +6,7 @@ import sys
 
 ADDRESS = 'cloudflare_ruleset.origin_tls["xtremeidiots.net"]'
 HOST = "redirect.xtremeidiots.net"
+ZONE = "xtremeidiots.net"
 
 
 class Rejected(ValueError):
@@ -23,6 +24,34 @@ def has_unknown(value):
     if isinstance(value, list):
         return any(has_unknown(item) for item in value)
     return value is not False and value is not None
+
+
+def expected_zone_identity(plan, zone):
+    require(zone.get("name") == ZONE and zone.get("dns_provider") == "cloudflare",
+            "unexpected zone configuration")
+    if zone.get("management", "external") == "external":
+        return zone["zone_id"]
+
+    resources = plan.get("planned_values", {}).get("root_module", {}).get("resources", [])
+    managed = [resource for resource in resources
+               if resource.get("address") == f'cloudflare_zone.managed["{ZONE}"]'
+               and resource.get("mode") == "managed"
+               and resource.get("type") == "cloudflare_zone"]
+    require(len(managed) == 1, "managed zone identity missing or ambiguous")
+    values = managed[0].get("values", {})
+    zone_id = values.get("id")
+    require(values.get("name") == ZONE and isinstance(zone_id, str) and bool(zone_id),
+            "unexpected managed zone identity")
+    if zone.get("adopt_existing") is True:
+        discovered = [resource for resource in resources
+                      if resource.get("address") == f'data.cloudflare_zone.adopt["{ZONE}"]'
+                      and resource.get("mode") == "data"
+                      and resource.get("type") == "cloudflare_zone"]
+        require(len(discovered) == 1, "adopted zone discovery missing or ambiguous")
+        live = discovered[0].get("values", {})
+        require(live.get("name") == ZONE and live.get("zone_id") == zone_id,
+                "adopted and managed zone identities differ")
+    return zone_id
 
 
 def validate(plan, expected_zone_id, operation="add"):
@@ -126,12 +155,13 @@ def main():
     try:
         zone_file = Path(__file__).resolve().parents[1] / "zones" / "xtremeidiots.net.json"
         with zone_file.open(encoding="utf-8") as file:
-            expected_zone_id = json.load(file)["zone_id"]
+            zone = json.load(file)
         if len(sys.argv) != 2 or sys.argv[1] not in {"add", "remove"}:
             raise Rejected("invalid arguments")
-        validate(json.load(sys.stdin), expected_zone_id, sys.argv[1])
+        plan = json.load(sys.stdin)
+        validate(plan, expected_zone_identity(plan, zone), sys.argv[1])
         print("Strict TLS plan scope accepted.")
-    except (Rejected, ValueError, TypeError, KeyError) as error:
+    except (Rejected, ValueError, TypeError, KeyError, OSError) as error:
         print(f"Strict TLS plan rejected: {error}", file=sys.stderr)
         return 1
     return 0

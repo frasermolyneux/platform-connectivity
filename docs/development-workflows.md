@@ -53,6 +53,11 @@ with no unrelated changes. Explicit rule logging is rejected; stop for separate
 review if the live rule contains it. The workflow checks the current `main` SHA
 and a binding to the reviewed Terraform source, then applies the same
 scope-validated saved plan. A source change can invalidate that binding.
+After zone adoption, the guard obtains the expected zone identity from the
+named managed zone in the saved plan and cross-checks its live discovery
+while `adopt_existing` is enabled. It does not derive that identity from the
+TLS target itself or require a committed Cloudflare identifier. CLI regression
+tests also verify both workflow source bindings.
 
 For rollback, obtain separate authorization and a reviewed procedure before
 changing the `.net` `origin_tls_hostnames` list to `[]`. A matching main push
