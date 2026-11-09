@@ -1,0 +1,35 @@
+{
+  "name": "api.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "free",
+  "records": [
+    { "key": "api-origin", "type": "A", "name": "api", "content": "192.0.2.20", "proxied": true, "ttl": 1 }
+  ],
+  "rulesets": {
+    "http_ratelimit": {
+      "name": "Synthetic rate limit",
+      "description": "Test-only ruleset",
+      "rules": [{
+        "action": "managed_challenge",
+        "description": "Synthetic challenge",
+        "enabled": true,
+        "expression": "(http.host eq \"api.example.test\")",
+        "ratelimit": {
+          "characteristics": ["ip.src"],
+          "mitigation_timeout": 60,
+          "period": 60,
+          "requests_per_period": 10
+        }
+      }]
+    }
+  },
+  "page_rules": {
+    "status": {
+      "target": "https://status.api.example.test/*",
+      "priority": 1,
+      "status": "active",
+      "actions": { "ssl": "full" }
+    }
+  }
+}

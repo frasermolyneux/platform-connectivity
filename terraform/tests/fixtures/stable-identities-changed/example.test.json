@@ -1,0 +1,8 @@
+{
+  "name": "example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000004",
+  "records": [
+    { "key": "web-origin", "type": "A", "name": "www", "content": "198.51.100.10", "proxied": true, "ttl": 1 }
+  ]
+}

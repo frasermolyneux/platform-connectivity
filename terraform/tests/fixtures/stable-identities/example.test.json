@@ -1,0 +1,20 @@
+{
+  "name": "example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000004",
+  "records": [
+    { "key": "web-origin", "type": "A", "name": "www", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
+    {
+      "key": "service-primary",
+      "type": "SRV",
+      "name": "_service._udp",
+      "data": { "priority": 10, "weight": 5, "port": 9000, "target": "server.example.test" }
+    },
+    {
+      "key": "service-secondary",
+      "type": "SRV",
+      "name": "_service._udp",
+      "data": { "priority": 20, "weight": 5, "port": 9000, "target": "server.example.test" }
+    }
+  ]
+}

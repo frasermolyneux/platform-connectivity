@@ -1,0 +1,8 @@
+{
+  "name": "example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000004",
+  "records": [
+    { "type": "CAA", "name": "@", "content": "0 issue \"ca.example.test\"" }
+  ]
+}

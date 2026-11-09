@@ -1,0 +1,9 @@
+{
+  "name": "edge.example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000003",
+  "origin_tls_hostnames": ["maps.edge.example.test", "maps.edge.example.test"],
+  "records": [
+    { "type": "A", "name": "maps", "content": "192.0.2.1", "proxied": true, "ttl": 1 }
+  ]
+}

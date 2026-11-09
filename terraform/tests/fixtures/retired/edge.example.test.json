@@ -1,7 +1,7 @@
 {
-  "name": "xtremeidiots.net",
+  "name": "edge.example.test",
   "dns_provider": "cloudflare",
-  "zone_id": "00000000000000000000000000000000",
+  "zone_id": "00000000000000000000000000000003",
   "backup_to_azure": false,
   "origin_tls_hostnames": [],
   "records": []

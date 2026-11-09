@@ -1,6 +1,10 @@
 locals {
-  maintenance_hosts = jsondecode(file("${path.module}/../maintenance/hosts.json"))
+  maintenance_hosts = var.maintenance_hosts_override != "" ? jsondecode(var.maintenance_hosts_override) : jsondecode(file("${path.module}/../maintenance/hosts.json"))
   maintenance_modes = var.maintenance_enabled ? toset(["page", "redirect"]) : toset([])
+  maintenance_canary_hosts = [
+    for host in local.maintenance_hosts : host if try(host.canary, false)
+  ]
+  maintenance_canary_host = try(one(local.maintenance_canary_hosts), null)
   maintenance_proxied_hosts = toset(flatten([
     for zone in values(local.active_cloudflare_zones) : [
       for record in try(zone.records, []) :
@@ -29,14 +33,16 @@ resource "cloudflare_workers_script" "maintenance" {
       condition = (
         var.environment == "prd" && var.cloudflare_account_id != "" &&
         length(distinct([for host in local.maintenance_hosts : host.hostname])) == length(local.maintenance_hosts) &&
+        length(local.maintenance_canary_hosts) == 1 &&
         alltrue([for host in local.maintenance_hosts :
-          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false) && host.hostname == "maintenance-check.bishopsbees.co.uk") &&
+          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false)) &&
           !contains(["mxstatus.io", "status.xtremeidiots.com"], host.hostname) &&
           !strcontains(host.hostname, "*") &&
-          contains(["mx", "xi"], host.site)
+          contains(["mx", "xi"], host.site) &&
+          contains(keys(local.cloudflare_zone_ids), host.zone)
         ])
       )
-      error_message = "Maintenance requires production, a Cloudflare account, and unique exact proxied hostnames excluding status sites."
+      error_message = "Maintenance requires production, a Cloudflare account, exactly one canary host, and unique exact proxied hostnames in configured Cloudflare zones."
     }
 
   }
@@ -54,9 +60,9 @@ resource "cloudflare_workers_script" "maintenance_canary" {
 resource "cloudflare_workers_custom_domain" "maintenance_canary" {
   count      = var.maintenance_enabled ? 1 : 0
   account_id = var.cloudflare_account_id
-  hostname   = "maintenance-check.bishopsbees.co.uk"
+  hostname   = try(local.maintenance_canary_host.hostname, "")
   service    = cloudflare_workers_script.maintenance_canary[0].script_name
-  zone_id    = local.cloudflare_zone_ids["bishopsbees.co.uk"]
+  zone_id    = try(local.cloudflare_zone_ids[local.maintenance_canary_host.zone], "")
 }
 
 output "maintenance_runtime" {

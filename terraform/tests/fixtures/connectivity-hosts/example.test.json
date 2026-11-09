@@ -1,0 +1,14 @@
+{
+  "name": "example.test",
+  "dns_provider": "cloudflare",
+  "zone_id": "00000000000000000000000000000002",
+  "backup_to_azure": false,
+  "legacy_apex_redirect_disabled": true,
+  "origin_tls_hostnames": ["example.test", "www.example.test"],
+  "records": [
+    { "type": "A", "name": "@", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
+    { "type": "A", "name": "www", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
+    { "type": "A", "name": "maps", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
+    { "type": "A", "name": "maintenance-check", "content": "192.0.2.10", "proxied": true, "ttl": 1 }
+  ]
+}
