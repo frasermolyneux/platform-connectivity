@@ -5,8 +5,11 @@ This repository uses Terraform to manage shared tenant DNS connectivity.
 - Public DNS configuration is in `terraform/zones/`; Private Link zones are in
   `terraform/private_link_zones/`.
 - Environment behavior is selected by `terraform/tfvars/`. Dev creates only its
-  DNS resource group; Production enables public DNS, Private Link zones and
+  DNS resource group; Production enables public DNS and
   maintenance Workers.
+- Private Link DNS is optional. Add zone names to the environment's
+  `private_link_zones_file` JSON list when required; an empty list provisions
+  no private zones. Production currently configures an empty list.
 - Root Terraform configuration and the published output contract are in
   `terraform/*.tf` and `terraform/outputs.tf`.
 - `platform-workloads` remote state supplies workload resource-group metadata.
