@@ -1,0 +1,8 @@
+{
+  "name": "mail.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "free",
+  "waf_custom_rules_enabled": false,
+  "records": []
+}

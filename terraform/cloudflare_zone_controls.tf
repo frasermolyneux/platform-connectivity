@@ -1,7 +1,30 @@
 locals {
+  cloudflare_managed_waf_ruleset_ids = {
+    free = "77454fe2d30c4220b5701f6fdfb893ba"
+    pro  = "efb7b8c949ac4650a09736fc376e9aee"
+  }
+
   cloudflare_zone_rulesets = merge({}, [
     for zone_key, zone in local.managed_cloudflare_zones : {
-      for phase, ruleset in try(zone.rulesets, {}) :
+      for phase, ruleset in merge(
+        length(try(zone.managed_waf_hostnames, [])) == 0 ? {} : {
+          http_request_firewall_managed = {
+            name        = "Terraform-managed WAF"
+            description = "Managed protection for declared HTTP services"
+            rules = [{
+              ref         = "execute_managed_waf"
+              description = "Execute the plan-appropriate Cloudflare managed ruleset"
+              action      = "execute"
+              enabled     = true
+              expression  = "http.host in {${join(" ", [for hostname in zone.managed_waf_hostnames : jsonencode(hostname)])}}"
+              action_parameters = {
+                id = local.cloudflare_managed_waf_ruleset_ids[try(zone.plan_profile, "free")]
+              }
+            }]
+          }
+        },
+        try(zone.rulesets, {})
+      ) :
       "${zone_key}/${phase}" => merge(ruleset, {
         zone_key = zone_key
         phase    = phase
@@ -32,6 +55,21 @@ resource "cloudflare_page_rule" "managed" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+moved {
+  from = cloudflare_page_rule.managed["xtremeidiots.com/tcadmin"]
+  to   = cloudflare_page_rule.retired_tcadmin[0]
+}
+
+resource "cloudflare_page_rule" "retired_tcadmin" {
+  count = 0
+
+  zone_id  = ""
+  target   = ""
+  priority = 1
+  status   = "disabled"
+  actions  = {}
 }
 
 resource "cloudflare_ruleset" "zone_configured" {

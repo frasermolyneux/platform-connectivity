@@ -1,0 +1,9 @@
+{
+  "name": "free.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "free",
+  "managed_waf_hostnames": ["free.example.test", "www.free.example.test"],
+  "waf_custom_rules_enabled": false,
+  "records": []
+}

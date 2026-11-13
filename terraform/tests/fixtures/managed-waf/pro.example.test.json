@@ -1,0 +1,9 @@
+{
+  "name": "pro.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "pro",
+  "managed_waf_hostnames": ["pro.example.test"],
+  "waf_custom_rules_enabled": false,
+  "records": []
+}
