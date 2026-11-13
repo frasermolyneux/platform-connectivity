@@ -43,7 +43,7 @@ Use the PR workflows for state-backed plans. A production plan is opt-in through
 ## Material constraints
 
 - Use the compatibility constraints in `terraform/providers.tf`, the exact CLI pin in `terraform/.terraform-version`, and provider selections in `terraform/.terraform.lock.hcl`.
-- Dev intentionally creates only the DNS resource group. Prd enables public zones and Private Link zones through its tfvars.
+- Dev intentionally creates only the DNS resource group. Prd enables public zones; Private Link zones are optional through its JSON list.
 - State and remote state use Azure AD/OIDC. Do not add credentials, client secrets, or state identifiers discovered at runtime.
 - Do not run local `terraform import`, move/remove state, or change state addresses without an explicit migration task.
 - Commit each root's `.terraform-version` and `.terraform.lock.hcl`. Select the exact root CLI pin before invoking Terraform; normal initialization uses `-lockfile=readonly`. Regenerate provider selections only in a reviewed dependency-update PR; never commit state, plans, or `.terraform/`.
