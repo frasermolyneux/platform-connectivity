@@ -66,3 +66,50 @@ run "ruleset_rules_require_explicit_references" {
     cloudflare_ruleset.zone_custom_firewall["example.invalid"]
   ]
 }
+
+run "managed_waf_uses_plan_and_explicit_http_hosts" {
+  command = plan
+
+  variables {
+    dns_zones_path = "tests/fixtures/managed-waf"
+  }
+
+  assert {
+    condition = (
+      cloudflare_ruleset.zone_configured["free.example.test/http_request_firewall_managed"].rules[0].action_parameters.id == "77454fe2d30c4220b5701f6fdfb893ba" &&
+      cloudflare_ruleset.zone_configured["free.example.test/http_request_firewall_managed"].rules[0].expression == "http.host in {\"free.example.test\" \"www.free.example.test\"}" &&
+      cloudflare_ruleset.zone_configured["pro.example.test/http_request_firewall_managed"].rules[0].action_parameters.id == "efb7b8c949ac4650a09736fc376e9aee" &&
+      !contains(keys(local.cloudflare_zone_rulesets), "mail.example.test/http_request_firewall_managed") &&
+      cloudflare_ruleset.zone_configured["configured.example.test/http_request_firewall_managed"].rules[0].ref == "existing-rule"
+    )
+    error_message = "Managed WAF must use the plan-appropriate ruleset for declared HTTP hosts, preserve existing rulesets and exclude non-HTTP zones."
+  }
+}
+
+run "create_retired_page_rule_in_test_state" {
+  command   = apply
+  state_key = "retired_tcadmin"
+
+  module {
+    source = "./tests/fixtures/tcadmin-before"
+  }
+
+  assert {
+    condition     = cloudflare_page_rule.managed["xtremeidiots.com/tcadmin"].target == "*tcadmin.xtremeidiots.com/*"
+    error_message = "The synthetic retired Page Rule must exist before testing its removal."
+  }
+}
+
+run "retire_only_tcadmin_page_rule" {
+  command   = plan
+  state_key = "retired_tcadmin"
+
+  variables {
+    dns_zones_path = "tests/fixtures/tcadmin-after"
+  }
+
+  assert {
+    condition     = length(cloudflare_page_rule.retired_tcadmin) == 0 && length(cloudflare_page_rule.managed) == 0
+    error_message = "The retired Page Rule should be removed without disabling protection on other Page Rules."
+  }
+}

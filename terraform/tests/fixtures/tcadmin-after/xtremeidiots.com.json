@@ -1,0 +1,8 @@
+{
+  "name": "xtremeidiots.com",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "waf_custom_rules_enabled": false,
+  "records": [],
+  "page_rules": {}
+}

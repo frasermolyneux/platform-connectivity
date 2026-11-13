@@ -1,0 +1,21 @@
+{
+  "name": "configured.example.test",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "plan_profile": "pro",
+  "managed_waf_hostnames": ["configured.example.test"],
+  "waf_custom_rules_enabled": false,
+  "records": [],
+  "rulesets": {
+    "http_request_firewall_managed": {
+      "name": "existing",
+      "rules": [{
+        "ref": "existing-rule",
+        "action": "execute",
+        "enabled": true,
+        "expression": "true",
+        "action_parameters": { "id": "efb7b8c949ac4650a09736fc376e9aee" }
+      }]
+    }
+  }
+}

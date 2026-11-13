@@ -33,6 +33,21 @@ per type and independent of mutable content. Ruleset rules use explicit stable
 `ref` values. Custom firewall rulesets own an entire phase, so keep their
 configured rules complete and coordinated with the owning service.
 
+Managed Cloudflare zone snapshots set the minimum edge TLS version to 1.2.
+Page Rules retain destruction protection. The retired tcadmin Page Rule has
+a dedicated zero-instance resource and moved block to allow only its deletion;
+review that deletion in the production plan.
+
+`managed_waf_hostnames` declares exact proxied HTTP service hostnames and
+enables the plan-appropriate managed WAF: the Free Managed Ruleset on Free
+zones, or the broader Cloudflare Managed Ruleset on Pro zones. Unlisted
+hostnames, DNS-only and non-HTTP services are excluded. Explicit
+`http_request_firewall_managed` rulesets take precedence and must contain
+their complete desired configuration. Cloudflare may already own a phase
+entrypoint, including automatically deployed Free rules; reconcile its live
+contents and ownership before declaring hostnames for any additional zone.
+Do not treat an omitted hostname as proof that Cloudflare WAF is disabled.
+
 Keep one owner per Cloudflare resource. Workload-owned DNS, status-owned
 `http_config_settings` entrypoints, Worker-generated DNS records and
 runtime-managed Worker routes remain with their current stacks/controllers.

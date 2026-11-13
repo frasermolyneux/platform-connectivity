@@ -300,7 +300,7 @@
             "version": "latest"
           },
           "enabled": true,
-          "expression": "(not http.request.uri contains \"/duc\")",
+          "expression": "true",
           "description": ""
         },
         {
@@ -327,7 +327,7 @@
             "version": "latest"
           },
           "enabled": true,
-          "expression": "(not http.request.uri contains \"/duc\")",
+          "expression": "true",
           "description": ""
         }
       ]
@@ -339,9 +339,9 @@
         {
           "ref": "2b7a4ce4b9d34fe5b47ef61c86a4f96c",
           "action": "managed_challenge",
-          "description": "Requests > 20 in 10 Seconds - Challenge",
+          "description": "50 requests in 10 seconds - Challenge",
           "enabled": true,
-          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "expression": "(http.host eq \"www.xtremeidiots.com\")",
           "ratelimit": {
             "characteristics": [
               "ip.src",
@@ -355,9 +355,9 @@
         {
           "ref": "b67ea4f491e04cb090711e9fa1d92500",
           "action": "managed_challenge",
-          "description": "Duplicate of Requests > 150 in 1 Minute - Challenge",
+          "description": "150 requests in 1 minute - Challenge",
           "enabled": true,
-          "expression": "(http.host wildcard \"xtremeidiots.com\")",
+          "expression": "(http.host eq \"www.xtremeidiots.com\")",
           "ratelimit": {
             "characteristics": [
               "ip.src",
@@ -444,17 +444,6 @@
     ]
   },
   "page_rules": {
-    "tcadmin": {
-      "target": "*tcadmin.xtremeidiots.com/*",
-      "priority": 2,
-      "status": "active",
-      "actions": {
-        "ssl": "flexible",
-        "automatic_https_rewrites": "on",
-        "disable_apps": true,
-        "disable_performance": true
-      }
-    },
     "stats": {
       "target": "https://stats.xtremeidiots.com/*",
       "priority": 1,
