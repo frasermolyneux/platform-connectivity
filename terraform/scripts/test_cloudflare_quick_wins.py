@@ -33,6 +33,15 @@ class CloudflareQuickWinsTests(unittest.TestCase):
     def test_retired_tcadmin_configuration_is_absent(self):
         self.assertNotIn("tcadmin", json.dumps(self.xtremeidiots).lower())
 
+    def test_only_xtremeidiots_opts_into_zone_wide_bot_fight_mode(self):
+        self.assertIs(self.xtremeidiots["bot_fight_mode"], True)
+        self.assertEqual(self.xtremeidiots["management"], "terraform")
+        self.assertEqual(
+            [zone["name"] for zone in self.cloudflare_zones if "bot_fight_mode" in zone],
+            ["xtremeidiots.com"],
+        )
+        self.assertNotIn("bot_fight_mode", self.xtremeidiots["settings"])
+
     def test_rate_limits_target_www_and_describe_their_thresholds(self):
         rules = self.xtremeidiots["rulesets"]["http_ratelimit"]["rules"]
         self.assertEqual(len(rules), 2)

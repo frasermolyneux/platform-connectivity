@@ -3,6 +3,7 @@
   "dns_provider": "cloudflare",
   "management": "terraform",
   "plan_profile": "pro",
+  "bot_fight_mode": true,
   "dnssec_enabled": false,
   "settings_preserve_existing": true,
   "backup_to_azure": false,
