@@ -57,10 +57,13 @@ data "cloudflare_bot_management" "existing" {
 resource "cloudflare_bot_management" "managed" {
   for_each = local.cloudflare_bot_management_zones
 
-  zone_id                   = cloudflare_zone.managed[each.key].id
-  fight_mode                = try(each.value.bot_management.fight_mode, null)
-  sbfm_definitely_automated = try(each.value.bot_management.sbfm_definitely_automated, null)
-  sbfm_verified_bots        = try(each.value.bot_management.sbfm_verified_bots, null)
+  zone_id                         = cloudflare_zone.managed[each.key].id
+  fight_mode                      = try(each.value.bot_management.fight_mode, null)
+  sbfm_definitely_automated       = try(each.value.bot_management.sbfm_definitely_automated, null)
+  sbfm_likely_automated           = data.cloudflare_bot_management.existing[each.key].sbfm_likely_automated
+  sbfm_static_resource_protection = data.cloudflare_bot_management.existing[each.key].sbfm_static_resource_protection
+  optimize_wordpress              = data.cloudflare_bot_management.existing[each.key].optimize_wordpress
+  sbfm_verified_bots              = try(each.value.bot_management.sbfm_verified_bots, null)
 
   # The provider defaults these to false; retain the zone's existing preferences.
   ai_bots_migration_opt_out = data.cloudflare_bot_management.existing[each.key].ai_bots_migration_opt_out

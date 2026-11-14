@@ -43,8 +43,11 @@ run "zone_controls_are_configuration_driven" {
   override_data {
     target = data.cloudflare_bot_management.existing["example.invalid"]
     values = {
-      ai_bots_migration_opt_out = true
-      is_robots_txt_managed     = true
+      ai_bots_migration_opt_out       = true
+      is_robots_txt_managed           = true
+      sbfm_likely_automated           = "allow"
+      sbfm_static_resource_protection = false
+      optimize_wordpress              = false
     }
   }
   assert {
@@ -53,6 +56,9 @@ run "zone_controls_are_configuration_driven" {
       cloudflare_bot_management.managed["example.invalid"].zone_id == cloudflare_zone.managed["example.invalid"].id &&
       cloudflare_bot_management.managed["example.invalid"].fight_mode == false &&
       cloudflare_bot_management.managed["example.invalid"].sbfm_definitely_automated == "managed_challenge" &&
+      cloudflare_bot_management.managed["example.invalid"].sbfm_likely_automated == "allow" &&
+      cloudflare_bot_management.managed["example.invalid"].sbfm_static_resource_protection == false &&
+      cloudflare_bot_management.managed["example.invalid"].optimize_wordpress == false &&
       cloudflare_bot_management.managed["example.invalid"].sbfm_verified_bots == "allow" &&
       cloudflare_bot_management.managed["example.invalid"].ai_bots_migration_opt_out == true &&
       cloudflare_bot_management.managed["example.invalid"].is_robots_txt_managed == true
@@ -88,8 +94,11 @@ run "sbfm_settings_are_configurable_without_claiming_other_zones" {
   override_data {
     target = data.cloudflare_bot_management.existing["api.example.test"]
     values = {
-      ai_bots_migration_opt_out = false
-      is_robots_txt_managed     = false
+      ai_bots_migration_opt_out       = false
+      is_robots_txt_managed           = false
+      sbfm_likely_automated           = "allow"
+      sbfm_static_resource_protection = false
+      optimize_wordpress              = false
     }
   }
   assert {
@@ -98,6 +107,9 @@ run "sbfm_settings_are_configurable_without_claiming_other_zones" {
       toset(keys(data.cloudflare_bot_management.existing)) == toset(["api.example.test"]) &&
       cloudflare_bot_management.managed["api.example.test"].fight_mode == false &&
       cloudflare_bot_management.managed["api.example.test"].sbfm_definitely_automated == "managed_challenge" &&
+      cloudflare_bot_management.managed["api.example.test"].sbfm_likely_automated == "allow" &&
+      cloudflare_bot_management.managed["api.example.test"].sbfm_static_resource_protection == false &&
+      cloudflare_bot_management.managed["api.example.test"].optimize_wordpress == false &&
       cloudflare_bot_management.managed["api.example.test"].sbfm_verified_bots == "allow" &&
       cloudflare_bot_management.managed["api.example.test"].ai_bots_migration_opt_out == false &&
       cloudflare_bot_management.managed["api.example.test"].is_robots_txt_managed == false

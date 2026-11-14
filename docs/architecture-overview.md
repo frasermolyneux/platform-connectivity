@@ -52,15 +52,15 @@ For Terraform-managed zones, `bot_management` configures the supported
 `cloudflare_bot_management` controls. `xtremeidiots.com` uses Pro Super Bot
 Fight Mode zone-wide: challenge definitely automated traffic with a managed
 challenge and allow verified bots. The configuration disables legacy Bot Fight
-Mode and leaves other Super Bot Fight actions unchanged. These controls cover
-the whole zone, not only `www`, and may challenge API clients and monitoring
-traffic. Super Bot Fight Mode supports WAF custom-rule exceptions; this
-configuration adds none. The resource reads existing AI-bot migration and
-managed `robots.txt` preferences to preserve them instead of applying the
-provider's false defaults. Deployment credentials need Bot Management Read and
-Write permissions. To roll back, configure the desired SBFM actions explicitly;
-removing the declaration only stops Terraform management and does not reset
-live settings.
+Mode and retains the current likely-automated, static-resource, and WordPress
+SBFM settings. These controls cover the whole zone, not only `www`, and may
+challenge API clients and monitoring traffic. Super Bot Fight Mode supports
+WAF custom-rule exceptions; this configuration adds none. The resource reads
+existing AI-bot migration and managed `robots.txt` preferences to preserve them
+instead of applying the provider's false defaults. Deployment credentials need
+Bot Management Read and Write permissions. To roll back, configure the desired
+SBFM actions explicitly; removing the declaration only stops Terraform
+management and does not reset live settings.
 
 Keep one owner per Cloudflare resource. Workload-owned DNS, status-owned
 `http_config_settings` entrypoints, Worker-generated DNS records and
