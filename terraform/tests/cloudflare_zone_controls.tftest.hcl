@@ -55,7 +55,7 @@ run "zone_controls_are_configuration_driven" {
       length(cloudflare_bot_management.managed) == 1 &&
       cloudflare_bot_management.managed["example.invalid"].zone_id == cloudflare_zone.managed["example.invalid"].id &&
       cloudflare_bot_management.managed["example.invalid"].fight_mode == false &&
-      cloudflare_bot_management.managed["example.invalid"].sbfm_definitely_automated == "managed_challenge" &&
+      cloudflare_bot_management.managed["example.invalid"].sbfm_definitely_automated == "allow" &&
       cloudflare_bot_management.managed["example.invalid"].sbfm_likely_automated == "allow" &&
       cloudflare_bot_management.managed["example.invalid"].sbfm_static_resource_protection == false &&
       cloudflare_bot_management.managed["example.invalid"].optimize_wordpress == false &&
@@ -63,7 +63,7 @@ run "zone_controls_are_configuration_driven" {
       cloudflare_bot_management.managed["example.invalid"].ai_bots_migration_opt_out == true &&
       cloudflare_bot_management.managed["example.invalid"].is_robots_txt_managed == true
     )
-    error_message = "Super Bot Fight Mode must use the requested Pro settings and preserve existing AI and robots.txt preferences."
+    error_message = "Bot controls must honor the configured disabled action and preserve existing AI and robots.txt preferences."
   }
   assert {
     condition = (

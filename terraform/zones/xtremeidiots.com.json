@@ -5,7 +5,7 @@
   "plan_profile": "pro",
   "bot_management": {
     "fight_mode": false,
-    "sbfm_definitely_automated": "managed_challenge",
+    "sbfm_definitely_automated": "allow",
     "sbfm_verified_bots": "allow"
   },
   "dnssec_enabled": false,

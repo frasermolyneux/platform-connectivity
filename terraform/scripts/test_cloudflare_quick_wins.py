@@ -33,13 +33,14 @@ class CloudflareQuickWinsTests(unittest.TestCase):
     def test_retired_tcadmin_configuration_is_absent(self):
         self.assertNotIn("tcadmin", json.dumps(self.xtremeidiots).lower())
 
-    def test_only_xtremeidiots_opts_into_zone_wide_super_bot_fight_mode(self):
+    def test_xtremeidiots_bot_controls_return_to_default_allow_behavior(self):
         self.assertEqual(self.xtremeidiots["bot_management"]["fight_mode"], False)
         self.assertEqual(
             self.xtremeidiots["bot_management"]["sbfm_definitely_automated"],
-            "managed_challenge",
+            "allow",
         )
         self.assertEqual(self.xtremeidiots["bot_management"]["sbfm_verified_bots"], "allow")
+        self.assertNotIn("sbfm_likely_automated", self.xtremeidiots["bot_management"])
         self.assertEqual(self.xtremeidiots["management"], "terraform")
         self.assertEqual(
             [zone["name"] for zone in self.cloudflare_zones if "bot_management" in zone],
