@@ -5,7 +5,11 @@
   "settings_preserve_existing": true,
   "settings": { "ssl": "strict" },
   "plan_profile": "pro",
-  "bot_fight_mode": true,
+  "bot_management": {
+    "fight_mode": false,
+    "sbfm_definitely_automated": "managed_challenge",
+    "sbfm_verified_bots": "allow"
+  },
   "dnssec_enabled": false,
   "waf_custom_rules_enabled": true,
   "waf_custom_ruleset": {

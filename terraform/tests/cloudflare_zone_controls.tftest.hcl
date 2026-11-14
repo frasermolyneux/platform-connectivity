@@ -51,11 +51,13 @@ run "zone_controls_are_configuration_driven" {
     condition = (
       length(cloudflare_bot_management.managed) == 1 &&
       cloudflare_bot_management.managed["example.invalid"].zone_id == cloudflare_zone.managed["example.invalid"].id &&
-      cloudflare_bot_management.managed["example.invalid"].fight_mode == true &&
+      cloudflare_bot_management.managed["example.invalid"].fight_mode == false &&
+      cloudflare_bot_management.managed["example.invalid"].sbfm_definitely_automated == "managed_challenge" &&
+      cloudflare_bot_management.managed["example.invalid"].sbfm_verified_bots == "allow" &&
       cloudflare_bot_management.managed["example.invalid"].ai_bots_migration_opt_out == true &&
       cloudflare_bot_management.managed["example.invalid"].is_robots_txt_managed == true
     )
-    error_message = "Bot Fight Mode must target the declared zone and preserve provider-defaulted AI and robots.txt preferences."
+    error_message = "Super Bot Fight Mode must use the requested Pro settings and preserve existing AI and robots.txt preferences."
   }
   assert {
     condition = (
@@ -71,9 +73,9 @@ run "zone_controls_are_configuration_driven" {
   }
 }
 
-run "bot_fight_mode_can_be_disabled_without_claiming_other_zones" {
+run "sbfm_settings_are_configurable_without_claiming_other_zones" {
   command   = apply
-  state_key = "bot_fight_disabled"
+  state_key = "sbfm_configured"
 
   variables {
     dns_zones_path = "tests/fixtures/multi-zone"
@@ -95,10 +97,12 @@ run "bot_fight_mode_can_be_disabled_without_claiming_other_zones" {
       toset(keys(cloudflare_bot_management.managed)) == toset(["api.example.test"]) &&
       toset(keys(data.cloudflare_bot_management.existing)) == toset(["api.example.test"]) &&
       cloudflare_bot_management.managed["api.example.test"].fight_mode == false &&
+      cloudflare_bot_management.managed["api.example.test"].sbfm_definitely_automated == "managed_challenge" &&
+      cloudflare_bot_management.managed["api.example.test"].sbfm_verified_bots == "allow" &&
       cloudflare_bot_management.managed["api.example.test"].ai_bots_migration_opt_out == false &&
       cloudflare_bot_management.managed["api.example.test"].is_robots_txt_managed == false
     )
-    error_message = "An explicit false must disable Bot Fight Mode; omitted settings and externally managed zones must remain untouched."
+    error_message = "Pro Super Bot Fight settings must be explicit, preserve existing preferences, and exclude externally managed zones."
   }
 }
 

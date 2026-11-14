@@ -3,7 +3,11 @@
   "dns_provider": "cloudflare",
   "management": "terraform",
   "plan_profile": "free",
-  "bot_fight_mode": false,
+  "bot_management": {
+    "fight_mode": false,
+    "sbfm_definitely_automated": "managed_challenge",
+    "sbfm_verified_bots": "allow"
+  },
   "records": [
     { "key": "api-origin", "type": "A", "name": "api", "content": "192.0.2.20", "proxied": true, "ttl": 1 }
   ],

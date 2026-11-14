@@ -48,18 +48,19 @@ entrypoint, including automatically deployed Free rules; reconcile its live
 contents and ownership before declaring hostnames for any additional zone.
 Do not treat an omitted hostname as proof that Cloudflare WAF is disabled.
 
-For Terraform-managed zones, `bot_fight_mode: true` enables zone-wide Bot Fight
-Mode through `cloudflare_bot_management`; `false` explicitly disables it.
-Omitting the field leaves bot management untouched. `xtremeidiots.com` opts in
-for all Cloudflare-proxied HTTP traffic, not only `www`. Bot Fight Mode cannot
-be scoped to a hostname or bypassed with WAF custom rules or Page Rules, and
-may challenge API clients and monitoring traffic. This is not Super Bot Fight
-Mode. The resource reads existing AI-bot migration and managed `robots.txt`
-preferences to preserve them instead of applying the provider's false defaults;
-other bot settings remain unspecified. Deployment credentials need Bot Management
-Read and Write permissions. To roll back, set `bot_fight_mode` to `false`:
-removing the field only stops Terraform management and does not disable the
-live setting.
+For Terraform-managed zones, `bot_management` configures the supported
+`cloudflare_bot_management` controls. `xtremeidiots.com` uses Pro Super Bot
+Fight Mode zone-wide: challenge definitely automated traffic with a managed
+challenge and allow verified bots. The configuration disables legacy Bot Fight
+Mode and leaves other Super Bot Fight actions unchanged. These controls cover
+the whole zone, not only `www`, and may challenge API clients and monitoring
+traffic. Super Bot Fight Mode supports WAF custom-rule exceptions; this
+configuration adds none. The resource reads existing AI-bot migration and
+managed `robots.txt` preferences to preserve them instead of applying the
+provider's false defaults. Deployment credentials need Bot Management Read and
+Write permissions. To roll back, configure the desired SBFM actions explicitly;
+removing the declaration only stops Terraform management and does not reset
+live settings.
 
 Keep one owner per Cloudflare resource. Workload-owned DNS, status-owned
 `http_config_settings` entrypoints, Worker-generated DNS records and

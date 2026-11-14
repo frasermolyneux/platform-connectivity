@@ -2,7 +2,11 @@
   "name": "external.example.invalid",
   "dns_provider": "cloudflare",
   "management": "external",
-  "bot_fight_mode": true,
+  "bot_management": {
+    "fight_mode": false,
+    "sbfm_definitely_automated": "block",
+    "sbfm_verified_bots": "block"
+  },
   "zone_id": "00000000000000000000000000000005",
   "records": [
     { "type": "A", "name": "www", "content": "198.51.100.20", "proxied": true, "ttl": 1 }
