@@ -5,6 +5,7 @@
   "settings_preserve_existing": true,
   "settings": { "ssl": "strict" },
   "plan_profile": "pro",
+  "bot_fight_mode": true,
   "dnssec_enabled": false,
   "waf_custom_rules_enabled": true,
   "waf_custom_ruleset": {

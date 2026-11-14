@@ -21,7 +21,8 @@ variables {
 }
 
 run "zone_controls_are_configuration_driven" {
-  command = plan
+  command   = apply
+  state_key = "zone_controls"
 
   variables {
     dns_zones_path = "tests/fixtures/configured-zone-controls"
@@ -39,6 +40,23 @@ run "zone_controls_are_configuration_driven" {
     target = cloudflare_zone_setting.managed["example.invalid/ssl"]
     values = { id = "00000000000000000000000000000002/ssl" }
   }
+  override_data {
+    target = data.cloudflare_bot_management.existing["example.invalid"]
+    values = {
+      ai_bots_migration_opt_out = true
+      is_robots_txt_managed     = true
+    }
+  }
+  assert {
+    condition = (
+      length(cloudflare_bot_management.managed) == 1 &&
+      cloudflare_bot_management.managed["example.invalid"].zone_id == cloudflare_zone.managed["example.invalid"].id &&
+      cloudflare_bot_management.managed["example.invalid"].fight_mode == true &&
+      cloudflare_bot_management.managed["example.invalid"].ai_bots_migration_opt_out == true &&
+      cloudflare_bot_management.managed["example.invalid"].is_robots_txt_managed == true
+    )
+    error_message = "Bot Fight Mode must target the declared zone and preserve provider-defaulted AI and robots.txt preferences."
+  }
   assert {
     condition = (
       cloudflare_ruleset.zone_configured["example.invalid/http_ratelimit"].phase == "http_ratelimit" &&
@@ -50,6 +68,53 @@ run "zone_controls_are_configuration_driven" {
       local.cloudflare_zone_rulesets["example.invalid/http_ratelimit"].phase == "http_ratelimit"
     )
     error_message = "Rulesets and Page Rules must be configured directly with stable rule references."
+  }
+}
+
+run "bot_fight_mode_can_be_disabled_without_claiming_other_zones" {
+  command   = apply
+  state_key = "bot_fight_disabled"
+
+  variables {
+    dns_zones_path = "tests/fixtures/multi-zone"
+  }
+
+  override_resource {
+    target = cloudflare_zone.managed["api.example.test"]
+    values = { id = "00000000000000000000000000000003" }
+  }
+  override_data {
+    target = data.cloudflare_bot_management.existing["api.example.test"]
+    values = {
+      ai_bots_migration_opt_out = false
+      is_robots_txt_managed     = false
+    }
+  }
+  assert {
+    condition = (
+      toset(keys(cloudflare_bot_management.managed)) == toset(["api.example.test"]) &&
+      toset(keys(data.cloudflare_bot_management.existing)) == toset(["api.example.test"]) &&
+      cloudflare_bot_management.managed["api.example.test"].fight_mode == false &&
+      cloudflare_bot_management.managed["api.example.test"].ai_bots_migration_opt_out == false &&
+      cloudflare_bot_management.managed["api.example.test"].is_robots_txt_managed == false
+    )
+    error_message = "An explicit false must disable Bot Fight Mode; omitted settings and externally managed zones must remain untouched."
+  }
+}
+
+run "dev_has_no_bot_management" {
+  command = plan
+
+  variables {
+    dns_zones_path = ""
+  }
+
+  assert {
+    condition = (
+      length(cloudflare_bot_management.managed) == 0 &&
+      length(data.cloudflare_bot_management.existing) == 0
+    )
+    error_message = "Dev must not read or manage Cloudflare bot settings."
   }
 }
 

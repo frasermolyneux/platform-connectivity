@@ -1,4 +1,9 @@
 locals {
+  cloudflare_bot_fight_zones = {
+    for zone_key, zone in local.managed_cloudflare_zones :
+    zone_key => zone if try(zone.bot_fight_mode, null) != null
+  }
+
   cloudflare_managed_waf_ruleset_ids = {
     free = "77454fe2d30c4220b5701f6fdfb893ba"
     pro  = "efb7b8c949ac4650a09736fc376e9aee"
@@ -43,6 +48,23 @@ locals {
   ]...)
 
 }
+data "cloudflare_bot_management" "existing" {
+  for_each = local.cloudflare_bot_fight_zones
+
+  zone_id = cloudflare_zone.managed[each.key].id
+}
+
+resource "cloudflare_bot_management" "managed" {
+  for_each = local.cloudflare_bot_fight_zones
+
+  zone_id    = cloudflare_zone.managed[each.key].id
+  fight_mode = each.value.bot_fight_mode
+
+  # The provider defaults these to false; retain the zone's existing preferences.
+  ai_bots_migration_opt_out = data.cloudflare_bot_management.existing[each.key].ai_bots_migration_opt_out
+  is_robots_txt_managed     = data.cloudflare_bot_management.existing[each.key].is_robots_txt_managed
+}
+
 resource "cloudflare_page_rule" "managed" {
   for_each = local.cloudflare_page_rules
 
