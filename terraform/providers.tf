@@ -4,11 +4,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 5.12.0"
+      version = "~> 5.13.0"
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 5.28.1"
+      version = "~> 5.29.0"
     }
     external = {
       source  = "hashicorp/external"
