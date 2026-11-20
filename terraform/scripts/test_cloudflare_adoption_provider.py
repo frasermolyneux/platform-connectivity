@@ -17,11 +17,12 @@ RECORDS = [
     {"id": "00000000000000000000000000000002", "type": "CNAME", "name": "www.example.invalid",
      "content": "origin.example.invalid", "ttl": 1, "proxied": False},
     {"id": "00000000000000000000000000000003", "type": "MX", "name": "example.invalid",
-     "content": "mail.example.invalid", "ttl": 1, "priority": 0},
+     "content": "mail.example.invalid", "ttl": 1, "priority": 0, "proxied": False},
     {"id": "00000000000000000000000000000004", "type": "SRV", "name": "_sip._tcp.example.invalid",
-     "ttl": 1, "priority": 10, "data": {"priority": 10, "weight": 1, "port": 5061, "target": "sip.example.invalid"}},
+     "ttl": 1, "priority": 10, "proxied": False,
+     "data": {"priority": 10, "weight": 1, "port": 5061, "target": "sip.example.invalid"}},
     {"id": "00000000000000000000000000000005", "type": "TXT", "name": "_dmarc.example.invalid",
-     "content": '"v=DMARC1"', "ttl": 1},
+     "content": '"v=DMARC1"', "ttl": 1, "proxied": False},
 ]
 
 
@@ -30,7 +31,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.server.requests.append(self.path)
         url = urlsplit(self.path)
         query = parse_qs(url.query)
-        zone = {"id": ZONE, "name": "example.invalid", "account": {"id": ACCOUNT}, "type": "full", "status": "active"}
+        zone = {"id": ZONE, "name": "example.invalid", "account": {"id": ACCOUNT}, "type": "full",
+                "status": "active", "paused": False}
         records_path = f"/client/v4/zones/{ZONE}/dns_records"
         if url.path == "/client/v4/zones":
             result = [] if self.server.mode == "missing-zone" else [zone]
@@ -62,6 +64,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if result is None:
                 self.send_error(404)
                 return
+            if self.server.mode == "mismatched-proxy" and result["type"] == "CNAME":
+                result = {**result, "proxied": True}
         else:
             self.send_error(404)
             return
@@ -96,8 +100,8 @@ class CloudflareAdoptionTest(unittest.TestCase):
                 env = os.environ.copy()
                 env["CLOUDFLARE_BASE_URL"] = f"http://127.0.0.1:{server.server_address[1]}/client/v4/"
                 result = subprocess.run(
-                    [terraform, "test", "-test-directory=tests/import-fixture", "-no-color"],
-                    cwd=ROOT, env=env, capture_output=True, text=True,
+                    [terraform, "test", "-test-directory=tests/import-fixture", "-no-color", "-json", "-verbose"],
+                    cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8",
                 )
                 return result, server.requests
             finally:
@@ -107,6 +111,7 @@ class CloudflareAdoptionTest(unittest.TestCase):
     def test_imports_against_synthetic_cloudflare_api(self):
         result, requests = self.run_adoption("normal")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr + repr(requests))
+        self.assert_noop_imports(result)
         self.assertIn(f"/client/v4/zones/{ZONE}", requests)
         self.assertIn(f"/client/v4/zones/{ZONE}/dnssec", requests)
         for record in RECORDS:
@@ -114,9 +119,33 @@ class CloudflareAdoptionTest(unittest.TestCase):
         for suffix in ("06", "07", "08", "09"):
             self.assertNotIn(f"/client/v4/zones/{ZONE}/dns_records/{'0' * 30}{suffix}", requests)
 
+    def assert_noop_imports(self, result):
+        plans = [event["test_plan"] for line in result.stdout.splitlines()
+                 if "test_plan" in (event := json.loads(line))]
+        self.assertEqual(len(plans), 1)
+        imports = {change["address"]: change["change"]
+                   for change in plans[0]["resource_changes"] if change["change"].get("importing")}
+        expected = {
+            'cloudflare_zone.managed["example.invalid"]',
+            'cloudflare_zone_dnssec.managed["example.invalid"]',
+            'cloudflare_dns_record.cname["example.invalid|CNAME|alias"]',
+            'cloudflare_dns_record.mx["example.invalid|MX|mail"]',
+            'cloudflare_dns_record.srv["example.invalid|SRV|service"]',
+            'cloudflare_dns_record.txt["example.invalid|TXT|dmarc"]',
+        }
+        self.assertEqual(set(imports), expected)
+        for address, change in imports.items():
+            self.assertEqual(change["actions"], ["no-op"], address)
+
+    def test_import_assertion_detects_unintended_update(self):
+        result, _ = self.run_adoption("mismatched-proxy")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        with self.assertRaises(AssertionError):
+            self.assert_noop_imports(result)
+
     def test_missing_and_ambiguous_matches_fail_closed(self):
         for mode in ("missing-zone", "missing-record", "ambiguous-record"):
             with self.subTest(mode=mode):
                 result, _ = self.run_adoption(mode)
                 self.assertNotEqual(result.returncode, 0, result.stdout)
-                self.assertIn("Error:", result.stderr)
+                self.assertIn('"severity":"error"', result.stdout)
