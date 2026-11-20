@@ -76,7 +76,7 @@
                 "key": "dmarc",
                 "type": "TXT",
                 "name": "_dmarc",
-                "content": "v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io",
+                "content": "\"v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io\"",
                 "import_existing": true
             },
             {
