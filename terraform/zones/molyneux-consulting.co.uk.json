@@ -40,6 +40,13 @@
                 "import_existing": true
             },
             {
+                "key": "www-domain-validation",
+                "type": "TXT",
+                "name": "_dnsauth.www",
+                "ttl": 3600,
+                "content": "4n4xj4pnczcs92bxq0kt4lt56nrvkcgd"
+            },
+            {
                 "key": "sip-federation",
                 "type": "SRV",
                 "name": "_sipfederationtls._tcp",
