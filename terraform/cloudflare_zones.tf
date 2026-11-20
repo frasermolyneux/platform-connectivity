@@ -90,6 +90,18 @@ data "cloudflare_dns_records" "adoption" {
 }
 
 import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "A" }
+  to       = cloudflare_dns_record.a[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "AAAA" }
+  to       = cloudflare_dns_record.aaaa[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
   for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "CNAME" }
   to       = cloudflare_dns_record.cname[each.key]
   id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
