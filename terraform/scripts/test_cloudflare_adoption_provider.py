@@ -42,6 +42,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             result = [record for record in RECORDS
                       if record["name"] == query.get("name.exact", [""])[0]
                       and record["type"] == query.get("type", [""])[0]]
+            if self.server.mode == "missing-record" and query.get("type") == ["TXT"]:
+                result = []
+            if self.server.mode == "normal" and query.get("type") == ["CNAME"]:
+                result.append({**result[0], "id": "00000000000000000000000000000006",
+                               "content": "other.example.invalid"})
+            if self.server.mode == "normal" and query.get("type") == ["SRV"]:
+                result.append({**result[0], "id": "00000000000000000000000000000007",
+                               "priority": 20, "data": {**result[0]["data"], "priority": 20}})
+            if self.server.mode == "normal" and query.get("type") == ["MX"]:
+                result.append({**result[0], "id": "00000000000000000000000000000008", "priority": 10})
+            if self.server.mode == "normal" and query.get("type") == ["TXT"]:
+                result.append({**result[0], "id": "00000000000000000000000000000009",
+                               "content": '"v=other"'})
             if self.server.mode == "ambiguous-record" and query.get("type") == ["CNAME"]:
                 result.append({**result[0], "id": "00000000000000000000000000000006"})
         elif url.path.startswith(records_path + "/"):
@@ -98,9 +111,11 @@ class CloudflareAdoptionTest(unittest.TestCase):
         self.assertIn(f"/client/v4/zones/{ZONE}/dnssec", requests)
         for record in RECORDS:
             self.assertIn(f"/client/v4/zones/{ZONE}/dns_records/{record['id']}", requests)
+        for suffix in ("06", "07", "08", "09"):
+            self.assertNotIn(f"/client/v4/zones/{ZONE}/dns_records/{'0' * 30}{suffix}", requests)
 
-    def test_missing_zone_and_ambiguous_record_fail_closed(self):
-        for mode in ("missing-zone", "ambiguous-record"):
+    def test_missing_and_ambiguous_matches_fail_closed(self):
+        for mode in ("missing-zone", "missing-record", "ambiguous-record"):
             with self.subTest(mode=mode):
                 result, _ = self.run_adoption(mode)
                 self.assertNotEqual(result.returncode, 0, result.stdout)
