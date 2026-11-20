@@ -40,6 +40,32 @@ class CloudflareQuickWinsTests(unittest.TestCase):
                 else:
                     self.assertIn(tls, ("1.2", "1.3"))
 
+    def test_imported_zones_do_not_claim_custom_firewall(self):
+        zones = [
+            zone.get("cloudflare", zone)
+            for zone in self.zones
+        ]
+        adopted = [zone for zone in zones if zone.get("import_existing")]
+        self.assertTrue(adopted)
+        for zone in adopted:
+            with self.subTest(zone=zone.get("name", "migration")):
+                self.assertIs(zone.get("waf_custom_rules_enabled"), False)
+
+    def test_imported_microsoft_service_aliases_are_dns_only(self):
+        names = {
+            "autodiscover",
+            "enterpriseenrollment",
+            "enterpriseregistration",
+            "selector1._domainkey",
+            "selector2._domainkey",
+        }
+        for zone in self.zones:
+            cloudflare = zone.get("cloudflare", zone)
+            for record in cloudflare.get("records", []):
+                if record.get("import_existing") and record.get("name") in names:
+                    with self.subTest(zone=zone["name"], record=record["name"]):
+                        self.assertFalse(record["proxied"])
+
     def test_retired_tcadmin_configuration_is_absent(self):
         self.assertNotIn("tcadmin", json.dumps(self.xtremeidiots).lower())
 

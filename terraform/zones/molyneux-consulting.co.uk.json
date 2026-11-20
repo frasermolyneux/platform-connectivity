@@ -4,6 +4,7 @@
     "cloudflare": {
         "management": "terraform",
         "import_existing": true,
+        "waf_custom_rules_enabled": false,
         "settings_preserve_existing": true,
         "dnssec_enabled": false,
         "records": [
@@ -12,7 +13,7 @@
                 "type": "CNAME",
                 "name": "autodiscover",
                 "content": "autodiscover.outlook.com",
-                "proxied": true,
+                "proxied": false,
                 "import_existing": true
             },
             {
@@ -20,7 +21,7 @@
                 "type": "CNAME",
                 "name": "enterpriseenrollment",
                 "content": "enterpriseenrollment.manage.microsoft.com",
-                "proxied": true,
+                "proxied": false,
                 "import_existing": true
             },
             {
@@ -28,7 +29,7 @@
                 "type": "CNAME",
                 "name": "enterpriseregistration",
                 "content": "enterpriseregistration.windows.net",
-                "proxied": true,
+                "proxied": false,
                 "import_existing": true
             },
             {
