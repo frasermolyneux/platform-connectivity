@@ -56,6 +56,9 @@ class ProviderLoggingTest(unittest.TestCase):
         lock = (ROOT / ".terraform.lock.hcl").read_text()
         match = re.search(r'(?ms)^provider "registry\.terraform\.io/cloudflare/cloudflare" \{.*?^\}', lock)
         self.assertIsNotNone(match)
+        version_match = re.search(r'(?m)^\s*version\s*=\s*"([^"]+)"', match.group())
+        self.assertIsNotNone(version_match)
+        provider_version = version_match.group(1)
         ruleset = {
             "id": RULESET, "zone_id": ZONE, "name": "origin-tls-owner",
             "description": "Strict origin TLS only for explicitly selected proxied hostnames",
@@ -64,7 +67,7 @@ class ProviderLoggingTest(unittest.TestCase):
         }
         config = f'''terraform {{
   required_providers {{
-    cloudflare = {{ source = "cloudflare/cloudflare", version = "~> 5.28.1" }}
+    cloudflare = {{ source = "cloudflare/cloudflare", version = "= {provider_version}" }}
   }}
 }}
 provider "cloudflare" {{ api_token = "unused_placeholder_token_dev_environment" }}

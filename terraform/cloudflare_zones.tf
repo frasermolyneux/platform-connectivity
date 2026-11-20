@@ -54,3 +54,67 @@ resource "cloudflare_zone_setting" "managed" {
   setting_id = each.value.setting_id
   value      = each.value.value
 }
+
+locals {
+  cloudflare_zone_adoptions = { for key, zone in local.managed_cloudflare_zones : key => zone if try(zone.import_existing, false) }
+  cloudflare_record_adoptions = merge({}, [
+    for zone_key, zone in local.cloudflare_zone_adoptions : {
+      for record in zone.records : "${zone.name}|${record.type}|${record.key}" => {
+        zone_key = zone_key
+        type     = record.type
+        name     = record.name == "@" ? zone.name : "${record.name}.${zone.name}"
+      } if try(record.import_existing, false)
+    }
+  ]...)
+}
+
+data "cloudflare_zones" "adoption" {
+  for_each = local.cloudflare_zone_adoptions
+
+  account = { id = var.cloudflare_account_id }
+  name    = each.value.name
+}
+
+import {
+  for_each = local.cloudflare_zone_adoptions
+  to       = cloudflare_zone.managed[each.key]
+  id       = one(data.cloudflare_zones.adoption[each.key].result).id
+}
+
+data "cloudflare_dns_records" "adoption" {
+  for_each = local.cloudflare_record_adoptions
+
+  zone_id = one(data.cloudflare_zones.adoption[each.value.zone_key].result).id
+  name    = { exact = each.value.name }
+  type    = each.value.type
+}
+
+import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "CNAME" }
+  to       = cloudflare_dns_record.cname[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "MX" }
+  to       = cloudflare_dns_record.mx[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "SRV" }
+  to       = cloudflare_dns_record.srv[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
+  for_each = { for key, record in local.cloudflare_record_adoptions : key => record if record.type == "TXT" }
+  to       = cloudflare_dns_record.txt[each.key]
+  id       = "${one(data.cloudflare_zones.adoption[each.value.zone_key].result).id}/${one(data.cloudflare_dns_records.adoption[each.key].result).id}"
+}
+
+import {
+  for_each = local.cloudflare_zone_adoptions
+  to       = cloudflare_zone_dnssec.managed[each.key]
+  id       = one(data.cloudflare_zones.adoption[each.key].result).id
+}

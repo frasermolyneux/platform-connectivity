@@ -21,6 +21,13 @@ collections; Cloudflare zones use `records[]`. The JSON files are the source of
 truth for desired configuration; this document describes behavior, not a zone
 inventory.
 
+During migration an Azure zone may also declare a nested `cloudflare` object.
+Both zone resources remain managed, while `dns_zones` continues to expose the
+Azure zone until the migration is complete. Only explicitly listed Cloudflare
+records are managed; workload-owned records remain with their owners. Adopt
+existing zones and DNSSEC through `import_existing`, which resolves identifiers
+at plan time without committing them.
+
 Cloudflare zones default to `management: external`, which limits this stack to
 the explicitly configured records and hostname origin TLS overrides. Setting
 `management: terraform` declares zone-wide ownership. The zone JSON remains the
@@ -34,6 +41,8 @@ per type and independent of mutable content. Ruleset rules use explicit stable
 configured rules complete and coordinated with the owning service.
 
 Managed Cloudflare zone snapshots set the minimum edge TLS version to 1.2.
+Newly imported zones that do not yet declare settings retain their existing
+Cloudflare TLS minimum until their settings are reviewed.
 Page Rules retain destruction protection. The retired tcadmin Page Rule has
 a dedicated zero-instance resource and moved block to allow only its deletion;
 review that deletion in the production plan.

@@ -1,6 +1,58 @@
 {
     "name": "molyneux-consulting.co.uk",
     "dns_provider": "azure",
+    "cloudflare": {
+        "management": "terraform",
+        "import_existing": true,
+        "settings_preserve_existing": true,
+        "dnssec_enabled": false,
+        "records": [
+            {
+                "key": "autodiscover",
+                "type": "CNAME",
+                "name": "autodiscover",
+                "content": "autodiscover.outlook.com",
+                "proxied": true,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseenrollment",
+                "type": "CNAME",
+                "name": "enterpriseenrollment",
+                "content": "enterpriseenrollment.manage.microsoft.com",
+                "proxied": true,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseregistration",
+                "type": "CNAME",
+                "name": "enterpriseregistration",
+                "content": "enterpriseregistration.windows.net",
+                "proxied": true,
+                "import_existing": true
+            },
+            {
+                "key": "mail",
+                "type": "MX",
+                "name": "@",
+                "content": "molyneuxconsulting-co-uk02b.mail.protection.outlook.com",
+                "priority": 0,
+                "import_existing": true
+            },
+            {
+                "key": "sip-federation",
+                "type": "SRV",
+                "name": "_sipfederationtls._tcp",
+                "data": {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 5061,
+                    "target": "sipfed.online.lync.com"
+                },
+                "import_existing": true
+            }
+        ]
+    },
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [

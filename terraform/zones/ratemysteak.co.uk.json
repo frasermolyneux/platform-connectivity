@@ -1,0 +1,9 @@
+{
+  "name": "ratemysteak.co.uk",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "import_existing": true,
+  "settings_preserve_existing": true,
+  "dnssec_enabled": false,
+  "records": []
+}
