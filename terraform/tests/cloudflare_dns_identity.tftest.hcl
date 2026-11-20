@@ -120,3 +120,24 @@ run "preserved_settings_do_not_expand_profile_defaults" {
     error_message = "settings_preserve_existing must limit management to explicitly configured settings instead of inheriting profile defaults."
   }
 }
+
+run "dual_provider_keeps_azure_records_and_output" {
+  command = plan
+
+  variables {
+    dns_zones_path        = "tests/fixtures/dual-provider"
+    cloudflare_account_id = "00000000000000000000000000000000"
+  }
+
+  assert {
+    condition = (
+      contains(keys(local.azure_native_zones), "example.invalid") &&
+      contains(keys(local.managed_cloudflare_zones), "example.invalid") &&
+      contains(keys(local.a_records), "example.invalid/legacy") &&
+      contains(keys(local.cf_a_records), "example.invalid|A|replacement") &&
+      length(local.managed_cloudflare_zone_settings) == 0 &&
+      output.dns_zones["example.invalid"].dns_provider == "azure"
+    )
+    error_message = "Dual-provider migration must preserve Azure records and outputs while managing only explicitly listed Cloudflare records."
+  }
+}

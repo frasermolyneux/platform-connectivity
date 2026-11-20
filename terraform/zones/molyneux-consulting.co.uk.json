@@ -1,6 +1,90 @@
 {
     "name": "molyneux-consulting.co.uk",
     "dns_provider": "azure",
+    "cloudflare": {
+        "management": "terraform",
+        "import_existing": true,
+        "waf_custom_rules_enabled": false,
+        "settings_preserve_existing": true,
+        "dnssec_enabled": false,
+        "records": [
+            {
+                "key": "autodiscover",
+                "type": "CNAME",
+                "name": "autodiscover",
+                "content": "autodiscover.outlook.com",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseenrollment",
+                "type": "CNAME",
+                "name": "enterpriseenrollment",
+                "content": "enterpriseenrollment.manage.microsoft.com",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseregistration",
+                "type": "CNAME",
+                "name": "enterpriseregistration",
+                "content": "enterpriseregistration.windows.net",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "mail",
+                "type": "MX",
+                "name": "@",
+                "content": "molyneuxconsulting-co-uk02b.mail.protection.outlook.com",
+                "priority": 0,
+                "import_existing": true
+            },
+            {
+                "key": "www-domain-validation",
+                "type": "TXT",
+                "name": "_dnsauth.www",
+                "ttl": 3600,
+                "content": "4n4xj4pnczcs92bxq0kt4lt56nrvkcgd"
+            },
+            {
+                "key": "sip-federation",
+                "type": "SRV",
+                "name": "_sipfederationtls._tcp",
+                "data": {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 5061,
+                    "target": "sipfed.online.lync.com"
+                },
+                "import_existing": true
+            },
+            {
+                "key": "sip-tls-legacy",
+                "type": "SRV",
+                "name": "_sip_tls",
+                "ttl": 3600,
+                "data": {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 443,
+                    "target": "sipdir.online.lync.com"
+                }
+            },
+            {
+                "key": "sip-federation-legacy",
+                "type": "SRV",
+                "name": "_sipfederationtls_tcp",
+                "ttl": 3600,
+                "data": {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 5061,
+                    "target": "sipfed.online.lync.com"
+                }
+            }
+        ]
+    },
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [

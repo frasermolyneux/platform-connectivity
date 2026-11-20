@@ -20,7 +20,7 @@ output "dns_zones" {
         resource_group_name = null
         name_servers        = try(cloudflare_zone.managed[key].name_servers, [])
         dns_provider        = "cloudflare"
-      } if !try(z.backup_to_azure, false)
+      } if !try(z.backup_to_azure, false) && !contains(keys(local.azure_native_zones), key)
     }
   )
 }

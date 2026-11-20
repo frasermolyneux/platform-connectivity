@@ -15,7 +15,10 @@ locals {
   }
 
   azure_native_zones = { for k, z in local.all_zones : k => z if try(z.dns_provider, "azure") == "azure" }
-  cloudflare_zones   = { for k, z in local.all_zones : k => z if try(z.dns_provider, "azure") == "cloudflare" }
+  cloudflare_zones = merge(
+    { for k, z in local.all_zones : k => z if try(z.dns_provider, "azure") == "cloudflare" },
+    { for k, z in local.azure_native_zones : k => merge(z.cloudflare, { name = z.name }) if try(z.cloudflare, null) != null }
+  )
 
   managed_cloudflare_zones = { for k, z in local.cloudflare_zones : k => z if try(z.management, "external") == "terraform" }
   legacy_cloudflare_zones  = { for k, z in local.cloudflare_zones : k => z if try(z.management, "external") == "external" }
