@@ -1,6 +1,14 @@
 {
     "name": "molyneux.me",
     "dns_provider": "azure",
+    "cloudflare": {
+        "management": "terraform",
+        "import_existing": true,
+        "waf_custom_rules_enabled": false,
+        "settings_preserve_existing": true,
+        "dnssec_enabled": false,
+        "records": []
+    },
     "a_records": [],
     "aaaa_records": [],
     "cname_records": [],

@@ -20,15 +20,51 @@ class CloudflareQuickWinsTests(unittest.TestCase):
             zone for zone in cls.cloudflare_zones if zone["name"] == "xtremeidiots.com"
         )
 
-    def test_managed_cloudflare_zones_use_tls_1_2_or_higher(self):
+    def test_configured_managed_tls_versions_are_1_2_or_higher(self):
         managed = [
             zone for zone in self.cloudflare_zones
             if zone.get("management") == "terraform"
         ]
+        managed.extend(
+            zone["cloudflare"]
+            for zone in self.zones
+            if zone.get("cloudflare", {}).get("management") == "terraform"
+        )
         self.assertTrue(managed)
         for zone in managed:
-            with self.subTest(zone=zone["name"]):
-                self.assertIn(zone["settings"]["min_tls_version"], ("1.2", "1.3"))
+            with self.subTest(zone=zone.get("name", "migration")):
+                tls = zone.get("settings", {}).get("min_tls_version")
+                if tls is None:
+                    self.assertTrue(zone.get("import_existing"))
+                    self.assertTrue(zone.get("settings_preserve_existing"))
+                else:
+                    self.assertIn(tls, ("1.2", "1.3"))
+
+    def test_imported_zones_do_not_claim_custom_firewall(self):
+        zones = [
+            zone.get("cloudflare", zone)
+            for zone in self.zones
+        ]
+        adopted = [zone for zone in zones if zone.get("import_existing")]
+        self.assertTrue(adopted)
+        for zone in adopted:
+            with self.subTest(zone=zone.get("name", "migration")):
+                self.assertIs(zone.get("waf_custom_rules_enabled"), False)
+
+    def test_imported_microsoft_service_aliases_are_dns_only(self):
+        names = {
+            "autodiscover",
+            "enterpriseenrollment",
+            "enterpriseregistration",
+            "selector1._domainkey",
+            "selector2._domainkey",
+        }
+        for zone in self.zones:
+            cloudflare = zone.get("cloudflare", zone)
+            for record in cloudflare.get("records", []):
+                if record.get("import_existing") and record.get("name") in names:
+                    with self.subTest(zone=zone["name"], record=record["name"]):
+                        self.assertFalse(record["proxied"])
 
     def test_retired_tcadmin_configuration_is_absent(self):
         self.assertNotIn("tcadmin", json.dumps(self.xtremeidiots).lower())

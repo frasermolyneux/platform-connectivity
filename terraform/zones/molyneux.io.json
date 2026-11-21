@@ -1,6 +1,98 @@
 {
     "name": "molyneux.io",
     "dns_provider": "azure",
+    "cloudflare": {
+        "management": "terraform",
+        "import_existing": true,
+        "waf_custom_rules_enabled": false,
+        "settings_preserve_existing": true,
+        "dnssec_enabled": false,
+        "records": [
+            {
+                "key": "idp",
+                "type": "A",
+                "name": "idp",
+                "ttl": 300,
+                "content": "5.196.80.194",
+                "proxied": false
+            },
+            {
+                "key": "radar",
+                "type": "A",
+                "name": "radar",
+                "ttl": 300,
+                "content": "5.196.80.194",
+                "proxied": false
+            },
+            {
+                "key": "autodiscover",
+                "type": "CNAME",
+                "name": "autodiscover",
+                "content": "autodiscover.outlook.com",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseenrollment",
+                "type": "CNAME",
+                "name": "enterpriseenrollment",
+                "content": "enterpriseenrollment.manage.microsoft.com",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "enterpriseregistration",
+                "type": "CNAME",
+                "name": "enterpriseregistration",
+                "content": "enterpriseregistration.windows.net",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "dkim-selector1",
+                "type": "CNAME",
+                "name": "selector1._domainkey",
+                "content": "selector1-molyneux-io._domainkey.molyneuxio.r-v1.dkim.mail.microsoft",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "dkim-selector2",
+                "type": "CNAME",
+                "name": "selector2._domainkey",
+                "content": "selector2-molyneux-io._domainkey.molyneuxio.r-v1.dkim.mail.microsoft",
+                "proxied": false,
+                "import_existing": true
+            },
+            {
+                "key": "mail",
+                "type": "MX",
+                "name": "@",
+                "content": "molyneux-io.mail.protection.outlook.com",
+                "priority": 0,
+                "import_existing": true
+            },
+            {
+                "key": "dmarc",
+                "type": "TXT",
+                "name": "_dmarc",
+                "content": "\"v=DMARC1; p=reject; rua=mailto:dmarc@mx-mail.io\"",
+                "import_existing": true
+            },
+            {
+                "key": "sip-federation",
+                "type": "SRV",
+                "name": "_sipfederationtls._tcp",
+                "data": {
+                    "priority": 100,
+                    "weight": 1,
+                    "port": 5061,
+                    "target": "sipfed.online.lync.com"
+                },
+                "import_existing": true
+            }
+        ]
+    },
     "a_records": [
         {
             "name": "idp",

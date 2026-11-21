@@ -1,0 +1,24 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "azure",
+  "a_records": [
+    {
+      "name": "legacy",
+      "records": ["192.0.2.1"]
+    }
+  ],
+  "cloudflare": {
+    "management": "terraform",
+    "settings_preserve_existing": true,
+    "dnssec_enabled": false,
+    "records": [
+      {
+        "key": "replacement",
+        "type": "A",
+        "name": "replacement",
+        "content": "192.0.2.2",
+        "proxied": false
+      }
+    ]
+  }
+}
