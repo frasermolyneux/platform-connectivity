@@ -87,6 +87,7 @@ test('IDP and Radar bypass maintenance for API, OAuth and credential-bearing req
     ['idp.molyneux.io', 'GET', '/dashboard', { Cookie: '__Host-MxIdp=session' }],
     ['radar.molyneux.io', 'GET', '/dashboard', { Cookie: 'other=x; __Host-Radar=session' }],
     ['radar.molyneux.io', 'GET', '/dashboard', { Authorization: 'Bearer token' }],
+    ['idp.molyneux.io', 'GET', '/unrelated', { Cookie: '__Host-MxIdp=unverified' }],
   ];
   const original = globalThis.fetch;
   const calls = [];
@@ -130,6 +131,8 @@ test('bypass never changes anonymous navigation or unrelated and unregistered ho
     for (const [hostname, path, headers, method] of [
       ['idp.molyneux.io', '/dashboard', {}, 'GET'],
       ['radar.molyneux.io', '/dashboard', { Cookie: '__Host-Radar-CSRF=csrf' }, 'GET'],
+      ['idp.molyneux.io', '/dashboard', { Cookie: '__Host-MxIdp=' }, 'GET'],
+      ['idp.molyneux.io', '/dashboard', { Cookie: '__Host-Radar=session' }, 'GET'],
       ['idp.molyneux.io', '/apiculture', {}, 'GET'],
       ['idp.molyneux.io', '/auth/login', {}, 'POST'],
       ['radar.molyneux.io', '/auth/github/callback-extra', {}, 'GET'],

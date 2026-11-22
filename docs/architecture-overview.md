@@ -129,10 +129,14 @@ Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
 
 The Worker supports a maintenance bypass for registered `idp.molyneux.io` and
-`radar.molyneux.io`: all `/api` requests, OAuth login and callbacks, and requests carrying their
-session cookie or an Authorization header reach the origin. Anonymous browser
-navigation can still receive maintenance. The Worker does not authenticate
-credentials; origin authorization and signed webhook verification remain
+`radar.molyneux.io`: all `/api` requests, OAuth login and callbacks, and
+requests carrying their session cookie or an Authorization header reach the
+origin. API bypass includes anonymous requests: IDP's collector identity is
+deliberately anonymous discovery, and Radar's inventory events are verified by
+signature at the origin. Anonymous browser navigation without those routing
+signals can still receive maintenance. Headers and cookies can be supplied by
+any client and are not authenticated by the Worker, so maintenance is not an
+access control; origin authorization and webhook verification remain
 authoritative. These hostnames are not enrolled or proxied by this policy alone.
 
 TripSidekick's `.app` and `.net` zones, Talkwithtiles, BQBA and DM Electrical
