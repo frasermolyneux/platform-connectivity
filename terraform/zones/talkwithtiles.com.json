@@ -8,6 +8,26 @@
     "www.talkwithtiles.com"
   ],
   "management": "terraform",
+  "rulesets": {
+    "http_request_dynamic_redirect": {
+      "name": "Canonical host redirects",
+      "description": "Redirect the public alias to the canonical hostname",
+      "rules": [{
+        "ref": "canonical_hostname",
+        "description": "Redirect www to the canonical host",
+        "action": "redirect",
+        "enabled": true,
+        "expression": "http.host eq \"www.talkwithtiles.com\"",
+        "action_parameters": {
+          "from_value": {
+            "target_url": { "expression": "concat(\"https://talkwithtiles.com\", http.request.uri.path)" },
+            "status_code": 308,
+            "preserve_query_string": true
+          }
+        }
+      }]
+    }
+  },
   "settings_preserve_existing": true,
   "plan_profile": "free",
   "managed_waf_hostnames": ["talkwithtiles.com", "www.talkwithtiles.com"],
