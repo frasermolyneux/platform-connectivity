@@ -1,5 +1,25 @@
 locals {
-  maintenance_hosts = var.maintenance_hosts_override != "" ? jsondecode(var.maintenance_hosts_override) : jsondecode(file("${path.module}/../maintenance/hosts.json"))
+  ingress_catalog = jsondecode(file("${path.module}/../maintenance/ingress-catalog.json"))
+  ingress_hosts   = { for host in local.ingress_catalog.hosts : host.hostname => host }
+  maintenance_catalog_hosts = {
+    for host in local.ingress_catalog.hosts : host.hostname => {
+      hostname = host.hostname
+      zone     = host.zone
+      site     = host.target.alias_to == null ? host.target.status_brand : local.ingress_hosts[host.target.alias_to].target.status_brand
+    } if host.current.status
+  }
+  maintenance_extra_hosts = jsondecode(file("${path.module}/../maintenance/hosts.json"))
+  maintenance_hosts_by_name = merge(
+    local.maintenance_catalog_hosts,
+    { for host in local.maintenance_extra_hosts : host.hostname => host }
+  )
+  maintenance_host_order = jsondecode(file("${path.module}/../maintenance/host-order.json"))
+  maintenance_hosts = var.maintenance_hosts_override != "" ? jsondecode(var.maintenance_hosts_override) : [
+    for hostname in concat(
+      [for hostname in local.maintenance_host_order : hostname if contains(keys(local.maintenance_hosts_by_name), hostname)],
+      [for hostname in sort(keys(local.maintenance_hosts_by_name)) : hostname if !contains(local.maintenance_host_order, hostname)]
+    ) : local.maintenance_hosts_by_name[hostname]
+  ]
   maintenance_modes = var.maintenance_enabled ? toset(["page", "redirect"]) : toset([])
   maintenance_canary_hosts = [
     for host in local.maintenance_hosts : host if try(host.canary, false)

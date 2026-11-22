@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import worker from './worker.mjs';
 
-const hosts = JSON.parse(readFileSync(new URL('./hosts.json', import.meta.url)));
+const hosts = JSON.parse(readFileSync(new URL('../terraform/tests/fixtures/maintenance-hosts-baseline.json', import.meta.url)));
 const environment = { HOSTS: JSON.stringify(hosts), MODE: 'page' };
 const request = (hostname, method = 'GET', accept = 'text/html') =>
   new Request(`https://${hostname}/private/path?token=do-not-forward`, { method, headers: { Accept: accept } });

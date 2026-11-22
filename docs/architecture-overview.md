@@ -93,12 +93,24 @@ guarded strict-TLS change.
 
 ## Maintenance Workers
 
-`maintenance/hosts.json` registers exact proxied web hostnames and their status
-brand. `terraform/maintenance.tf` deploys stateless Worker modes in Production.
+`maintenance/ingress-catalog.json` is copied from `platform-workloads` commit
+`18b6ae285b98149c31cbf64407ab049c45bda66f`. The maintenance registry derives
+catalog hosts from `current.status`, resolving their existing status brand via
+the canonical target, and merges the canary and non-catalog hosts in
+`maintenance/hosts.json`. Target membership does not activate maintenance.
+`maintenance/host-order.json` preserves the deployed registry order; new current
+hosts append in hostname order.
+Existing aliases remain in the current registry until their routes can be
+restored and the controller configuration synchronized; target-only aliases
+do not gain independent controls. `terraform/maintenance.tf` deploys stateless
+Worker modes in Production.
 The `maintenance_runtime` output is consumed by `platform-baremetal`; the
 runtime controller owns active Worker routes. Connectivity must not create,
 clear or reset those routes. Restore routes before retiring a hostname from the
-registry. Do not proxy unrelated DNS-only services to enrol a host.
+registry. Baremetal materializes the output into the status workload's Key Vault;
+changes to registry membership require that configuration and the mounted
+controller metadata to be synchronized with the Workers. Do not proxy unrelated
+DNS-only services to enrol a host.
 
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.

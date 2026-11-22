@@ -37,6 +37,28 @@ run "development_has_no_workers_or_runtime_contract" {
   }
 }
 
+run "catalog_preserves_current_registry_without_activating_targets" {
+  command = plan
+  assert {
+    condition = (
+      jsonencode(local.maintenance_hosts) ==
+      jsonencode(jsondecode(file("tests/fixtures/maintenance-hosts-baseline.json")))
+    )
+    error_message = "The catalog and extra hosts must preserve the existing registry, including canary, legacy aliases and unrelated hosts."
+  }
+  assert {
+    condition = (
+      length(local.maintenance_hosts) == length(distinct([for host in local.maintenance_hosts : host.hostname])) &&
+      length(setintersection(toset(keys(local.maintenance_catalog_hosts)), toset([for host in local.maintenance_extra_hosts : host.hostname]))) == 0 &&
+      !contains(keys(local.maintenance_catalog_hosts), "talkwithtiles.com") &&
+      !contains(keys(local.maintenance_catalog_hosts), "tripsidekick.app") &&
+      !contains(keys(local.maintenance_catalog_hosts), "idp.molyneux.io") &&
+      !contains(keys(local.maintenance_catalog_hosts), "mxstatus.io")
+    )
+    error_message = "The merge must be deterministic and must not activate target-only or status-origin hosts."
+  }
+}
+
 run "production_deploys_worker_modes_and_exact_host_registry" {
   command = plan
   variables {
