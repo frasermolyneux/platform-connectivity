@@ -16,6 +16,10 @@ platform_workloads_state = {
 dns_zones_path          = "zones"
 private_link_zones_file = "private_link_zones/prd.json"
 maintenance_enabled     = true
+maintenance_controller_excluded_aliases = [
+  "www.bqba.co.uk",
+  "dm-electricalservices.co.uk",
+]
 
 tags = {
   Environment = "prd",
