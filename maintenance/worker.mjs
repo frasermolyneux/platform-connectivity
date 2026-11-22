@@ -2,11 +2,39 @@ const statusSites = { mx: 'https://mxstatus.io/', xi: 'https://status.xtremeidio
 const escapeHtml = text => text.replace(/[&<>"']/g, character =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 
+const maintenanceBypassCookies = new Map([
+  ['idp.molyneux.io', '__Host-MxIdp'],
+  ['radar.molyneux.io', '__Host-Radar'],
+]);
+
+function bypassMaintenance(request, hostname, pathname) {
+  const cookieName = maintenanceBypassCookies.get(hostname);
+  if (!cookieName) return false;
+
+  pathname = pathname.toLowerCase();
+  const cookies = (request.headers.get('Cookie') || '').split(';');
+  const hasSessionCookie = cookies.some(cookie => {
+    const separator = cookie.indexOf('=');
+    return separator !== -1 && cookie.slice(0, separator).trim() === cookieName
+      && cookie.slice(separator + 1).trim() !== '';
+  });
+  return Boolean(request.headers.get('Authorization')) || hasSessionCookie
+    || pathname === '/api' || pathname.startsWith('/api/')
+    || (pathname === '/auth/login' && request.method === 'GET')
+    || (pathname === '/signin-oidc' && ['GET', 'POST'].includes(request.method))
+    || (hostname === 'radar.molyneux.io' && pathname === '/auth/github/callback' && request.method === 'GET');
+}
+
 export default {
   async fetch(request, environment) {
-    const hostname = new URL(request.url).hostname.toLowerCase();
+    const url = new URL(request.url);
+    const hostname = url.hostname.toLowerCase();
     const hosts = JSON.parse(environment.HOSTS);
-    const site = hosts.find(host => host.hostname === hostname)?.site;
+    const host = hosts.find(host => host.hostname === hostname);
+    if (host && bypassMaintenance(request, hostname, url.pathname)) {
+      return fetch(new Request(request, { redirect: 'manual' }));
+    }
+    const site = host?.site;
     const statusUrl = statusSites[site];
     const headers = new Headers({
       'Cache-Control': 'no-store, max-age=0',

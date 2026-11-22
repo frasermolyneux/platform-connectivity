@@ -59,6 +59,109 @@ test('HEAD keeps response semantics without a body; unregistered hosts never fal
   assert.equal(unknown.headers.get('Location'), null);
 });
 
+test('IDP and Radar bypass maintenance for API, OAuth and credential-bearing requests', async () => {
+  const registered = { HOSTS: JSON.stringify([
+    ...hosts,
+    { hostname: 'idp.molyneux.io', site: 'mx' },
+    { hostname: 'radar.molyneux.io', site: 'mx' },
+  ]) };
+  const cases = [
+    ['idp.molyneux.io', 'POST', '/signin-oidc'],
+    ['idp.molyneux.io', 'GET', '/signin-oidc'],
+    ['idp.molyneux.io', 'GET', '/auth/login'],
+    ['idp.molyneux.io', 'GET', '/api/collector/identity'],
+    ['idp.molyneux.io', 'GET', '/api/collector/catalog'],
+    ['idp.molyneux.io', 'GET', '/API/collector/identity'],
+    ['idp.molyneux.io', 'GET', '/api/inventory/v1/workload-membership'],
+    ['idp.molyneux.io', 'GET', '/api/inventory/v1/workloads/one/documents'],
+    ['idp.molyneux.io', 'POST', '/api/inventory/runtime'],
+    ['idp.molyneux.io', 'POST', '/api/evidence'],
+    ['radar.molyneux.io', 'POST', '/signin-oidc'],
+    ['radar.molyneux.io', 'GET', '/auth/login'],
+    ['radar.molyneux.io', 'GET', '/auth/github/callback'],
+    ['radar.molyneux.io', 'POST', '/api/inventory/events'],
+    ['radar.molyneux.io', 'POST', '/api/collector/cyclonedx'],
+    ['radar.molyneux.io', 'POST', '/api/evaluations'],
+    ['radar.molyneux.io', 'GET', '/api/evaluations'],
+    ['radar.molyneux.io', 'GET', '/api/evaluations/one'],
+    ['idp.molyneux.io', 'GET', '/dashboard', { Cookie: '__Host-MxIdp=session' }],
+    ['radar.molyneux.io', 'GET', '/dashboard', { Cookie: 'other=x; __Host-Radar=session' }],
+    ['radar.molyneux.io', 'GET', '/dashboard', { Authorization: 'Bearer token' }],
+  ];
+  const original = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async forwarded => {
+    calls.push(forwarded);
+    return new Response('origin', { status: 302, headers: { Location: 'https://other.example/' } });
+  };
+  try {
+    for (const mode of ['page', 'redirect']) {
+      for (const [hostname, method, path, headers = {}] of cases) {
+        const incoming = new Request(`https://${hostname}${path}?q=one%2Btwo`, {
+          method, headers: { Accept: 'text/html', 'X-Signature': 'signature', ...headers },
+          ...(method === 'POST' ? { body: 'signed=payload' } : {}),
+        });
+        const response = await worker.fetch(incoming, { ...registered, MODE: mode });
+        const forwarded = calls.at(-1);
+        assert.equal(response.status, 302);
+        assert.equal(response.headers.get('Location'), 'https://other.example/');
+        assert.equal(forwarded.url, incoming.url);
+        assert.equal(forwarded.method, method);
+        assert.equal(forwarded.redirect, 'manual');
+        assert.equal(forwarded.headers.get('X-Signature'), 'signature');
+        assert.equal(forwarded.headers.get('Cookie'), incoming.headers.get('Cookie'));
+        assert.equal(forwarded.headers.get('Authorization'), incoming.headers.get('Authorization'));
+        if (method === 'POST') assert.equal(await forwarded.text(), 'signed=payload');
+      }
+    }
+    assert.equal(calls.length, cases.length * 2);
+  } finally { globalThis.fetch = original; }
+});
+
+test('bypass never changes anonymous navigation or unrelated and unregistered hosts', async () => {
+  const registered = { HOSTS: JSON.stringify([
+    ...hosts,
+    { hostname: 'idp.molyneux.io', site: 'mx' },
+    { hostname: 'radar.molyneux.io', site: 'mx' },
+  ]), MODE: 'redirect' };
+  const original = globalThis.fetch;
+  globalThis.fetch = () => { throw new Error('Unexpected origin request'); };
+  try {
+    for (const [hostname, path, headers, method] of [
+      ['idp.molyneux.io', '/dashboard', {}, 'GET'],
+      ['radar.molyneux.io', '/dashboard', { Cookie: '__Host-Radar-CSRF=csrf' }, 'GET'],
+      ['idp.molyneux.io', '/apiculture', {}, 'GET'],
+      ['idp.molyneux.io', '/auth/login', {}, 'POST'],
+      ['radar.molyneux.io', '/auth/github/callback-extra', {}, 'GET'],
+      ['radar.molyneux.io', '/auth/github/callback', {}, 'POST'],
+      ['idp.molyneux.io', '/signin-oidc', {}, 'DELETE'],
+      ['www.xtremeidiots.com', '/api/evidence', { Authorization: 'Bearer token' }, 'POST'],
+      ['unknown.example', '/api/evidence', { Authorization: 'Bearer token' }, 'POST'],
+    ]) {
+      const response = await worker.fetch(new Request(`https://${hostname}${path}`, {
+        method, headers: { Accept: 'text/html', ...headers },
+      }), registered);
+      assert.equal(response.status, 503);
+    }
+    const unregistered = new Request('https://idp.molyneux.io/api/collector/identity');
+    assert.equal((await worker.fetch(unregistered, environment)).status, 503);
+    const navigation = new Request('https://radar.molyneux.io/', {
+      headers: { Accept: 'text/html', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document' },
+    });
+    assert.equal((await worker.fetch(navigation, registered)).status, 302);
+  } finally { globalThis.fetch = original; }
+});
+
+test('origin failures propagate instead of returning a maintenance response', async () => {
+  const original = globalThis.fetch;
+  const error = new Error('origin unavailable');
+  globalThis.fetch = async () => { throw error; };
+  try {
+    const registered = { HOSTS: JSON.stringify([{ hostname: 'idp.molyneux.io', site: 'mx' }]) };
+    await assert.rejects(worker.fetch(new Request('https://idp.molyneux.io/api/evidence'), registered), error);
+  } finally { globalThis.fetch = original; }
+});
+
 test('registry admits exact proxied web hosts only and never includes status or wildcard hostnames', () => {
   const seen = new Set();
   for (const host of hosts) {
