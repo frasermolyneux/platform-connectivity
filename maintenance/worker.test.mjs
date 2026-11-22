@@ -59,7 +59,7 @@ test('HEAD keeps response semantics without a body; unregistered hosts never fal
   assert.equal(unknown.headers.get('Location'), null);
 });
 
-test('IDP and Radar bypass maintenance for API, OAuth and credential-bearing requests', async () => {
+test('IDP and Radar bypass only evidenced service methods and OAuth callbacks', async () => {
   const registered = { HOSTS: JSON.stringify([
     ...hosts,
     { hostname: 'idp.molyneux.io', site: 'mx' },
@@ -68,26 +68,26 @@ test('IDP and Radar bypass maintenance for API, OAuth and credential-bearing req
   const cases = [
     ['idp.molyneux.io', 'POST', '/signin-oidc'],
     ['idp.molyneux.io', 'GET', '/signin-oidc'],
-    ['idp.molyneux.io', 'GET', '/auth/login'],
-    ['idp.molyneux.io', 'GET', '/api/collector/identity'],
     ['idp.molyneux.io', 'GET', '/api/collector/catalog'],
-    ['idp.molyneux.io', 'GET', '/API/collector/identity'],
+    ['idp.molyneux.io', 'GET', '/API/collector/catalog'],
+    ['idp.molyneux.io', 'GET', '/api/collector/pipelines/workload'],
+    ['idp.molyneux.io', 'GET', '/api/collector/inventory/workloads'],
+    ['idp.molyneux.io', 'GET', '/api/collector/inventory/workloads/one'],
+    ['idp.molyneux.io', 'GET', '/api/collector/inventory/workloads/one/documents'],
     ['idp.molyneux.io', 'GET', '/api/inventory/v1/workload-membership'],
+    ['idp.molyneux.io', 'GET', '/api/inventory/v1/workloads'],
     ['idp.molyneux.io', 'GET', '/api/inventory/v1/workloads/one/documents'],
     ['idp.molyneux.io', 'POST', '/api/inventory/runtime'],
     ['idp.molyneux.io', 'POST', '/api/evidence'],
     ['radar.molyneux.io', 'POST', '/signin-oidc'],
-    ['radar.molyneux.io', 'GET', '/auth/login'],
+    ['radar.molyneux.io', 'GET', '/signin-oidc'],
     ['radar.molyneux.io', 'GET', '/auth/github/callback'],
     ['radar.molyneux.io', 'POST', '/api/inventory/events'],
     ['radar.molyneux.io', 'POST', '/api/collector/cyclonedx'],
     ['radar.molyneux.io', 'POST', '/api/evaluations'],
     ['radar.molyneux.io', 'GET', '/api/evaluations'],
+    ['radar.molyneux.io', 'GET', '/api/evaluations/configuration'],
     ['radar.molyneux.io', 'GET', '/api/evaluations/one'],
-    ['idp.molyneux.io', 'GET', '/dashboard', { Cookie: '__Host-MxIdp=session' }],
-    ['radar.molyneux.io', 'GET', '/dashboard', { Cookie: 'other=x; __Host-Radar=session' }],
-    ['radar.molyneux.io', 'GET', '/dashboard', { Authorization: 'Bearer token' }],
-    ['idp.molyneux.io', 'GET', '/unrelated', { Cookie: '__Host-MxIdp=unverified' }],
   ];
   const original = globalThis.fetch;
   const calls = [];
@@ -130,11 +130,27 @@ test('bypass never changes anonymous navigation or unrelated and unregistered ho
   try {
     for (const [hostname, path, headers, method] of [
       ['idp.molyneux.io', '/dashboard', {}, 'GET'],
+      ['idp.molyneux.io', '/dashboard', { Cookie: '__Host-MxIdp=session' }, 'GET'],
+      ['radar.molyneux.io', '/dashboard', { Authorization: 'Bearer token' }, 'GET'],
+      ['radar.molyneux.io', '/dashboard', { Cookie: '__Host-Radar=session' }, 'GET'],
       ['radar.molyneux.io', '/dashboard', { Cookie: '__Host-Radar-CSRF=csrf' }, 'GET'],
       ['idp.molyneux.io', '/dashboard', { Cookie: '__Host-MxIdp=' }, 'GET'],
       ['idp.molyneux.io', '/dashboard', { Cookie: '__Host-Radar=session' }, 'GET'],
       ['idp.molyneux.io', '/apiculture', {}, 'GET'],
+      ['idp.molyneux.io', '/api/collector/identity', {}, 'GET'],
+      ['idp.molyneux.io', '/api/collector/catalog', {}, 'POST'],
+      ['idp.molyneux.io', '/api/collector/pipelines/one/extra', {}, 'GET'],
+      ['idp.molyneux.io', '/api/inventory/v1/workloads/one', {}, 'GET'],
+      ['idp.molyneux.io', '/api/inventory/runtime', {}, 'GET'],
+      ['idp.molyneux.io', '/api/evidence', {}, 'GET'],
+      ['idp.molyneux.io', '/auth/login', {}, 'GET'],
       ['idp.molyneux.io', '/auth/login', {}, 'POST'],
+      ['radar.molyneux.io', '/auth/login', {}, 'GET'],
+      ['radar.molyneux.io', '/api/inventory/events', {}, 'GET'],
+      ['radar.molyneux.io', '/api/collector/cyclonedx', {}, 'GET'],
+      ['radar.molyneux.io', '/api/evaluations/one', {}, 'POST'],
+      ['radar.molyneux.io', '/api/evaluations/one/extra', {}, 'GET'],
+      ['radar.molyneux.io', '/api/session', {}, 'GET'],
       ['radar.molyneux.io', '/auth/github/callback-extra', {}, 'GET'],
       ['radar.molyneux.io', '/auth/github/callback', {}, 'POST'],
       ['idp.molyneux.io', '/signin-oidc', {}, 'DELETE'],
@@ -146,7 +162,7 @@ test('bypass never changes anonymous navigation or unrelated and unregistered ho
       }), registered);
       assert.equal(response.status, 503);
     }
-    const unregistered = new Request('https://idp.molyneux.io/api/collector/identity');
+    const unregistered = new Request('https://idp.molyneux.io/api/collector/catalog');
     assert.equal((await worker.fetch(unregistered, environment)).status, 503);
     const navigation = new Request('https://radar.molyneux.io/', {
       headers: { Accept: 'text/html', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document' },
@@ -161,7 +177,7 @@ test('origin failures propagate instead of returning a maintenance response', as
   globalThis.fetch = async () => { throw error; };
   try {
     const registered = { HOSTS: JSON.stringify([{ hostname: 'idp.molyneux.io', site: 'mx' }]) };
-    await assert.rejects(worker.fetch(new Request('https://idp.molyneux.io/api/evidence'), registered), error);
+    await assert.rejects(worker.fetch(new Request('https://idp.molyneux.io/api/evidence', { method: 'POST' }), registered), error);
   } finally { globalThis.fetch = original; }
 });
 

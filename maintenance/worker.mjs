@@ -2,27 +2,27 @@ const statusSites = { mx: 'https://mxstatus.io/', xi: 'https://status.xtremeidio
 const escapeHtml = text => text.replace(/[&<>"']/g, character =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 
-const maintenanceBypassCookies = new Map([
-  ['idp.molyneux.io', '__Host-MxIdp'],
-  ['radar.molyneux.io', '__Host-Radar'],
-]);
-
 function bypassMaintenance(request, hostname, pathname) {
-  const cookieName = maintenanceBypassCookies.get(hostname);
-  if (!cookieName) return false;
-
   pathname = pathname.toLowerCase();
-  const cookies = (request.headers.get('Cookie') || '').split(';');
-  const hasSessionCookie = cookies.some(cookie => {
-    const separator = cookie.indexOf('=');
-    return separator !== -1 && cookie.slice(0, separator).trim() === cookieName
-      && cookie.slice(separator + 1).trim() !== '';
-  });
-  return Boolean(request.headers.get('Authorization')) || hasSessionCookie
-    || pathname === '/api' || pathname.startsWith('/api/')
-    || (pathname === '/auth/login' && request.method === 'GET')
-    || (pathname === '/signin-oidc' && ['GET', 'POST'].includes(request.method))
-    || (hostname === 'radar.molyneux.io' && pathname === '/auth/github/callback' && request.method === 'GET');
+  const method = request.method;
+  if (!['idp.molyneux.io', 'radar.molyneux.io'].includes(hostname)) return false;
+  if (pathname === '/signin-oidc' && ['GET', 'POST'].includes(method)) return true;
+
+  if (hostname === 'idp.molyneux.io') {
+    if (method === 'POST') return ['/api/inventory/runtime', '/api/evidence'].includes(pathname);
+    if (method !== 'GET') return false;
+    return ['/api/collector/catalog', '/api/collector/inventory/workloads',
+      '/api/inventory/v1/workload-membership', '/api/inventory/v1/workloads'].includes(pathname)
+      || /^\/api\/collector\/pipelines\/[^/]+$/.test(pathname)
+      || /^\/api\/collector\/inventory\/workloads\/[^/]+(?:\/documents)?$/.test(pathname)
+      || /^\/api\/inventory\/v1\/workloads\/[^/]+\/documents$/.test(pathname);
+  }
+
+  if (method === 'POST') {
+    return ['/api/inventory/events', '/api/collector/cyclonedx', '/api/evaluations'].includes(pathname);
+  }
+  return method === 'GET' && (pathname === '/auth/github/callback'
+    || pathname === '/api/evaluations' || /^\/api\/evaluations\/[^/]+$/.test(pathname));
 }
 
 export default {

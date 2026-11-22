@@ -128,16 +128,15 @@ Non-catalog hosts are not eligible for this catalog-alias exclusion.
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
 
-The Worker supports a maintenance bypass for registered `idp.molyneux.io` and
-`radar.molyneux.io`: all `/api` requests, OAuth login and callbacks, and
-requests carrying their session cookie or an Authorization header reach the
-origin. API bypass includes anonymous requests: IDP's collector identity is
-deliberately anonymous discovery, and Radar's inventory events are verified by
-signature at the origin. Anonymous browser navigation without those routing
-signals can still receive maintenance. Headers and cookies can be supplied by
-any client and are not authenticated by the Worker, so maintenance is not an
-access control; origin authorization and webhook verification remain
-authoritative. These hostnames are not enrolled or proxied by this policy alone.
+For registered `idp.molyneux.io` and `radar.molyneux.io`, the Worker bypasses
+maintenance only for the evidenced OAuth callback and service endpoint methods
+listed in `maintenance/worker.mjs`. Radar's inventory events endpoint is
+anonymous at the application routing layer but requires signature verification.
+The Worker does not authenticate requests; origin authorization and webhook
+verification remain authoritative. Other requests, including login and IDP's
+anonymous collector discovery, remain subject to maintenance even when they
+carry cookies or an Authorization header. These hostnames are not enrolled or
+proxied by this policy alone.
 
 TripSidekick's `.app` and `.net` zones, Talkwithtiles, BQBA and DM Electrical
 use zone-owned Single Redirect rules for their public catalog aliases, retaining
