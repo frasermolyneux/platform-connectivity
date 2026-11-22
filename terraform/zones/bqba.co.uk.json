@@ -5,6 +5,26 @@
   "management": "terraform",
   "settings_preserve_existing": true,
   "plan_profile": "free",
+  "rulesets": {
+    "http_request_dynamic_redirect": {
+      "name": "Canonical host redirects",
+      "description": "Redirect the public alias to the canonical hostname",
+      "rules": [{
+        "ref": "canonical_hostname",
+        "description": "Redirect www to the canonical host",
+        "action": "redirect",
+        "enabled": true,
+        "expression": "http.host eq \"www.bqba.co.uk\"",
+        "action_parameters": {
+          "from_value": {
+            "target_url": { "expression": "concat(\"https://bqba.co.uk\", http.request.uri.path)" },
+            "status_code": 308,
+            "preserve_query_string": true
+          }
+        }
+      }]
+    }
+  },
   "managed_waf_hostnames": ["bqba.co.uk", "www.bqba.co.uk"],
   "dnssec_enabled": false,
   "settings": {

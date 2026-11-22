@@ -128,8 +128,9 @@ Non-catalog hosts are not eligible for this catalog-alias exclusion.
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
 
-TripSidekick's `.app` and `.net` zones and Talkwithtiles use zone-owned Single
-Redirect rules for their public aliases, retaining path, query, and method.
+TripSidekick's `.app` and `.net` zones, Talkwithtiles, BQBA and DM Electrical
+use zone-owned Single Redirect rules for their public catalog aliases, retaining
+path, query, and method.
 Each zone's existing Always Use HTTPS setting handles HTTP. Their origin
 redirects remain in place. The other catalog aliases retain their current
 behavior until maintenance routes and controller metadata are coordinated.

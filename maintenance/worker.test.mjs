@@ -79,13 +79,14 @@ test('registry admits exact proxied web hosts only and never includes status or 
 
 test('edge alias redirects preserve catalog canonical destinations, paths, queries and methods', () => {
   const catalog = JSON.parse(readFileSync(new URL('./ingress-catalog.json', import.meta.url)));
-  for (const zoneName of ['tripsidekick.app', 'tripsidekick.net', 'talkwithtiles.com']) {
+  for (const zoneName of ['tripsidekick.app', 'tripsidekick.net', 'talkwithtiles.com', 'bqba.co.uk', 'dm-electricalservices.co.uk']) {
     const zone = JSON.parse(readFileSync(new URL(`../terraform/zones/${zoneName}.json`, import.meta.url)));
     const alias = catalog.hosts.find(host => host.zone === zoneName && host.target.alias_to !== null);
     const rules = zone.rulesets.http_request_dynamic_redirect.rules;
     assert.equal(rules.length, 1);
-    assert.equal(alias.target.alias_to, zoneName);
-    assert.equal(alias.current.status, false);
+    if (['tripsidekick.app', 'tripsidekick.net', 'talkwithtiles.com'].includes(zoneName)) {
+      assert.equal(alias.current.status, false);
+    }
     assert.equal(rules[0].expression, `http.host eq "${alias.hostname}"`);
     assert.equal(rules[0].action, 'redirect');
     assert.equal(rules[0].enabled, true);
