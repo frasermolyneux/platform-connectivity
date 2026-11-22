@@ -115,6 +115,12 @@ DNS-only services to enrol a host.
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
 
+TripSidekick's `.app` and `.net` zones and Talkwithtiles use zone-owned Single
+Redirect rules for their public aliases, retaining path, query, and method.
+Each zone's existing Always Use HTTPS setting handles HTTP. Their origin
+redirects remain in place. The other catalog aliases retain their current
+behavior until maintenance routes and controller metadata are coordinated.
+
 ## Other DNS capabilities
 
 `backup_to_azure` mirrors Cloudflare records into a non-authoritative Azure DNS

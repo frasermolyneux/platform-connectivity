@@ -76,3 +76,23 @@ test('registry admits exact proxied web hosts only and never includes status or 
   assert.ok(seen.has('maps.xtremeidiots.com'));
   assert.ok(!seen.has('maps.xtremeidiots.net'));
 });
+
+test('edge alias redirects preserve catalog canonical destinations, paths, queries and methods', () => {
+  const catalog = JSON.parse(readFileSync(new URL('./ingress-catalog.json', import.meta.url)));
+  for (const zoneName of ['tripsidekick.app', 'tripsidekick.net', 'talkwithtiles.com']) {
+    const zone = JSON.parse(readFileSync(new URL(`../terraform/zones/${zoneName}.json`, import.meta.url)));
+    const alias = catalog.hosts.find(host => host.zone === zoneName && host.target.alias_to !== null);
+    const rules = zone.rulesets.http_request_dynamic_redirect.rules;
+    assert.equal(rules.length, 1);
+    assert.equal(alias.target.alias_to, zoneName);
+    assert.equal(alias.current.status, false);
+    assert.equal(rules[0].expression, `http.host eq "${alias.hostname}"`);
+    assert.equal(rules[0].action, 'redirect');
+    assert.equal(rules[0].enabled, true);
+    const redirect = rules[0].action_parameters.from_value;
+    assert.equal(redirect.status_code, 308);
+    assert.equal(redirect.preserve_query_string, true);
+    assert.equal(redirect.target_url.expression, `concat("https://${alias.target.alias_to}", http.request.uri.path)`);
+    assert.equal(zone.settings.always_use_https, 'on');
+  }
+});
