@@ -28,6 +28,10 @@ locals {
       [for hostname in sort(keys(local.maintenance_hosts_by_name)) : hostname if !contains(local.maintenance_host_order, hostname)]
     ) : local.maintenance_hosts_by_name[hostname]
   ]
+  maintenance_controller_hosts = [
+    for host in local.maintenance_hosts : host
+    if !contains(var.maintenance_controller_excluded_aliases, host.hostname)
+  ]
   maintenance_modes = var.maintenance_enabled ? toset(["page", "redirect"]) : toset([])
   maintenance_canary_hosts = [
     for host in local.maintenance_hosts : host if try(host.canary, false)
@@ -127,7 +131,7 @@ output "maintenance_runtime" {
     accountId = var.cloudflare_account_id
     scripts   = { for mode, script in cloudflare_workers_script.maintenance : mode => script.script_name }
     hosts = [
-      for host in local.maintenance_hosts : {
+      for host in local.maintenance_controller_hosts : {
         hostname = host.hostname
         site     = host.site
         zoneId   = local.cloudflare_zone_ids[host.zone]

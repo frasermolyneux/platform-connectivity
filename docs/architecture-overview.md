@@ -118,6 +118,13 @@ then apply the baremetal configuration and verify both status hosts have
 reconciled the mounted secret before using new controls. Do not proxy unrelated
 DNS-only services to enrol a host.
 
+`maintenance_controller_excluded_aliases` defaults to empty and can explicitly
+remove currently registered catalog aliases from controller metadata without
+removing Worker support. This does not alter routes. Coordinate and verify both
+controller mounts and restore any active alias routes before a later redirect
+cutover or Worker removal; stale controllers can still operate until refreshed.
+Non-catalog hosts are not eligible for this catalog-alias exclusion.
+
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
 

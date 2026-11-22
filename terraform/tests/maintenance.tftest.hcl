@@ -83,6 +83,7 @@ run "production_deploys_worker_modes_and_exact_host_registry" {
       length(cloudflare_workers_script.maintenance) == 2 &&
       length(cloudflare_workers_custom_domain.maintenance_canary) == 1 &&
       output.maintenance_runtime.version == 1 &&
+      jsonencode(local.maintenance_controller_hosts) == jsonencode(local.maintenance_hosts) &&
       cloudflare_workers_custom_domain.maintenance_canary[0].hostname == "maintenance-check.example.test" &&
       contains([for host in output.maintenance_runtime.hosts : host.hostname], "www.example.test") &&
       contains([for host in output.maintenance_runtime.hosts : host.hostname], "maps.example.test") &&
@@ -91,6 +92,44 @@ run "production_deploys_worker_modes_and_exact_host_registry" {
     )
     error_message = "Production maintenance tests must use synthetic approved hosts and a synthetic canary domain."
   }
+}
+
+run "controller_alias_exclusion_preserves_worker_registry" {
+  command = plan
+  variables {
+    environment                             = "prd"
+    dns_zones_path                          = "tests/fixtures/connectivity-hosts"
+    maintenance_enabled                     = true
+    cloudflare_account_id                   = "00000000000000000000000000000000"
+    maintenance_controller_excluded_aliases = ["www.bqba.co.uk", "dm-electricalservices.co.uk"]
+    maintenance_hosts_override = jsonencode([
+      { hostname = "maintenance-check.example.test", zone = "example.test", site = "mx", canary = true },
+      { hostname = "www.bqba.co.uk", zone = "example.test", site = "mx" },
+      { hostname = "example.test", zone = "example.test", site = "mx" },
+      { hostname = "dm-electricalservices.co.uk", zone = "example.test", site = "mx" }
+    ])
+    maintenance_external_dns_override = jsonencode({
+      "www.bqba.co.uk"              = [{ name = "www.bqba.co.uk", type = "A", proxied = true }]
+      "dm-electricalservices.co.uk" = [{ name = "dm-electricalservices.co.uk", type = "A", proxied = true }]
+    })
+  }
+  assert {
+    condition = (
+      jsonencode([for host in output.maintenance_runtime.hosts : host.hostname]) == jsonencode(["maintenance-check.example.test", "example.test"]) &&
+      alltrue([for script in values(cloudflare_workers_script.maintenance) :
+        one([for binding in script.bindings : binding.text if binding.name == "HOSTS"]) == jsonencode(local.maintenance_hosts)
+      ])
+    )
+    error_message = "Exclusions must affect only controller hosts, preserving Worker bindings, order and the canary."
+  }
+}
+
+run "controller_exclusion_rejects_canonical_hosts" {
+  command = plan
+  variables {
+    maintenance_controller_excluded_aliases = ["bqba.co.uk"]
+  }
+  expect_failures = [var.maintenance_controller_excluded_aliases]
 }
 
 run "externally_owned_proxied_record_is_accepted" {

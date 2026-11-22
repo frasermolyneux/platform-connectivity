@@ -85,6 +85,21 @@ variable "maintenance_enabled" {
   default     = false
 }
 
+variable "maintenance_controller_excluded_aliases" {
+  description = "Catalog aliases to remove from controller metadata while retaining Worker support. Empty until explicitly coordinated."
+  type        = set(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for hostname in var.maintenance_controller_excluded_aliases :
+      try(local.ingress_hosts[hostname].current.status && local.ingress_hosts[hostname].target.alias_to != null, false) &&
+      contains([for host in local.maintenance_hosts : host.hostname if !try(host.canary, false)], hostname)
+    ])
+    error_message = "Controller exclusions must be currently registered maintenance aliases in the ingress catalog."
+  }
+}
+
 variable "maintenance_hosts_override" {
   description = "Optional JSON host list for isolated tests. Leave unset in environment deployments."
   type        = string
