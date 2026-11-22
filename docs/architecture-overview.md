@@ -97,7 +97,11 @@ guarded strict-TLS change.
 `18b6ae285b98149c31cbf64407ab049c45bda66f`. The maintenance registry derives
 catalog hosts from `current.status`, resolving their existing status brand via
 the canonical target, and merges the canary and non-catalog hosts in
-`maintenance/hosts.json`. Target membership does not activate maintenance.
+`maintenance/hosts.json`. The explicit enrollment in `terraform/maintenance.tf`
+adds only the three canonical TripSidekick and Talkwithtiles hosts; other target
+membership does not activate maintenance. For enrolled hosts whose DNS records
+are owned elsewhere, Terraform reads the exact Cloudflare record without
+claiming DNS ownership and checks that it is proxied.
 `maintenance/host-order.json` preserves the deployed registry order; new current
 hosts append in hostname order.
 Existing aliases remain in the current registry until their routes can be
@@ -109,7 +113,9 @@ runtime controller owns active Worker routes. Connectivity must not create,
 clear or reset those routes. Restore routes before retiring a hostname from the
 registry. Baremetal materializes the output into the status workload's Key Vault;
 changes to registry membership require that configuration and the mounted
-controller metadata to be synchronized with the Workers. Do not proxy unrelated
+controller metadata to be synchronized with the Workers. Deploy Workers first,
+then apply the baremetal configuration and verify both status hosts have
+reconciled the mounted secret before using new controls. Do not proxy unrelated
 DNS-only services to enrol a host.
 
 Worker tests use Node's built-in runner:

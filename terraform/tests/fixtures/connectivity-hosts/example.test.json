@@ -9,6 +9,7 @@
     { "type": "A", "name": "@", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
     { "type": "A", "name": "www", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
     { "type": "A", "name": "maps", "content": "192.0.2.10", "proxied": true, "ttl": 1 },
+    { "type": "A", "name": "dns-only", "content": "192.0.2.10", "proxied": false, "ttl": 300 },
     { "type": "A", "name": "maintenance-check", "content": "192.0.2.10", "proxied": true, "ttl": 1 }
   ]
 }

@@ -1,12 +1,20 @@
 locals {
   ingress_catalog = jsondecode(file("${path.module}/../maintenance/ingress-catalog.json"))
   ingress_hosts   = { for host in local.ingress_catalog.hosts : host.hostname => host }
+  maintenance_enrolled_catalog_hosts = toset([
+    "talkwithtiles.com",
+    "tripsidekick.app",
+    "tripsidekick.net",
+  ])
   maintenance_catalog_hosts = {
     for host in local.ingress_catalog.hosts : host.hostname => {
       hostname = host.hostname
       zone     = host.zone
       site     = host.target.alias_to == null ? host.target.status_brand : local.ingress_hosts[host.target.alias_to].target.status_brand
-    } if host.current.status
+      } if host.current.status || (
+      contains(local.maintenance_enrolled_catalog_hosts, host.hostname) &&
+      host.target.alias_to == null && host.target.status_brand != null
+    )
   }
   maintenance_extra_hosts = jsondecode(file("${path.module}/../maintenance/hosts.json"))
   maintenance_hosts_by_name = merge(
@@ -25,6 +33,13 @@ locals {
     for host in local.maintenance_hosts : host if try(host.canary, false)
   ]
   maintenance_canary_host = try(one(local.maintenance_canary_hosts), null)
+  maintenance_declared_web_hosts = toset(flatten([
+    for zone in values(local.active_cloudflare_zones) : [
+      for record in try(zone.records, []) :
+      record.name == "@" ? zone.name : "${record.name}.${zone.name}"
+      if contains(["A", "AAAA", "CNAME"], record.type)
+    ]
+  ]))
   maintenance_proxied_hosts = toset(flatten([
     for zone in values(local.active_cloudflare_zones) : [
       for record in try(zone.records, []) :
@@ -32,6 +47,23 @@ locals {
       if try(record.proxied, false) && contains(["A", "AAAA", "CNAME"], record.type)
     ]
   ]))
+  maintenance_external_dns_hosts = var.maintenance_enabled ? {
+    for host in local.maintenance_hosts : host.hostname => host
+    if !contains(local.maintenance_declared_web_hosts, host.hostname) && !try(host.canary, false)
+  } : {}
+}
+
+data "cloudflare_dns_records" "maintenance_external" {
+  for_each = var.maintenance_external_dns_override == "" ? local.maintenance_external_dns_hosts : {}
+
+  zone_id = local.cloudflare_zone_ids[each.value.zone]
+  name    = { exact = each.key }
+}
+
+locals {
+  maintenance_external_dns_records = var.maintenance_external_dns_override == "" ? {
+    for hostname, records in data.cloudflare_dns_records.maintenance_external : hostname => records.result
+  } : jsondecode(var.maintenance_external_dns_override)
 }
 
 resource "cloudflare_workers_script" "maintenance" {
@@ -55,7 +87,10 @@ resource "cloudflare_workers_script" "maintenance" {
         length(distinct([for host in local.maintenance_hosts : host.hostname])) == length(local.maintenance_hosts) &&
         length(local.maintenance_canary_hosts) == 1 &&
         alltrue([for host in local.maintenance_hosts :
-          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false)) &&
+          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false) || (contains(keys(local.maintenance_external_dns_hosts), host.hostname) && try(anytrue([
+            for record in local.maintenance_external_dns_records[host.hostname] :
+            record.name == host.hostname && record.proxied && contains(["A", "AAAA", "CNAME"], record.type)
+          ]), false))) &&
           !contains(["mxstatus.io", "status.xtremeidiots.com"], host.hostname) &&
           !strcontains(host.hostname, "*") &&
           contains(["mx", "xi"], host.site) &&
