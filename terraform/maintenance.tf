@@ -33,6 +33,13 @@ locals {
     for host in local.maintenance_hosts : host if try(host.canary, false)
   ]
   maintenance_canary_host = try(one(local.maintenance_canary_hosts), null)
+  maintenance_declared_web_hosts = toset(flatten([
+    for zone in values(local.active_cloudflare_zones) : [
+      for record in try(zone.records, []) :
+      record.name == "@" ? zone.name : "${record.name}.${zone.name}"
+      if contains(["A", "AAAA", "CNAME"], record.type)
+    ]
+  ]))
   maintenance_proxied_hosts = toset(flatten([
     for zone in values(local.active_cloudflare_zones) : [
       for record in try(zone.records, []) :
@@ -42,7 +49,7 @@ locals {
   ]))
   maintenance_external_dns_hosts = var.maintenance_enabled ? {
     for host in local.maintenance_hosts : host.hostname => host
-    if !contains(local.maintenance_proxied_hosts, host.hostname) && !try(host.canary, false)
+    if !contains(local.maintenance_declared_web_hosts, host.hostname) && !try(host.canary, false)
   } : {}
 }
 
@@ -80,10 +87,10 @@ resource "cloudflare_workers_script" "maintenance" {
         length(distinct([for host in local.maintenance_hosts : host.hostname])) == length(local.maintenance_hosts) &&
         length(local.maintenance_canary_hosts) == 1 &&
         alltrue([for host in local.maintenance_hosts :
-          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false) || try(anytrue([
+          (contains(local.maintenance_proxied_hosts, host.hostname) || try(host.canary, false) || (contains(keys(local.maintenance_external_dns_hosts), host.hostname) && try(anytrue([
             for record in local.maintenance_external_dns_records[host.hostname] :
             record.name == host.hostname && record.proxied && contains(["A", "AAAA", "CNAME"], record.type)
-          ]), false)) &&
+          ]), false))) &&
           !contains(["mxstatus.io", "status.xtremeidiots.com"], host.hostname) &&
           !strcontains(host.hostname, "*") &&
           contains(["mx", "xi"], host.site) &&

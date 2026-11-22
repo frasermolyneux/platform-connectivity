@@ -138,3 +138,24 @@ run "externally_owned_unproxied_record_is_rejected" {
     cloudflare_workers_script.maintenance["redirect"]
   ]
 }
+
+run "declared_dns_only_record_is_not_validated_against_stale_external_dns" {
+  command = plan
+  variables {
+    environment           = "prd"
+    dns_zones_path        = "tests/fixtures/connectivity-hosts"
+    maintenance_enabled   = true
+    cloudflare_account_id = "00000000000000000000000000000000"
+    maintenance_hosts_override = jsonencode([
+      { hostname = "maintenance-check.example.test", zone = "example.test", site = "mx", canary = true },
+      { hostname = "dns-only.example.test", zone = "example.test", site = "mx" }
+    ])
+    maintenance_external_dns_override = jsonencode({
+      "dns-only.example.test" = [{ name = "dns-only.example.test", type = "A", proxied = true }]
+    })
+  }
+  expect_failures = [
+    cloudflare_workers_script.maintenance["page"],
+    cloudflare_workers_script.maintenance["redirect"]
+  ]
+}
