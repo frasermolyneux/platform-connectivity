@@ -90,3 +90,9 @@ variable "maintenance_hosts_override" {
   type        = string
   default     = ""
 }
+
+variable "maintenance_external_dns_override" {
+  description = "Optional JSON map of DNS query results for isolated tests. Leave unset in environment deployments."
+  type        = string
+  default     = ""
+}
