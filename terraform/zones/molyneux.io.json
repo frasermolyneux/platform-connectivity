@@ -4,7 +4,23 @@
     "cloudflare": {
         "management": "terraform",
         "import_existing": true,
-        "waf_custom_rules_enabled": false,
+        "waf_custom_rules_enabled": true,
+        "waf_custom_ruleset": {
+            "name": "Terraform-managed IDP firewall",
+            "description": "Allow authenticated runtime inventory submissions through Browser Integrity Check",
+            "rules": [
+                {
+                    "ref": "skip_bic_for_idp_runtime_inventory",
+                    "description": "Skip Browser Integrity Check for IDP runtime inventory submissions",
+                    "expression": "(http.host eq \"idp.molyneux.io\" and http.request.method eq \"POST\" and http.request.uri.path eq \"/api/inventory/runtime\")",
+                    "action": "skip",
+                    "enabled": true,
+                    "action_parameters": {
+                        "products": ["bic"]
+                    }
+                }
+            ]
+        },
         "settings_preserve_existing": true,
         "dnssec_enabled": false,
         "records": [
