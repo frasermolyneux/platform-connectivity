@@ -22,6 +22,14 @@
         "description": "Block a synthetic path",
         "enabled": true,
         "expression": "(http.request.uri.path eq \"/blocked\")"
+      },
+      {
+        "ref": "synthetic-bic-exception",
+        "action": "skip",
+        "description": "Skip BIC for a synthetic service endpoint",
+        "enabled": true,
+        "expression": "(http.host eq \"service.example.invalid\" and http.request.method eq \"POST\" and http.request.uri.path eq \"/inventory\")",
+        "action_parameters": { "products": ["bic"] }
       }
     ]
   },

@@ -40,6 +40,11 @@ per type and independent of mutable content. Ruleset rules use explicit stable
 `ref` values. Custom firewall rulesets own an entire phase, so keep their
 configured rules complete and coordinated with the owning service.
 
+For `idp.molyneux.io`, the custom firewall skips only Browser Integrity Check
+for `POST /api/inventory/runtime`, allowing the machine collector's Python
+client through while retaining application authentication and all other edge
+protections. Human sign-in and other paths remain subject to the check.
+
 Managed Cloudflare zone snapshots set the minimum edge TLS version to 1.2.
 Newly imported zones that do not yet declare settings retain their existing
 Cloudflare TLS minimum until their settings are reviewed.

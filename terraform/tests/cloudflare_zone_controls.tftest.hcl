@@ -71,6 +71,8 @@ run "zone_controls_are_configuration_driven" {
       cloudflare_ruleset.zone_configured["example.invalid/http_ratelimit"].rules[0].ratelimit.requests_per_period == 50 &&
       cloudflare_ruleset.zone_configured["example.invalid/http_ratelimit"].rules[0].ref == "synthetic-rate-limit" &&
       cloudflare_ruleset.zone_custom_firewall["example.invalid"].rules[0].ref == "synthetic-firewall-rule" &&
+      cloudflare_ruleset.zone_custom_firewall["example.invalid"].rules[1].action == "skip" &&
+      toset(cloudflare_ruleset.zone_custom_firewall["example.invalid"].rules[1].action_parameters.products) == toset(["bic"]) &&
       cloudflare_page_rule.managed["example.invalid/stats"].target == "https://stats.example.invalid/*" &&
       cloudflare_page_rule.managed["example.invalid/stats"].actions.ssl == "full" &&
       local.cloudflare_zone_rulesets["example.invalid/http_ratelimit"].phase == "http_ratelimit"

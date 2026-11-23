@@ -41,15 +41,32 @@ class CloudflareQuickWinsTests(unittest.TestCase):
                     self.assertIn(tls, ("1.2", "1.3"))
 
     def test_imported_zones_do_not_claim_custom_firewall(self):
-        zones = [
+        adopted = [
             zone.get("cloudflare", zone)
             for zone in self.zones
+            if zone.get("name") != "molyneux.io"
+            and zone.get("cloudflare", zone).get("import_existing")
         ]
-        adopted = [zone for zone in zones if zone.get("import_existing")]
         self.assertTrue(adopted)
         for zone in adopted:
             with self.subTest(zone=zone.get("name", "migration")):
                 self.assertIs(zone.get("waf_custom_rules_enabled"), False)
+
+    def test_idp_runtime_inventory_skips_only_browser_integrity_check(self):
+        zone = next(zone for zone in self.zones if zone["name"] == "molyneux.io")
+        cloudflare = zone["cloudflare"]
+        self.assertTrue(cloudflare["waf_custom_rules_enabled"])
+        rules = cloudflare["waf_custom_ruleset"]["rules"]
+        self.assertEqual(len(rules), 1)
+        rule = rules[0]
+        self.assertEqual(
+            rule["expression"],
+            '(http.host eq "idp.molyneux.io" and http.request.method eq "POST" '
+            'and http.request.uri.path eq "/api/inventory/runtime")',
+        )
+        self.assertEqual(rule["action"], "skip")
+        self.assertEqual(rule["action_parameters"], {"products": ["bic"]})
+        self.assertTrue(rule["enabled"])
 
     def test_imported_microsoft_service_aliases_are_dns_only(self):
         names = {
