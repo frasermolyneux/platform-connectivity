@@ -95,14 +95,6 @@
       "proxied": true
     },
     {
-      "key": "test",
-      "type": "A",
-      "name": "test",
-      "ttl": 1,
-      "content": "100.87.229.111",
-      "proxied": false
-    },
-    {
       "key": "ts",
       "type": "A",
       "name": "ts",
