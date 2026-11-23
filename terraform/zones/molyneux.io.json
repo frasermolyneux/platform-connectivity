@@ -14,7 +14,7 @@
                 "name": "idp",
                 "ttl": 300,
                 "content": "5.196.80.194",
-                "proxied": false
+                "proxied": true
             },
             {
                 "key": "radar",
@@ -22,7 +22,7 @@
                 "name": "radar",
                 "ttl": 300,
                 "content": "5.196.80.194",
-                "proxied": false
+                "proxied": true
             },
             {
                 "key": "autodiscover",

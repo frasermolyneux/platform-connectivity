@@ -6,7 +6,7 @@ function bypassMaintenance(request, hostname, pathname) {
   pathname = pathname.toLowerCase();
   const method = request.method;
   if (!['idp.molyneux.io', 'radar.molyneux.io'].includes(hostname)) return false;
-  if (pathname === '/signin-oidc' && ['GET', 'POST'].includes(method)) return true;
+  if (pathname === '/signin-oidc' && method === 'POST') return true;
 
   if (hostname === 'idp.molyneux.io') {
     if (method === 'POST') return ['/api/inventory/runtime', '/api/evidence'].includes(pathname);
