@@ -92,7 +92,10 @@ declared, proxied hostnames are accepted; wildcard, duplicate or unproxied
 names fail validation. `origin_tls_preserve_existing` retains this stack's
 existing owner identity when a zone becomes Terraform-managed. It does not
 claim ownership of another stack's entrypoint. The owner identity and ruleset
-have destruction protection. Use the narrow recovery path described in
+have destruction protection. A managed zone can explicitly set
+`origin_tls_create` to create a new entrypoint only when no other owner exists;
+it disables automatic recovery imports, so recovery requires reviewing the
+retained owner and switching to `origin_tls_preserve_existing`. Use the narrow recovery path described in
 [`development-workflows.md`](development-workflows.md) for the explicitly
 guarded strict-TLS change.
 

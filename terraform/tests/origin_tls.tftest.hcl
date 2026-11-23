@@ -123,6 +123,35 @@ run "new_managed_zone_override_is_rejected_explicitly" {
   expect_failures = [terraform_data.origin_tls_owner["new.invalid"]]
 }
 
+run "new_managed_zone_can_create_scoped_tls_rules" {
+  command = plan
+
+  variables {
+    dns_zones_path = "tests/fixtures/new-origin"
+  }
+
+  override_resource {
+    target          = cloudflare_zone.managed["example.invalid"]
+    values          = { id = "00000000000000000000000000000002" }
+    override_during = plan
+  }
+  override_data {
+    target          = data.cloudflare_rulesets.origin_tls["example.invalid"]
+    values          = { rulesets = { phase = "http_request_cache_settings", name = "cache" } }
+    override_during = plan
+  }
+
+  assert {
+    condition = (
+      toset([for rule in cloudflare_ruleset.origin_tls["example.invalid"].rules : rule.expression]) ==
+      toset(["http.host eq \"example.invalid\"", "http.host eq \"www.example.invalid\""]) &&
+      alltrue([for rule in cloudflare_ruleset.origin_tls["example.invalid"].rules : rule.action_parameters.ssl == "strict"]) &&
+      length(local.cloudflare_origin_tls_recovery_bindings) == 0
+    )
+    error_message = "A new managed-zone entrypoint must enforce strict TLS only for selected hosts without importing an existing entrypoint."
+  }
+}
+
 run "origin_tls_recovery_rebinds_only_its_existing_owner" {
   command = plan
 

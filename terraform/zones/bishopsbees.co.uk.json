@@ -3,6 +3,8 @@
   "dns_provider": "cloudflare",
   "backup_to_azure": false,
   "management": "terraform",
+  "origin_tls_create": true,
+  "origin_tls_hostnames": ["bishopsbees.co.uk", "www.bishopsbees.co.uk", "staging.bishopsbees.co.uk"],
   "settings_preserve_existing": true,
   "plan_profile": "free",
   "managed_waf_hostnames": ["bishopsbees.co.uk", "www.bishopsbees.co.uk", "staging.bishopsbees.co.uk"],
