@@ -1,0 +1,11 @@
+{
+  "name": "example.invalid",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "origin_tls_create": true,
+  "origin_tls_hostnames": ["example.invalid", "www.example.invalid"],
+  "records": [
+    { "key": "apex", "type": "A", "name": "@", "content": "192.0.2.10", "proxied": true },
+    { "key": "www", "type": "A", "name": "www", "content": "192.0.2.11", "proxied": true }
+  ]
+}
