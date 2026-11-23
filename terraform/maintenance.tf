@@ -2,6 +2,8 @@ locals {
   ingress_catalog = jsondecode(file("${path.module}/../maintenance/ingress-catalog.json"))
   ingress_hosts   = { for host in local.ingress_catalog.hosts : host.hostname => host }
   maintenance_enrolled_catalog_hosts = toset([
+    "idp.molyneux.io",
+    "radar.molyneux.io",
     "talkwithtiles.com",
     "tripsidekick.app",
     "tripsidekick.net",

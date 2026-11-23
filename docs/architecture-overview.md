@@ -98,10 +98,11 @@ guarded strict-TLS change.
 catalog hosts from `current.status`, resolving their existing status brand via
 the canonical target, and merges the canary and non-catalog hosts in
 `maintenance/hosts.json`. The explicit enrollment in `terraform/maintenance.tf`
-adds only the three canonical TripSidekick and Talkwithtiles hosts; other target
-membership does not activate maintenance. For enrolled hosts whose DNS records
-are owned elsewhere, Terraform reads the exact Cloudflare record without
-claiming DNS ownership and checks that it is proxied.
+adds only approved canonical hosts; current additions are the three canonical
+TripSidekick and Talkwithtiles hosts plus IDP and Radar. Other target membership
+does not activate maintenance. For enrolled hosts whose DNS records are owned
+elsewhere, Terraform reads the exact Cloudflare record without claiming DNS
+ownership and checks that it is proxied.
 `maintenance/host-order.json` preserves the deployed registry order; new current
 hosts append in hostname order.
 Existing aliases remain in the current registry until their routes can be
@@ -127,6 +128,10 @@ Non-catalog hosts are not eligible for this catalog-alias exclusion.
 
 Worker tests use Node's built-in runner:
 `node --test maintenance/worker.test.mjs`.
+IDP and Radar maintenance bypass is limited to the exact callback/service
+path-method pairs in `maintenance/worker.mjs`; `/signin-oidc` is POST-only.
+There is no cookie/header blanket exemption. Login initiation and anonymous
+collector discovery remain subject to maintenance.
 
 For registered `idp.molyneux.io` and `radar.molyneux.io`, the Worker bypasses
 maintenance only for the evidenced OAuth callback and service endpoint methods

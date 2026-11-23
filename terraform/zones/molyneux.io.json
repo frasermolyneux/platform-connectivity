@@ -12,17 +12,17 @@
                 "key": "idp",
                 "type": "A",
                 "name": "idp",
-                "ttl": 300,
+                "ttl": 1,
                 "content": "5.196.80.194",
-                "proxied": false
+                "proxied": true
             },
             {
                 "key": "radar",
                 "type": "A",
                 "name": "radar",
-                "ttl": 300,
+                "ttl": 1,
                 "content": "5.196.80.194",
-                "proxied": false
+                "proxied": true
             },
             {
                 "key": "autodiscover",

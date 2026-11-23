@@ -51,14 +51,20 @@ run "catalog_adds_only_enrolled_canonical_hosts" {
       length(local.maintenance_hosts) == length(distinct([for host in local.maintenance_hosts : host.hostname])) &&
       length(setintersection(toset(keys(local.maintenance_catalog_hosts)), toset([for host in local.maintenance_extra_hosts : host.hostname]))) == 0 &&
       toset([for host in local.maintenance_hosts : host.hostname if contains(local.maintenance_enrolled_catalog_hosts, host.hostname)]) == local.maintenance_enrolled_catalog_hosts &&
-      alltrue([for host in local.maintenance_hosts : host.site == "mx" && host.zone == host.hostname if contains(local.maintenance_enrolled_catalog_hosts, host.hostname)]) &&
+      alltrue([for host in local.maintenance_hosts : host.site == "mx" if contains(local.maintenance_enrolled_catalog_hosts, host.hostname)]) &&
+      alltrue([for hostname in ["idp.molyneux.io", "radar.molyneux.io"] :
+        local.maintenance_catalog_hosts[hostname].zone == "molyneux.io" &&
+        local.ingress_hosts[hostname].target.alias_to == null &&
+        local.ingress_hosts[hostname].target.status_brand == "mx"
+      ]) &&
       !contains(keys(local.maintenance_catalog_hosts), "www.talkwithtiles.com") &&
       !contains(keys(local.maintenance_catalog_hosts), "www.tripsidekick.app") &&
       !contains(keys(local.maintenance_catalog_hosts), "www.tripsidekick.net") &&
-      !contains(keys(local.maintenance_catalog_hosts), "idp.molyneux.io") &&
+      contains(keys(local.maintenance_catalog_hosts), "idp.molyneux.io") &&
+      contains(keys(local.maintenance_catalog_hosts), "radar.molyneux.io") &&
       !contains(keys(local.maintenance_catalog_hosts), "mxstatus.io")
     )
-    error_message = "Only the three canonical catalog hosts may be enrolled; aliases and unrelated targets remain excluded."
+    error_message = "Only explicitly enrolled canonical catalog hosts may be added; aliases and unrelated targets remain excluded."
   }
 }
 
