@@ -1,0 +1,10 @@
+{
+  "name": "beeops.dev",
+  "dns_provider": "cloudflare",
+  "management": "terraform",
+  "import_existing": true,
+  "waf_custom_rules_enabled": false,
+  "settings_preserve_existing": true,
+  "dnssec_enabled": false,
+  "records": []
+}
